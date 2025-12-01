@@ -1,6 +1,6 @@
 # Projet L2A - G34
 
-
+Bonjour, camarade. Bienvenue sur le projet.
 
 ## Getting started
 
