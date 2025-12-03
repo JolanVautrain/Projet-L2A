@@ -8,5 +8,6 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Navbar />
     <h1>Accueil</h1>
+    <a href="/game.html">Play Game</a>
   </StrictMode>
 );
