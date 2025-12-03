@@ -1,18 +1,6 @@
 #root {
   max-width: 1280px;
-  margin: 0 auto;
+  margin: 0 100px;
   padding: 2rem;
   text-align: center;
-}
-
-canvas {
-  position: absolute;
-  top: 20%;
-  left: 20%;
-}
-
-.reload-game {
-  position: absolute;
-  top: 90%;
-  left: 40%;
 }
