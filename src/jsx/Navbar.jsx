@@ -4,7 +4,7 @@ function Navbar() {
   return (
     <>
       <header>
-        <nav class="navbar">
+        <nav className="navbar">
           <a href="/">Accueil</a>
           <a href="/rules">Règles</a>
           <a href="/account">Compte</a>

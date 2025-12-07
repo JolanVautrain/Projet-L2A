@@ -131,7 +131,18 @@
 
       function update() {
         if (gameOver) {
-          return;
+          stars.children.iterate(function (child) {
+            child.disableBody(true, true);
+          });
+          bombs.children.iterate(function (child) {
+            child.disableBody(true, true);
+          });
+          score = 0;
+          scoreText.setText("Score: " + score);
+          stars.children.iterate(function (child) {
+            child.enableBody(true, child.x, 0, true, true);
+          });
+          gameOver = false;
         }
 
         if (cursors.left.isDown) {
@@ -180,12 +191,6 @@
       }
 
       function hitBomb(player, bomb) {
-        this.physics.pause();
-
-        player.setTint(0xff0000);
-
-        player.anims.play("turn");
-
         gameOver = true;
       }
     </script>

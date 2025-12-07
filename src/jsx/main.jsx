@@ -1,13 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "../css/index.css";
-import "../css/accueil.css";
-import Navbar from "./Navbar.jsx";
+import Accueil from "./Accueil.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <Navbar />
-    <h1>Accueil</h1>
-    <a href="/game">Play Game</a>
+    <Accueil />
   </StrictMode>
 );
