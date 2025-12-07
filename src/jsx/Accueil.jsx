@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Navbar from "./Navbar.jsx";
 import LoginModal from "./LoginModal.jsx";
 import "../css/Accueil.css";
 
@@ -10,7 +9,6 @@ function Accueil() {
   if (logged) {
     return (
       <>
-        <Navbar />
         <h1>Accueil</h1>
         <a href="/game">Play Game</a>
       </>
@@ -18,7 +16,6 @@ function Accueil() {
   } else {
     return (
       <>
-        <Navbar />
         <h1>Accueil</h1>
         <button onClick={() => setIsOpen(true)}>Login</button>
         <LoginModal

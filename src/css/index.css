@@ -13,6 +13,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.navbar {
+  display: flex;
+  gap: 20px;
+}
+
+header {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border-radius: 10px;
+  border: 1px solid black;
+  padding: 5px;
+  margin: 5px;
+  background-color: #1a1a1a;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
