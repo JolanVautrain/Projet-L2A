@@ -1,0 +1,8 @@
+services:
+  projetl2ag34:
+    image: projetl2ag34
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 5000:5000
