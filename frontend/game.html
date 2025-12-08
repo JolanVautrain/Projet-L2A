@@ -35,8 +35,11 @@
       var platforms;
       var cursors;
       var score = 0;
+      var highestScore = 0;
       var gameOver = false;
       var scoreText;
+      var highestScoreText;
+      var touchingGround = false;
 
       var game = new Phaser.Game(config);
 
@@ -113,13 +116,18 @@
         bombs = this.physics.add.group();
 
         //  The score
-        scoreText = this.add.text(16, 16, "score: 0", {
+        scoreText = this.add.text(16, 16, "Score: 0", {
+          fontSize: "32px",
+          fill: "#000",
+        });
+
+        highestScoreText = this.add.text(16, 48, "Highest Score: 0", {
           fontSize: "32px",
           fill: "#000",
         });
 
         //  Collide the player and the stars with the platforms
-        this.physics.add.collider(player, platforms);
+        //this.physics.add.collider(player, platforms);
         this.physics.add.collider(stars, platforms);
         this.physics.add.collider(bombs, platforms);
 
@@ -127,6 +135,8 @@
         this.physics.add.overlap(player, stars, collectStar, null, this);
 
         this.physics.add.collider(player, bombs, hitBomb, null, this);
+
+        this.physics.add.collider(player, platforms, touchGround, null, this);
       }
 
       function update() {
@@ -137,8 +147,12 @@
           bombs.children.iterate(function (child) {
             child.disableBody(true, true);
           });
+          if (score > highestScore) {
+            highestScore = score;
+          }
           score = 0;
           scoreText.setText("Score: " + score);
+          highestScoreText.setText("Highest Score: " + highestScore);
           stars.children.iterate(function (child) {
             child.enableBody(true, child.x, 0, true, true);
           });
@@ -159,8 +173,9 @@
           player.anims.play("turn");
         }
 
-        if (cursors.up.isDown && player.body.touching.down) {
+        if (cursors.up.isDown && player.body.touching.down && touchingGround) {
           player.setVelocityY(-650);
+          touchingGround = false;
         }
       }
 
@@ -192,6 +207,10 @@
 
       function hitBomb(player, bomb) {
         gameOver = true;
+      }
+
+      function touchGround(player, ground) {
+        touchingGround = true;
       }
     </script>
   </body>
