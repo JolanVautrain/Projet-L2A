@@ -1,18 +1,19 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import Accueil from "./Accueil";
 import Rules from "./Rules";
 import Account from "./Account";
 import Contacts from "./Contacts";
+import PageNotFound from "./PageNotFound";
 
 function App() {
   return (
     <BrowserRouter>
       <header>
         <nav className="navbar">
-          <Link to="/">Accueil</Link>
-          <Link to="/rules">Règles</Link>
-          <Link to="/account">Compte</Link>
-          <Link to="/contacts">Contacts</Link>
+          <NavLink to="/">Accueil</NavLink>
+          <NavLink to="/rules">Règles</NavLink>
+          <NavLink to="/account">Compte</NavLink>
+          <NavLink to="/contacts">Contacts</NavLink>
         </nav>
       </header>
       <Routes>
@@ -20,6 +21,7 @@ function App() {
         <Route path="/rules" element={<Rules />} />
         <Route path="/account" element={<Account />} />
         <Route path="/contacts" element={<Contacts />} />
+        <Route path="/*" element={<PageNotFound />}/>
       </Routes>
     </BrowserRouter>
   );
