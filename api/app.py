@@ -1,13 +1,43 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import psycopg2
 
 app = Flask(__name__)
 CORS(app)
 
-users = {
-    "test":"1234",
-    "test2":"1",
-}
+
+def connectToDatabase():
+    return psycopg2.connect(
+        database="ma_db",
+        user="mon_user",
+        password="mon_pass",
+        host="127.0.0.1",
+        port="5432",
+    )
+
+
+conn = connectToDatabase()
+
+cur = conn.cursor()
+
+cur.execute("DROP TABLE IF EXISTS users;")
+
+cur.execute(
+    """CREATE TABLE IF NOT EXISTS users (
+    username varchar(100) PRIMARY KEY, password varchar(100) NOT NULL);"""
+)
+
+cur.execute(
+    """INSERT INTO users (username, password) VALUES
+    ('test', '1234'),
+    ('username', 'password'),
+    ('azerty', 'qsdfgh');"""
+)
+
+conn.commit()
+
+cur.close()
+conn.close()
 
 
 @app.route("/api/login")
@@ -23,11 +53,21 @@ def checkLogin():
     userExist = False
     passwordIsCorrect = False
 
-    if username in users :
-        userExist = True
-        
-        if users.get(username) == password:
-            passwordIsCorrect = True
+    conn = connectToDatabase()
+    cur = conn.cursor()
+
+    cur.execute("""SELECT * FROM users""")
+    data = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    for user in data:
+        if user[0] == username:
+            userExist = True
+            if user[1] == password:
+                passwordIsCorrect = True
+
     return jsonify(
         {
             "userExist": userExist,
