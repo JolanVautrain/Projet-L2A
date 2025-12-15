@@ -11,7 +11,7 @@ def connectToDatabase():
         database="ma_db",
         user="mon_user",
         password="mon_pass",
-        host="localhost",
+        host="db",
         port="5432",
     )
 
