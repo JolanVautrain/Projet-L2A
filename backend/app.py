@@ -11,7 +11,7 @@ def connectToDatabase():
         database="ma_db",
         user="mon_user",
         password="mon_pass",
-        host="127.0.0.1",
+        host="0.0.0.0",
         port="5432",
     )
 
@@ -42,7 +42,7 @@ conn.close()
 
 @app.route("/api/login")
 def checkLogin2():
-    return "Reached"
+    return "hello world"
 
 
 @app.route("/api/login", methods=["POST"])
@@ -77,4 +77,4 @@ def checkLogin():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
