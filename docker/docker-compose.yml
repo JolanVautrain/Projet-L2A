@@ -1,4 +1,7 @@
 version: '3.8'
+
+name: projetl2a
+
 services:
   # Base de données
   db:
