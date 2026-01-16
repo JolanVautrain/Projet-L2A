@@ -37,7 +37,7 @@ function App() {
           {userState ? (
             <div className="nav-greeting" style={{display: 'inline-flex', gap: 8, alignItems: 'center'}}>
               <span>Bonjour {userState}</span>
-              <button className="btn ghost" onClick={handleLogout}>Déconnexion</button>
+              <NavLink className="btn ghost no-border" to="/account">Profil</NavLink>
             </div>
           ) : (
             <NavLink to="/account">Compte</NavLink>

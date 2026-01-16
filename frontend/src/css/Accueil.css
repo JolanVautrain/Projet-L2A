@@ -102,12 +102,6 @@
   box-shadow: 0 16px 38px rgba(29, 211, 176, 0.35);
 }
 
-.btn.ghost {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #e8edf6;
-}
-
 .btn.accent {
   background: linear-gradient(120deg, #0ea5e9 0%, #2563eb 100%);
   color: #e8edf6;
