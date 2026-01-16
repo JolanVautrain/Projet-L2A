@@ -6,9 +6,7 @@ import "../css/game.css";
 // Game state (module-level to persist across renders)
 let player, stars, bombs, platforms, cursors;
 let score = 0;
-let highestScore = 0;
 let gameOver = false;
-let scoreText, highestScoreText;
 let touchingGround = false;
 let internalStage = 1;
 
@@ -63,14 +61,6 @@ function create() {
     child.setBounceY(window.Phaser.Math.FloatBetween(0.4, 0.8));
   });
   bombs = this.physics.add.group();
-  scoreText = this.add.text(16, 16, "Score: 0", {
-    fontSize: "32px",
-    fill: "#000",
-  });
-  highestScoreText = this.add.text(16, 48, "Highest Score: 0", {
-    fontSize: "32px",
-    fill: "#000",
-  });
   this.physics.add.collider(stars, platforms);
   this.physics.add.collider(bombs, platforms);
   this.physics.add.overlap(player, stars, collectStar, null, this);
@@ -87,12 +77,6 @@ function update() {
     bombs.children.iterate(function (child) {
       child.disableBody(true, true);
     });
-    if (score > highestScore) {
-      highestScore = score;
-    }
-    score = 0;
-    scoreText.setText("Score: " + score);
-    highestScoreText.setText("Highest Score: " + highestScore);
     stars.children.iterate(function (child) {
       child.enableBody(true, child.x, 0, true, true);
     });
@@ -117,8 +101,8 @@ function update() {
 function collectStar(player, star) {
   console.log('[Phaser] Star collected! Stage:', internalStage);
   star.disableBody(true, true);
+  // update score and notify React overlay
   score += 10;
-  scoreText.setText("Score: " + score);
   window.dispatchEvent(new CustomEvent('score-up', { detail: score }));
   if (stars.countActive(true) === 0) {
     internalStage += 1;
@@ -127,21 +111,35 @@ function collectStar(player, star) {
     stars.children.iterate(function (child) {
       child.enableBody(true, child.x, 0, true, true);
     });
-    const bombsToSpawn = Math.min(3, Math.floor(internalStage / 1));
-    console.log('[Phaser] Spawning', bombsToSpawn, 'bombs');
-    for (let i = 0; i < bombsToSpawn; i++) {
-      var x = player.x < 400 ? window.Phaser.Math.Between(400, 800) : window.Phaser.Math.Between(0, 400);
-      var bomb = bombs.create(x, 16, "bomb");
-      bomb.setBounce(1);
-      bomb.setCollideWorldBounds(true);
-      bomb.setVelocity(window.Phaser.Math.Between(-200 - internalStage * 20, 200 + internalStage * 20), 20);
-      bomb.allowGravity = false;
+    // ensure only one bomb exists per stage: remove existing bombs then spawn one
+    if (bombs) {
+      bombs.children.iterate(function (child) {
+        try { child.destroy(); } catch (e) { /* ignore */ }
+      });
     }
+    console.log('[Phaser] Spawning 1 bomb for the new stage');
+    var x = player.x < 400 ? window.Phaser.Math.Between(400, 800) : window.Phaser.Math.Between(0, 400);
+    var bomb = bombs.create(x, 16, "bomb");
+    bomb.setBounce(1);
+    bomb.setCollideWorldBounds(true);
+    bomb.setVelocity(window.Phaser.Math.Between(-200 - internalStage * 20, 200 + internalStage * 20), 20);
+    bomb.allowGravity = false;
   }
 }
 
 function hitBomb(player, bomb) {
   gameOver = true;
+  // reset stage and score on death
+  internalStage = 1;
+  score = 0;
+  window.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
+  window.dispatchEvent(new CustomEvent('score-up', { detail: score }));
+  // remove existing bombs immediately
+  if (bombs) {
+    bombs.children.iterate(function (child) {
+      try { child.destroy(); } catch (e) { /* ignore */ }
+    });
+  }
 }
 
 function touchGround(player, ground) {
@@ -161,10 +159,7 @@ function Game() {
     platforms = undefined;
     cursors = undefined;
     score = 0;
-    highestScore = 0;
     gameOver = false;
-    scoreText = undefined;
-    highestScoreText = undefined;
     touchingGround = false;
     internalStage = 1;
   }, []);
@@ -283,11 +278,17 @@ function Game() {
     return () => window.removeEventListener('score-up', onScore);
   }, []);
 
+  
+
   return (
     <div className="game-wrap">
       <div className="game-overlay">
-        <div className="stage-pill">Stage {stage}</div>
-        <div className="score-display">Score: {scoreDisplay}</div>
+        <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+          <div className="stage-pill">Stage {stage}</div>
+        </div>
+        <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+          <div className="score-display">Score: {scoreDisplay}</div>
+        </div>
       </div>
 
       <div ref={gameContainer} id="phaser-container" style={{width: 800, height: 600, background: '#0b1222', borderRadius: 12, overflow: 'hidden', display: 'block', position: 'relative'}} />
