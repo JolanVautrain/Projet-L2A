@@ -29,8 +29,3 @@ Ce document décrit les pages HTML présentes dans `frontend/` et indique leurs 
 - Styles : `frontend/src/css/`
 - Assets (images, icônes) : `frontend/src/assets/`
 - Script de jeu : `frontend/game.js` (si présent)
-
-## Recommandations
-
-- Préférence : centraliser le lancement du jeu depuis React (`/game` route) plutôt que d'utiliser une page HTML séparée, sauf besoin de mode standalone.
-- Pour la production : vérifier les références CDN (Phaser) et préférer l'installation via npm pour verrouiller les versions.
