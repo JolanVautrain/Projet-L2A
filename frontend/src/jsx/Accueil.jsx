@@ -33,9 +33,8 @@ const steps = [
   },
 ];
 
-function Accueil() {
+function Accueil({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [logged, setLogged] = useState(false);
 
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
@@ -61,7 +60,7 @@ function Accueil() {
               Voir les règles
             </a>
             <button className="btn accent" onClick={openLogin}>
-              {logged ? "Changer de joueur" : "Se connecter"}
+              {user ? `Bonjour ${user}` : "Se connecter"}
             </button>
           </div>
           <div className="hero__stats">
@@ -124,7 +123,7 @@ function Accueil() {
             </div>
           ))}
         </div>
-        {!logged && (
+        {!user && (
           <div className="cta-banner">
             <div>
               <p className="hero__eyebrow">Rejoins la partie</p>
@@ -141,7 +140,7 @@ function Accueil() {
         )}
       </section>
 
-      <LoginModal isOpen={isOpen} action={setLogged} onClose={closeLogin} />
+      <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} />
     </div>
   );
 }

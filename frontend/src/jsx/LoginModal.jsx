@@ -35,7 +35,10 @@ function LoginModal({ isOpen, onClose, action }) {
         } else if (!data.passwordIsCorrect) {
           setError("Mot de passe incorrect.");
         } else {
-          action(true);
+          // renvoie le nom d'utilisateur au parent pour affichage dans le header
+          action(username);
+          // ferme la modal automatiquement après connexion réussie
+          if (typeof onClose === "function") onClose();
         }
       })
       .catch((error) => {
@@ -51,9 +54,9 @@ function LoginModal({ isOpen, onClose, action }) {
     <div className="login-modal styled-modal">
       <div className="modal-card">
         <header className="modal-header">
-          <h2 style={{marginRight: '32px'}}>Connexion</h2>
+          <h2>Connexion</h2>
         </header>
-        <button className="modal-close" onClick={onClose} title="Fermer" style={{position: 'absolute', top: '18px', right: '18px'}}>×</button>
+        <button className="modal-close" onClick={onClose} title="Fermer">×</button>
         <form className="modal-form" onSubmit={handleSubmit}>
           <div className="modal-field">
             <label htmlFor="username">Nom d'utilisateur</label>

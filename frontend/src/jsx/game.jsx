@@ -8,6 +8,8 @@ import "../css/game.css";
 function Game() {
   const gameContainer = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [stage, setStage] = useState(1);
+  const [scoreDisplay, setScoreDisplay] = useState(0);
   useEffect(() => {
     // On évite de recréer le jeu à chaque render
     // Si Phaser n'est pas encore chargé, on ne casse pas l'UI : on tente de l'attendre
@@ -96,8 +98,31 @@ function Game() {
     return () => window.removeEventListener('phaser-ready-create', onCreate);
   }, []);
 
+  // Listen to stage changes coming from Phaser scene
+  useEffect(() => {
+    const onStage = (e) => {
+      if (e && e.detail) setStage(e.detail);
+    };
+    window.addEventListener('stage-up', onStage);
+    return () => window.removeEventListener('stage-up', onStage);
+  }, []);
+
+  useEffect(() => {
+    const onScore = (e) => {
+      if (e && typeof e.detail !== 'undefined') setScoreDisplay(e.detail);
+    };
+    window.addEventListener('score-up', onScore);
+    return () => window.removeEventListener('score-up', onScore);
+  }, []);
+
   // Fonctions Phaser (copiées de game.js)
-  let player, stars, bombs, platforms, cursors, score = 0, highestScore = 0, gameOver = false, scoreText, highestScoreText, touchingGround = false;
+  let player, stars, bombs, platforms, cursors;
+  let score = 0;
+  let highestScore = 0;
+  let gameOver = false;
+  let scoreText, highestScoreText;
+  let touchingGround = false;
+  let internalStage = 1;
 
   function preload() {
     this.load.image("sky", "src/assets/sky.png");
@@ -201,16 +226,28 @@ function Game() {
     star.disableBody(true, true);
     score += 10;
     scoreText.setText("Score: " + score);
+    window.dispatchEvent(new CustomEvent('score-up', { detail: score }));
     if (stars.countActive(true) === 0) {
+      // stage completes
+      internalStage += 1;
+      // notify React of stage change
+      window.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
+
+      // respawn stars
       stars.children.iterate(function (child) {
         child.enableBody(true, child.x, 0, true, true);
       });
-      var x = player.x < 400 ? window.Phaser.Math.Between(400, 800) : window.Phaser.Math.Between(0, 400);
-      var bomb = bombs.create(x, 16, "bomb");
-      bomb.setBounce(1);
-      bomb.setCollideWorldBounds(true);
-      bomb.setVelocity(window.Phaser.Math.Between(-200, 200), 20);
-      bomb.allowGravity = false;
+
+      // spawn bombs scaled with stage
+      const bombsToSpawn = Math.min(3, Math.floor(internalStage / 1));
+      for (let i = 0; i < bombsToSpawn; i++) {
+        var x = player.x < 400 ? window.Phaser.Math.Between(400, 800) : window.Phaser.Math.Between(0, 400);
+        var bomb = bombs.create(x, 16, "bomb");
+        bomb.setBounce(1);
+        bomb.setCollideWorldBounds(true);
+        bomb.setVelocity(window.Phaser.Math.Between(-200 - internalStage * 20, 200 + internalStage * 20), 20);
+        bomb.allowGravity = false;
+      }
     }
   }
 
@@ -223,14 +260,21 @@ function Game() {
   }
 
   return (
-    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative'}}>
+    <div className="game-wrap">
       {loading && (
         <div style={{position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.6)', color: '#e8edf6', padding: '8px 12px', borderRadius: 8, zIndex: 20}}>
           Chargement du jeu…
         </div>
       )}
-      <div ref={gameContainer} id="phaser-container" style={{width: 800, height: 600}}></div>
-      <div className="options-buttons" style={{marginTop: 24}}>
+
+      <div className="game-overlay">
+        <div className="stage-pill">Stage {stage}</div>
+        <div className="score-display">Score: {scoreDisplay}</div>
+      </div>
+
+      <div ref={gameContainer} id="phaser-container" className="phaser-canvas" style={{width: 800, height: 600}}></div>
+
+      <div className="options-buttons">
         <button className="btn ghost" onClick={() => window.location.reload()}>Recharger le jeu</button>
         <Link className="btn accent" to="/">Quitter le jeu</Link>
       </div>
