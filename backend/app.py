@@ -1,43 +1,54 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 import psycopg2
+from psycopg2 import OperationalError
+from werkzeug.exceptions import HTTPException
+import logging
 
 app = Flask(__name__)
 CORS(app)
+logging.basicConfig(level=logging.INFO)
 
 
 def connectToDatabase():
-    return psycopg2.connect(
-        database="ma_db",
-        user="mon_user",
-        password="mon_pass",
-        host="db",
-        port="5432",
+    # Garder la fonction simple mais remonter une erreur claire si la connexion échoue
+    try:
+        return psycopg2.connect(
+            database="ma_db",
+            user="mon_user",
+            password="mon_pass",
+            host="db",
+            port="5432",
+        )
+    except OperationalError as e:
+        app.logger.exception("Database connection failed")
+        raise
+
+
+try:
+    conn = connectToDatabase()
+    cur = conn.cursor()
+
+    cur.execute("DROP TABLE IF EXISTS users;")
+
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS users (
+        username varchar(100) PRIMARY KEY, password varchar(100) NOT NULL);"""
     )
 
+    cur.execute(
+        """INSERT INTO users (username, password) VALUES
+        ('test', '1234'),
+        ('username', 'password'),
+        ('azerty', 'qsdfgh');"""
+    )
 
-conn = connectToDatabase()
+    conn.commit()
 
-cur = conn.cursor()
-
-cur.execute("DROP TABLE IF EXISTS users;")
-
-cur.execute(
-    """CREATE TABLE IF NOT EXISTS users (
-    username varchar(100) PRIMARY KEY, password varchar(100) NOT NULL);"""
-)
-
-cur.execute(
-    """INSERT INTO users (username, password) VALUES
-    ('test', '1234'),
-    ('username', 'password'),
-    ('azerty', 'qsdfgh');"""
-)
-
-conn.commit()
-
-cur.close()
-conn.close()
+    cur.close()
+    conn.close()
+except Exception:
+    app.logger.exception("Failed to initialize database; continuing without seeding")
 
 
 @app.route("/api/login")
@@ -47,32 +58,70 @@ def checkLogin2():
 
 @app.route("/api/login", methods=["POST"])
 def checkLogin():
-    data = request.json
-    username = data["username"]
-    password = data["password"]
-    userExist = False
-    passwordIsCorrect = False
+    try:
+        data = request.get_json()
+        if not data or "username" not in data or "password" not in data:
+            return (
+                jsonify(
+                    {
+                        "error": "Bad Request",
+                        "message": "username and password required",
+                    }
+                ),
+                400,
+            )
 
-    conn = connectToDatabase()
-    cur = conn.cursor()
+        username = data["username"]
+        password = data["password"]
 
-    cur.execute("""SELECT * FROM users""")
-    data = cur.fetchall()
+        conn = connectToDatabase()
+        cur = conn.cursor()
 
-    cur.close()
-    conn.close()
+        cur.execute(
+            "SELECT username, password FROM users WHERE username = %s", (username,)
+        )
+        row = cur.fetchone()
 
-    for user in data:
-        if user[0] == username:
-            userExist = True
-            if user[1] == password:
-                passwordIsCorrect = True
+        cur.close()
+        conn.close()
 
-    return jsonify(
-        {
-            "userExist": userExist,
-            "passwordIsCorrect": passwordIsCorrect,
-        }
+        if not row:
+            return jsonify({"error": "User not found"}), 404
+
+        stored_username, stored_password = row
+        if stored_password != password:
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        return jsonify({"message": "Authenticated", "username": stored_username}), 200
+
+    except OperationalError:
+        # DB connection-level error
+        return jsonify({"error": "Database error"}), 500
+    except Exception:
+        app.logger.exception("Unexpected error in /api/login")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+
+# Centralized error handlers
+@app.errorhandler(HTTPException)
+def handle_http_exception(e):
+    response = e.get_response()
+    # replace the body with JSON
+    return jsonify({"error": e.name, "message": e.description}), e.code
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # non-HTTP exceptions -> 500
+    app.logger.exception(e)
+    return (
+        jsonify(
+            {
+                "error": "Internal Server Error",
+                "message": "An unexpected error occurred.",
+            }
+        ),
+        500,
     )
 
 

@@ -64,10 +64,3 @@ Notes techniques et sécurité
 Configuration
 -------------
 - Les paramètres de connexion PostgreSQL sont codés dans `connectToDatabase()` (`database`, `user`, `password`, `host`, `port`). Pour la production, les lire depuis des variables d'environnement.
-
-Améliorations recommandées
--------------------------
-- Documenter l'API avec Swagger.
-
----
-
