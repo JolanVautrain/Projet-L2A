@@ -8,7 +8,23 @@ import PageNotFound from "./PageNotFound";
 import Game from "./game";
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [userState, setUserState] = useState(() => {
+    try {
+      return localStorage.getItem("user") || null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const setUser = (value) => {
+    setUserState(value);
+    try {
+      if (value) localStorage.setItem("user", value);
+      else localStorage.removeItem("user");
+    } catch (e) {
+      // ignore storage errors
+    }
+  };
 
   const handleLogout = () => setUser(null);
 
@@ -18,9 +34,9 @@ function App() {
         <nav className="navbar">
           <NavLink to="/">Accueil</NavLink>
           <NavLink to="/rules">Règles</NavLink>
-          {user ? (
+          {userState ? (
             <div className="nav-greeting" style={{display: 'inline-flex', gap: 8, alignItems: 'center'}}>
-              <span>Bonjour {user}</span>
+              <span>Bonjour {userState}</span>
               <button className="btn ghost" onClick={handleLogout}>Déconnexion</button>
             </div>
           ) : (
@@ -30,9 +46,9 @@ function App() {
         </nav>
       </header>
       <Routes>
-        <Route path="/" element={<Accueil user={user} setUser={setUser} />} />
+        <Route path="/" element={<Accueil user={userState} setUser={setUser} />} />
         <Route path="/rules" element={<Rules />} />
-        <Route path="/account" element={<Account user={user} setUser={setUser} />} />
+        <Route path="/account" element={<Account user={userState} setUser={setUser} />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/game" element={<Game />} />
         <Route path="/*" element={<PageNotFound />}/>

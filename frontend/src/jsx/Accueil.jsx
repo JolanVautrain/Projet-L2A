@@ -59,7 +59,12 @@ function Accueil({ user, setUser }) {
             <Link className="btn ghost" to="/rules">
               Voir les règles
             </Link>
-            <button className="btn accent" onClick={openLogin}>
+            <button
+              className="btn accent"
+              onClick={!user ? openLogin : undefined}
+              disabled={!!user}
+              aria-disabled={!!user}
+            >
               {user ? `Bonjour ${user}` : "Se connecter"}
             </button>
           </div>
