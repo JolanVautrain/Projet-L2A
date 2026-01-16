@@ -11,6 +11,12 @@ function LoginModal({ isOpen, onClose, action }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const userTrim = username.trim();
+    const passTrim = password.trim();
+    if (!userTrim || !passTrim) {
+      setError("Nom d'utilisateur et mot de passe requis.");
+      return;
+    }
     setLoading(true);
     setError("");
     fetch("http://127.0.0.1:5000/api/login", {
@@ -19,8 +25,8 @@ function LoginModal({ isOpen, onClose, action }) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: username,
-        password: password,
+        username: userTrim,
+        password: passTrim,
       }),
     })
       .then((response) => {

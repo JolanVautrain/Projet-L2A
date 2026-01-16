@@ -1,5 +1,4 @@
 # Projet L2A — Jeu en ligne (Groupe G34)
-# Projet L2A — Jeu en ligne (Groupe G34)
 
 ## Description
 

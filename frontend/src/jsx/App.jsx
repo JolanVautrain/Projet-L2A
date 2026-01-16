@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
 import Accueil from "./Accueil";
 import Rules from "./Rules";
@@ -28,6 +28,10 @@ function App() {
 
   const handleLogout = () => setUser(null);
 
+  const RequireAuth = ({ children }) => {
+    return userState ? children : <Navigate to="/" replace />;
+  };
+
   return (
     <BrowserRouter>
       <header>
@@ -50,7 +54,7 @@ function App() {
         <Route path="/rules" element={<Rules />} />
         <Route path="/account" element={<Account user={userState} setUser={setUser} />} />
         <Route path="/contacts" element={<Contacts />} />
-        <Route path="/game" element={<Game />} />
+        <Route path="/game" element={<RequireAuth><Game /></RequireAuth>} />
         <Route path="/*" element={<PageNotFound />}/>
       </Routes>
     </BrowserRouter>

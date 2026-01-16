@@ -1,4 +1,17 @@
+"""API Flask minimale pour le backend du projet L2A.
+
+Contient des endpoints d'authentification (/api/login) et une
+initialisation de base de données pour le développement. Les
+implémentations actuelles sont destinées au développement uniquement
+et doivent être durcies pour la production (hash des mots de passe,
+authentification token, TLS, etc.).
+"""
+
 import logging
+
+# Disable import-error for third-party packages that may be missing
+# in the static analysis environment (editors/CI).
+# pylint: disable=import-error
 
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS  # type: ignore
@@ -84,8 +97,8 @@ def check_login():
             resp.status_code = 400
             return resp
 
-        username = data["username"]
-        password = data["password"]
+        username = str(data["username"]).strip()
+        password = str(data["password"]).strip()
 
         conn = connect_to_database()
         cur = conn.cursor()
@@ -100,21 +113,22 @@ def check_login():
         conn.close()
 
         if not row:
-            resp = jsonify({"error": "User not found"})
-            resp.status_code = 404
+            app.logger.info("Login attempt: user '%s' not found", username)
+            # Frontend expects a JSON object with userExist and passwordIsCorrect
+            resp = jsonify({"userExist": False, "passwordIsCorrect": False})
+            resp.status_code = 200
             return resp
 
         stored_username, stored_password = row
         if stored_password != password:
-            resp = jsonify({"error": "Invalid credentials"})
-            resp.status_code = 401
+            app.logger.info("Login attempt: incorrect password for user '%s'", username)
+            resp = jsonify({"userExist": True, "passwordIsCorrect": False})
+            resp.status_code = 200
             return resp
 
+        app.logger.info("User '%s' authenticated", stored_username)
         resp = jsonify(
-            {
-                "message": "Authenticated",
-                "username": stored_username,
-            }
+            {"userExist": True, "passwordIsCorrect": True, "username": stored_username}
         )
         resp.status_code = 200
         return resp
