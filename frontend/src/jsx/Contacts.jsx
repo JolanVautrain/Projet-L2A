@@ -1,7 +1,10 @@
 import { useState } from "react";
 import "../css/index.css";
 import "../css/Contacts.css";
-import jolanImg from "../assets/contacts/Jolan.png";
+import jolanImg from "../assets/contacts/jolan.png";
+import gabImg from "../assets/contacts/gab.jpg";
+import ethanImg from "../assets/contacts/ethan.jpg";
+import laloImg from "../assets/contacts/lalo.jpg";
 
 const devs = [
   {
@@ -15,21 +18,21 @@ const devs = [
     name: "Gabriel Salaun",
     role: "Camarade efficace dans le travail",
     email: "gabriel.salaun@etudiant.univ-rennes.fr",
-    img: "https://avatars.githubusercontent.com/u/00000002?v=4",
+    img: gabImg,
     egg: "Détient un record personnel : 42 pull-requests en une journée.",
   },
   {
     name: "Ethan Louis",
     role: "Le travailleur mécontent",
     email: "ethan.louis@etudiant.univ-rennes.fr",
-    img: "https://i.pravatar.cc/150?img=8",
+    img: ethanImg,
     egg: "Râle mais délivre ; spécialiste des fixes 23:00.",
   },
   {
     name: "Lalo Lucas",
     role: "Heureux dans la vie",
     email: "lalo.lucas@etudiant.univ-rennes.fr",
-    img: "https://i.pravatar.cc/150?img=15",
+    img: laloImg,
     egg: "Distribue des sourires et parfois des cookies (virtuel).",
   },
 ];
