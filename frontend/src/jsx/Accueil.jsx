@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import LoginModal from "./LoginModal.jsx";
+import { useLocation } from "react-router-dom";
 import "../css/Accueil.css";
 
 const highlights = [
@@ -38,6 +39,20 @@ function Accueil({ user, setUser }) {
 
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location && location.state && location.state.openLogin) {
+      setIsOpen(true);
+      try {
+        // clear the navigation state so modal doesn't reopen on refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [location]);
 
   return (
     <div className="home">

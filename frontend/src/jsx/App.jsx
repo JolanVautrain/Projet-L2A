@@ -29,7 +29,7 @@ function App() {
   const handleLogout = () => setUser(null);
 
   const RequireAuth = ({ children }) => {
-    return userState ? children : <Navigate to="/" replace />;
+    return userState ? children : <Navigate to="/" replace state={{ openLogin: true }} />;
   };
 
   return (
