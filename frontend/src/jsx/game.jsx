@@ -61,6 +61,12 @@ function create() {
     child.setBounceY(window.Phaser.Math.FloatBetween(0.4, 0.8));
   });
   bombs = this.physics.add.group();
+  // spawn initial bombs for starting stage
+  try {
+    for (let i = 0; i < internalStage; i++) spawnBomb();
+  } catch (e) {
+    console.warn('spawnBomb not available yet', e);
+  }
   this.physics.add.collider(stars, platforms);
   this.physics.add.collider(bombs, platforms);
   this.physics.add.overlap(player, stars, collectStar, null, this);
@@ -80,6 +86,12 @@ function update() {
     stars.children.iterate(function (child) {
       child.enableBody(true, child.x, 0, true, true);
     });
+    // spawn initial bombs for reset stage
+    try {
+      for (let i = 0; i < internalStage; i++) spawnBomb();
+    } catch (e) {
+      console.warn('spawnBomb unavailable during reset', e);
+    }
     gameOver = false;
   }
   if (cursors.left.isDown) {
@@ -111,20 +123,43 @@ function collectStar(player, star) {
     stars.children.iterate(function (child) {
       child.enableBody(true, child.x, 0, true, true);
     });
-    // ensure only one bomb exists per stage: remove existing bombs then spawn one
-    if (bombs) {
-      bombs.children.iterate(function (child) {
-        try { child.destroy(); } catch (e) { /* ignore */ }
-      });
+    // spawn exactly one additional bomb for the new stage (cumulative)
+    console.log('[Phaser] Adding 1 bomb for new stage');
+    try {
+      spawnBomb();
+    } catch (e) {
+      console.warn('spawnBomb not available when adding bomb', e);
     }
-    console.log('[Phaser] Spawning 1 bomb for the new stage');
-    var x = player.x < 400 ? window.Phaser.Math.Between(400, 800) : window.Phaser.Math.Between(0, 400);
-    var bomb = bombs.create(x, 16, "bomb");
-    bomb.setBounce(1);
-    bomb.setCollideWorldBounds(true);
-    bomb.setVelocity(window.Phaser.Math.Between(-200 - internalStage * 20, 200 + internalStage * 20), 20);
-    bomb.allowGravity = false;
   }
+}
+
+// helper to call Phaser.Math.Between safely if Phaser not yet on global scope
+function PhaserSafeBetween(min, max) {
+  try {
+    if (window && window.Phaser && window.Phaser.Math && typeof window.Phaser.Math.Between === 'function') {
+      return window.Phaser.Math.Between(min, max);
+    }
+  } catch (e) {}
+  // fallback
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// spawn a single bomb with properties influenced by current stage
+function spawnBomb() {
+  if (!bombs) return;
+  const x = PhaserSafeBetween(50, 750);
+  var b;
+  try {
+    b = bombs.create(x, 16, "bomb");
+  } catch (e) {
+    console.warn('Failed to create bomb', e);
+    return;
+  }
+  b.setBounce(1);
+  b.setCollideWorldBounds(true);
+  const speed = window.Phaser && window.Phaser.Math ? window.Phaser.Math.Between(-150 - internalStage * 10, 150 + internalStage * 10) : (Math.random() * 400 - 200);
+  b.setVelocity(speed, 20);
+  b.allowGravity = false;
 }
 
 function hitBomb(player, bomb) {
