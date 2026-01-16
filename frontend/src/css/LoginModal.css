@@ -1,30 +1,120 @@
-.login-modal {
+
+.login-modal.styled-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(14, 22, 40, 0.65);
+  backdrop-filter: blur(6px);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  z-index: 1000;
 }
 
-.login-modal form {
+.modal-card {
+  background: linear-gradient(120deg, #1a2336 0%, #232e48 100%);
+  border: 1px solid rgba(102, 227, 184, 0.18);
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.45);
+  padding: 32px 28px 24px;
+  min-width: 320px;
+  max-width: 95vw;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #66e3b8;
+}
+
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #b6c2d9;
+  cursor: pointer;
+  transition: color 0.2s;
+  border-radius: 8px;
+  padding: 8px 16px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.modal-close:hover {
+  color: #66e3b8;
+  background: rgba(102,227,184,0.08);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-field label {
+  font-size: 1rem;
+  color: #9fb2ff;
+  font-weight: 600;
+}
+
+.modal-input {
   border-radius: 10px;
-  border: 1px #646cff solid;
-  background-color: #1a1a1a;
-  padding: 10px 5px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  border: 1px solid #66e3b8;
+  background: #232e48;
+  color: #e8edf6;
+  font-size: 1.05rem;
+  padding: 8px 12px;
+  transition: border-color 0.2s;
+}
+.modal-input:focus {
+  border-color: #1dd3b0;
+  outline: none;
 }
 
-.login-modal form div {
-  display: flex;
-  flex-direction: column;
+.modal-error {
+  color: #ff6b6b;
+  background: rgba(255,107,107,0.08);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.98rem;
+  text-align: center;
+}
+
+.btn.primary {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 1.08rem;
+}
+
+@media (max-width: 500px) {
+  .modal-card {
+    padding: 18px 8px 14px;
+    min-width: 0;
+  }
 }

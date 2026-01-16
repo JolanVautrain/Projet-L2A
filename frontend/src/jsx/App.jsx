@@ -4,6 +4,7 @@ import Rules from "./Rules";
 import Account from "./Account";
 import Contacts from "./Contacts";
 import PageNotFound from "./PageNotFound";
+import Game from "./game";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/rules" element={<Rules />} />
         <Route path="/account" element={<Account />} />
         <Route path="/contacts" element={<Contacts />} />
+        <Route path="/game" element={<Game />} />
         <Route path="/*" element={<PageNotFound />}/>
       </Routes>
     </BrowserRouter>
