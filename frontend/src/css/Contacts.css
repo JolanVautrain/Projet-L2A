@@ -1,6 +1,123 @@
-#root {
-  max-width: 1280px;
+/* Contacts page styles */
+
+.contacts {
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.4rem;
+  color: #e8edf6;
+}
+
+.contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contacts-header {
   text-align: center;
+  margin-bottom: 18px;
+}
+
+.contacts-header h1 {
+  margin: 0 0 6px;
+}
+
+.contacts-header .intro {
+  color: #9fb2ff;
+  margin: 0;
+}
+
+.contacts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+  /* allow vertical scrolling if there are many cards */
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  padding-right: 8px; /* space for scrollbar */
+  align-items: center; /* center children horizontally */
+}
+
+.contact-card {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  background: linear-gradient(160deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 28px; /* larger padding for bigger cards */
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s;
+  width: 100%;
+  max-width: 1120px; /* allow even bigger cards */
+  margin: 0 auto; /* center horizontally inside grid */
+  min-height: 140px; /* ensure comfortable height */
+}
+
+.contact-card {
+  flex: 0 0 auto; /* prevent cards from shrinking */
+  min-height: 88px;
+}
+
+.contact-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(2,6,23,0.5);
+  background: linear-gradient(160deg, rgba(102,227,184,0.06), rgba(14,165,233,0.03));
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.06);
+}
+
+.card-body h3 {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* revert to left-aligned content */
+  justify-content: center;
+  text-align: left;
+}
+
+.role {
+  margin: 0;
+  color: #9fb2ff;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.email {
+  margin: 6px 0 0;
+  color: #b6c2d9;
+  font-size: 0.85rem;
+}
+
+.desc {
+  margin: 10px 0 0;
+  color: #c9d4f5;
+  font-size: 1.05rem;
+}
+
+.contacts-footer {
+  margin: 22px 0 0;
+  text-align: center;
+  color: #9fb2ff;
+}
+
+@media (max-width: 700px) {
+  .contact-card {
+    align-items: flex-start;
+  }
+  .avatar {
+    width: 64px;
+    height: 64px;
+  }
 }

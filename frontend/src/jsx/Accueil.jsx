@@ -9,12 +9,12 @@ const highlights = [
     text: "Lance une partie en quelques secondes et reprends là où tu t'es arrêté.",
   },
   {
-    title: "Vision claire",
+    title: "Vision à coup le souffle",
     text: "Animations fluides et grille lisible pour suivre chaque coup sans effort.",
   },
   {
-    title: "Esprit d'équipe",
-    text: "Invite un ami ou affronte l'IA, le tout depuis la même interface soignée.",
+    title: "Un challenge hors du commun",
+    text: "Une tension avec des bombes prête à exploser au moindre toucher.",
   },
 ];
 
@@ -56,9 +56,9 @@ function Accueil({ user, setUser }) {
             <Link className="btn primary" to="/game">
               Lancer une partie
             </Link>
-            <a className="btn ghost" href="/rules">
+            <Link className="btn ghost" to="/rules">
               Voir les règles
-            </a>
+            </Link>
             <button className="btn accent" onClick={openLogin}>
               {user ? `Bonjour ${user}` : "Se connecter"}
             </button>
@@ -139,7 +139,6 @@ function Accueil({ user, setUser }) {
           </div>
         )}
       </section>
-
       <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} />
     </div>
   );
