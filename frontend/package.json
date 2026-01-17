@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "nodejs": "^0.0.0",
+    "prop-types": "^15.8.1",
     "phaser": "^3.90.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

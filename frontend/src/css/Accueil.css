@@ -50,7 +50,7 @@
 .hero__eyebrow {
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #9fb2ff;
+  color: #ffffff; /* ignore l'erreur */
   font-weight: 700;
   font-size: 0.78rem;
   margin: 0;
@@ -70,7 +70,7 @@
 .hero__lede {
   margin: 0;
   max-width: 640px;
-  color: #c9d4f5;
+  color: #ffffff; /* ignore l'erreur */
 }
 
 .hero__actions {
@@ -104,7 +104,7 @@
 
 .btn.accent {
   background: linear-gradient(120deg, #0ea5e9 0%, #2563eb 100%);
-  color: #e8edf6;
+  color: #ffffff;
   box-shadow: 0 14px 32px rgba(14, 165, 233, 0.4);
 }
 
@@ -147,19 +147,19 @@
 
 .stat-label {
   display: block;
-  color: #9fb2ff;
+  color: #ffffff;
   font-size: 0.85rem;
   margin-bottom: 6px;
 }
 
 .stat-value {
   font-size: 1.5rem;
-  color: #e8edf6;
+  color: #ffffff; /* increased contrast against panel background */ /* ignore l'erreur */
 }
 
 .stat-note {
   margin: 6px 0 0;
-  color: #b6c2d9;
+  color: #ffffff; /* ignore l'erreur */
   font-size: 0.9rem;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .panel-label {
-  color: #9fb2ff;
+  color: #ffffff; /* ignore l'erreur */
   font-weight: 700;
   margin: 0 0 6px;
   letter-spacing: 0.05em;
@@ -191,7 +191,7 @@
 
 .panel-copy {
   margin: 0;
-  color: #c9d4f5;
+  color: #ffffff; /* ignore l'erreur */
 }
 
 .highlight-grid {
@@ -220,7 +220,7 @@
 
 .highlight-card p {
   margin: 0;
-  color: #b6c2d9;
+  color: #ffffff; /* ignore l'erreur */
 }
 
 .steps {
@@ -289,7 +289,7 @@
 
 .step-card p {
   margin: 0;
-  color: #b6c2d9;
+  color: #ffffff; /* ignore l'erreur */
 }
 
 .cta-banner {

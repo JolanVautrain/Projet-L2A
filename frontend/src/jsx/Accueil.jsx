@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import LoginModal from "./LoginModal.jsx";
 import "../css/Accueil.css";
 
+// Données pour les sections mises en avant
 const highlights = [
   {
     title: "Parties instantanées",
@@ -18,6 +20,7 @@ const highlights = [
   },
 ];
 
+// Étapes du parcours utilisateur
 const steps = [
   {
     title: "Choisis ton camp",
@@ -33,12 +36,32 @@ const steps = [
   },
 ];
 
+/**
+ * Composant Accueil
+ * Affiche la page d'accueil avec les actions principales et la connexion.
+ *
+ * Props :
+ * - user (string|null) : nom d'utilisateur connecté ou null
+ * - setUser (function) : fonction pour mettre à jour l'utilisateur
+ */
 function Accueil({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
 
+  const location = useLocation();
+
+  // Ouvre la modal de connexion si l'état de navigation le demande
+  useEffect(() => {
+    if (location?.state?.openLogin) {
+      setIsOpen(true);
+      // Nettoie l'état pour éviter de rouvrir la modal inutilement
+      globalThis.history.replaceState({}, document.title, globalThis.location.pathname);
+    }
+  }, [location]);
+
+  // Rendu du composant Accueil
   return (
     <div className="home">
       <section className="hero">
@@ -61,7 +84,7 @@ function Accueil({ user, setUser }) {
             </Link>
             <button
               className="btn accent"
-              onClick={!user ? openLogin : undefined}
+              onClick={user ? undefined : openLogin}
               disabled={!!user}
               aria-disabled={!!user}
             >
@@ -86,7 +109,6 @@ function Accueil({ user, setUser }) {
             </div>
           </div>
         </div>
-
         <div className="hero__panel">
           <div className="panel-glow">
             <p className="panel-label">Atmosphère</p>
@@ -107,7 +129,6 @@ function Accueil({ user, setUser }) {
           </div>
         </div>
       </section>
-
       <section className="steps">
         <header>
           <p className="hero__eyebrow">Comment ça marche</p>
@@ -150,3 +171,9 @@ function Accueil({ user, setUser }) {
 }
 
 export default Accueil;
+
+// PropTypes validation pour le composant Accueil
+Accueil.propTypes = {
+  user: PropTypes.string,
+  setUser: PropTypes.func.isRequired,
+};

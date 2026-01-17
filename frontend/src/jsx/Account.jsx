@@ -1,19 +1,28 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import "../css/index.css";
 import "../css/Account.css";
 import LoginModal from "./LoginModal.jsx";
 
+/**
+ * Composant Account
+ * Affiche la page de compte utilisateur ou un bouton de connexion selon l'état.
+ *
+ * Props :
+ * - user (string|null) : nom d'utilisateur connecté ou null si déconnecté
+ * - setUser (function) : fonction pour mettre à jour l'utilisateur
+ */
 function Account({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Gère la déconnexion de l'utilisateur
   const handleLogout = () => {
     setUser(null);
     navigate("/");
   };
-
-  if (user) {
+  if (user) { // Utilisateur connecté : afficher les informations de compte
     return (
       <>
         <h1>Compte</h1>
@@ -26,7 +35,7 @@ function Account({ user, setUser }) {
       </>
     );
   }
-
+  // Utilisateur non connecté : afficher le bouton de connexion
   return (
     <>
       <h1>Compte</h1>
@@ -35,5 +44,11 @@ function Account({ user, setUser }) {
     </>
   );
 }
+
+// PropTypes validation pour le composant Account
+Account.propTypes = {
+  user: PropTypes.string,
+  setUser: PropTypes.func.isRequired,
+};
 
 export default Account;

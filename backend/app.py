@@ -1,21 +1,30 @@
-"""API Flask minimale pour le backend du projet L2A.
+"""
+Ce fichier contient une application Flask qui fournit une API pour
+l'authentification des utilisateurs.
 
-Contient des endpoints d'authentification (/api/login) et une
-initialisation de base de données pour le développement. Les
-implémentations actuelles sont destinées au développement uniquement
-et doivent être durcies pour la production (hash des mots de passe,
-authentification token, TLS, etc.).
+L'application inclut les endpoints suivants :
+- /api/login (GET) : Un endpoint de test qui retourne une chaîne de caractères
+de salutation simple.
+- /api/login (POST) : Valide les identifiants de connexion par rapport à la
+table users et retourne des réponses JSON avec des codes d'état HTTP
+appropriés.
+
+Dépendances :
+- Flask
+- psycopg2
+
+Configuration :
+- La connexion à la base de données est établie en utilisant des variables
+d'environnement. Assurez-vous que la variable d'environnement
+POSTGRES_PASSWORD est définie sur le mot de passe souhaité.
 """
 
 import logging
+import os
 
-# Disable import-error for third-party packages that may be missing
-# in the static analysis environment (editors/CI).
-# pylint: disable=import-error
-
-from flask import Flask, request, jsonify, Response
-from flask_cors import CORS  # type: ignore
 import psycopg2  # type: ignore
+from flask import Flask, Response, jsonify, request
+from flask_cors import CORS  # type: ignore
 from psycopg2 import OperationalError  # type: ignore
 from werkzeug.exceptions import HTTPException
 
@@ -25,16 +34,19 @@ logging.basicConfig(level=logging.INFO)
 
 
 def connect_to_database():
-    """Establish and return a new PostgreSQL database connection.
+    """Établir et retourner une nouvelle connexion à la base de données
+    PostgreSQL.
 
     Raises:
-        OperationalError: if the connection to the database fails.
+        OperationalError : si la connexion à la base de données échoue.
     """
     try:
+        # Utiliser une variable d'environnement pour le mot de passe
+        db_password = os.environ.get("POSTGRES_PASSWORD", "password_change")
         return psycopg2.connect(
             database="ma_db",
             user="mon_user",
-            password="mon_pass",
+            password=db_password,
             host="db",
             port="5432",
         )
@@ -71,9 +83,11 @@ except psycopg2.Error as err:
 
 @app.route("/api/login")
 def check_login_test():
-    """Test endpoint that returns a simple greeting string.
+    """Endpoint de test qui retourne une chaîne de caractères de salutation
+    simple.
 
-    Used to verify the server is running and reachable.
+    Utilisé pour vérifier que le serveur est en cours d'exécution et
+    accessible.
     """
     return "hello world"
 
@@ -114,21 +128,29 @@ def check_login():
 
         if not row:
             app.logger.info("Login attempt: user '%s' not found", username)
-            # Frontend expects a JSON object with userExist and passwordIsCorrect
+            # Le frontend s'attend à un JSON avec les clés :
+            # 'userExist' et 'passwordIsCorrect'
             resp = jsonify({"userExist": False, "passwordIsCorrect": False})
             resp.status_code = 200
             return resp
 
         stored_username, stored_password = row
         if stored_password != password:
-            app.logger.info("Login attempt: incorrect password for user '%s'", username)
+            app.logger.info(
+                "Login attempt: incorrect password for user '%s'",
+                username,
+            )
             resp = jsonify({"userExist": True, "passwordIsCorrect": False})
             resp.status_code = 200
             return resp
 
         app.logger.info("User '%s' authenticated", stored_username)
         resp = jsonify(
-            {"userExist": True, "passwordIsCorrect": True, "username": stored_username}
+            {
+                "userExist": True,
+                "passwordIsCorrect": True,
+                "username": stored_username,
+            }
         )
         resp.status_code = 200
         return resp
@@ -146,10 +168,11 @@ def check_login():
 
 @app.errorhandler(HTTPException)
 def handle_http_exception(e: HTTPException) -> Response:
-    """Convert Werkzeug HTTPException into a JSON Response.
+    """Convertir une exception HTTP de Werkzeug en réponse JSON.
 
-    Ensures `name`, `description` and `code` are coerced to safe types
-    for JSON serialization and static type checkers.
+    Assure que les attributs `name`, `description` et `code` sont convertis en
+    types sécurisés
+    pour la sérialisation JSON et les vérificateurs de type statiques.
     """
     err_name = str(getattr(e, "name", "Error"))
     err_desc = str(getattr(e, "description", ""))
@@ -160,9 +183,10 @@ def handle_http_exception(e: HTTPException) -> Response:
 
 @app.errorhandler(Exception)
 def handle_exception(e: Exception) -> Response:
-    """Generic exception handler that returns HTTP 500 as JSON.
+    """Gestionnaire d'exception générique qui retourne HTTP 500 en tant que
+    JSON.
 
-    Logs the exception and returns a sanitized error message to clients.
+    Logue l'exception et retourne un message d'erreur sanisé aux clients.
     """
     app.logger.exception(e)
     resp = jsonify(

@@ -142,7 +142,6 @@
 
 .shape.clicked { transform: translateY(-6px) scale(0.99); }
 
-.shape { border: none; padding: 0; }
 .shape:focus { outline: 3px solid rgba(102,227,184,0.18); outline-offset: 4px; }
 
 /* hat removed — no styles needed */
@@ -153,7 +152,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: rgba(10,18,34,0.95);
-  color: #e8edf6;
+  color: #ffffff;
   padding: 8px 12px;
   border-radius: 8px;
   font-weight: 700;
@@ -202,5 +201,3 @@
 @media (max-width: 760px) {
   .follow-geom { top: -90px; }
 }
-
-.pnf-card { position: relative; }

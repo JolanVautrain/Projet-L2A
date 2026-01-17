@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { useState } from "react";
 import "../css/index.css";
 import "../css/Contacts.css";
@@ -6,6 +7,7 @@ import gabImg from "../assets/contacts/gab.jpg";
 import ethanImg from "../assets/contacts/ethan.jpg";
 import laloImg from "../assets/contacts/lalo.jpg";
 
+// Données des développeurs
 const devs = [
   {
     name: "Jolan Vautrain",
@@ -37,23 +39,55 @@ const devs = [
   },
 ];
 
+/**
+ * Composant ContactCard
+ * Affiche une carte de contact pour un membre de l'équipe.
+ *
+ * Props :
+ * - person (object) : données du membre de l'équipe
+ * 
+ */
 function ContactCard({ person }) {
+  // État pour gérer l'affichage de l'anecdote
   const [open, setOpen] = useState(false);
-
+  // Rendu de la carte de contact
   return (
-    <article className="contact-card" onClick={() => setOpen((s) => !s)}>
-      <img className="avatar" src={person.img} alt={`Photo de ${person.name}`} />
+    <button
+      type="button"
+      className="contact-card"
+      onClick={() => setOpen((s) => !s)}
+      aria-expanded={open}
+      aria-label={open ? `Masquer l'anecdote de ${person.name}` : `Afficher l'anecdote de ${person.name}`}
+      style={{ border: 'none', background: 'none', padding: 0, textAlign: 'inherit' }}
+    >
+      <img className="avatar" src={person.img} alt={person.name} />
       <div className="card-body">
         <h3>{person.name}</h3>
         <p className="role">{person.role}</p>
         <p className="email">{person.email}</p>
         <p className="desc">{open ? person.egg : <em>Cliquer pour une anecdote...</em>}</p>
       </div>
-    </article>
+    </button>
   );
 }
 
+// PropTypes validation pour le composant ContactCard
+ContactCard.propTypes = {
+  person: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    role: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired,
+    img: PropTypes.string.isRequired,
+    egg: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
+/**
+ * Composant Contacts
+ * Affiche la liste des membres de l'équipe avec leurs informations.
+ */
 function Contacts() {
+  // Rendu du composant Contacts
   return (
     <main className="contacts">
       <header className="contacts-header">
