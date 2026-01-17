@@ -69,14 +69,17 @@ try:
 
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS users (
-        username varchar(100) PRIMARY KEY, password varchar(100) NOT NULL);"""
+        username varchar(100) PRIMARY KEY,
+        password varchar(100) NOT NULL,
+        language varchar(10) DEFAULT 'fr'
+        );"""
     )
 
     init_cur.execute(
-        """INSERT INTO users (username, password) VALUES
-        ('admin', '1234'),
-        ('username', 'password'),
-        ('azerty', 'qsdfgh');"""
+        """INSERT INTO users (username, password, language) VALUES
+        ('admin', '1234', 'fr'),
+        ('username', 'password', 'fr'),
+        ('azerty', 'qsdfgh', 'fr');"""
     )
 
     # Table pour stocker le meilleur score par utilisateur
@@ -639,6 +642,157 @@ def get_user_sessions(username: str):
         app.logger.exception(
             "Unexpected error in /api/user/sessions/<username>: %s", err
         )
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/user/stats/<username>", methods=["GET"])
+def get_user_stats(username: str):
+    """Retourne les statistiques agrégées d'un utilisateur.
+
+    Réponse JSON: {
+        "totalGames": int,
+        "totalPlayTime": int (en secondes),
+        "totalScore": int,
+        "averageScore": float,
+        "averageStage": float,
+        "bestScore": int,
+        "highestStage": int,
+        "averagePlayTime": float (en secondes)
+    }
+    """
+    try:
+        username = str(username).strip()
+        conn = connect_to_database()
+        cur = conn.cursor()
+
+        # Récupérer les stats agrégées
+        cur.execute(
+            """
+            SELECT 
+                COUNT(*) as total_games,
+                SUM(timer) as total_playtime,
+                SUM(score) as total_score,
+                AVG(score) as avg_score,
+                AVG(stage) as avg_stage,
+                MAX(score) as best_score,
+                MAX(stage) as highest_stage,
+                AVG(timer) as avg_playtime
+            FROM game_sessions 
+            WHERE username = %s
+            """,
+            (username,),
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row or row[0] == 0:
+            resp = jsonify(
+                {
+                    "totalGames": 0,
+                    "totalPlayTime": 0,
+                    "totalScore": 0,
+                    "averageScore": 0,
+                    "averageStage": 0,
+                    "bestScore": 0,
+                    "highestStage": 0,
+                    "averagePlayTime": 0,
+                }
+            )
+        else:
+            resp = jsonify(
+                {
+                    "totalGames": int(row[0]),
+                    "totalPlayTime": int(row[1] or 0),
+                    "totalScore": int(row[2] or 0),
+                    "averageScore": float(row[3] or 0),
+                    "averageStage": float(row[4] or 0),
+                    "bestScore": int(row[5] or 0),
+                    "highestStage": int(row[6] or 0),
+                    "averagePlayTime": float(row[7] or 0),
+                }
+            )
+        resp.status_code = 200
+        return resp
+
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception(
+            "Unexpected error in /api/user/stats/<username>: %s", err
+        )
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/user/language/<username>", methods=["GET"])
+def get_user_language(username: str):
+    """Retourne la langue préférée d'un utilisateur."""
+    try:
+        username = str(username).strip()
+        conn = connect_to_database()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT language FROM users WHERE username = %s", (username,)
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row:
+            resp = jsonify({"language": "fr"})
+        else:
+            resp = jsonify({"language": row[0] or "fr"})
+        resp.status_code = 200
+        return resp
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception(
+            "Unexpected error in /api/user/language/<username>: %s", err
+        )
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/user/language", methods=["POST"])
+def set_user_language():
+    """Met à jour la langue préférée d'un utilisateur."""
+    try:
+        data = request.get_json(force=True)
+        username = str(data.get("username", "")).strip()
+        language = str(data.get("language", "fr")).strip()
+        if not username:
+            resp = jsonify({"error": "username required"})
+            resp.status_code = 400
+            return resp
+
+        conn = connect_to_database()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE users SET language = %s WHERE username = %s",
+            (language, username),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        resp = jsonify({"language": language})
+        resp.status_code = 200
+        return resp
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception("Unexpected error in /api/user/language: %s", err)
         resp = jsonify({"error": "Internal Server Error"})
         resp.status_code = 500
         return resp

@@ -71,9 +71,7 @@ function Accueil({ user, setUser }) {
             Aligne, anticipe, <span className="text-glow">gagne</span>.
           </h1>
           <p className="hero__lede">
-            Une page d'accueil animée pour te plonger immédiatement dans l'univers
-            du jeu. Lance une partie, revois les règles ou connecte-toi pour
-            continuer ta progression.
+            Bienvenue dans le jeu d'alignement ultime où chaque coup compte.
           </p>
           <div className="hero__actions">
             <Link className="btn primary" to="/game">

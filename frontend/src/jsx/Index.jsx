@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
+import { useLanguage } from "./useLanguage.jsx";
 
 /**
  * Rend une route protégée qui nécessite une authentification.
@@ -32,6 +33,7 @@ import Game from "./Game";
  * Gère l'état utilisateur et le routage global.
  */
 function App() {
+  const { t } = useLanguage();
 
   // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => localStorage.getItem("user") || null);
@@ -50,17 +52,17 @@ function App() {
     <>
       <header>
         <nav className="navbar">
-          <NavLink to="/">Accueil</NavLink>
-          <NavLink to="/leaderboard">Classements</NavLink>
+          <NavLink to="/">{t("common.home")}</NavLink>
+          <NavLink to="/leaderboard">{t("common.leaderboard")}</NavLink>
           {userState ? (
             <div className="nav-greeting" style={{display: 'inline-flex', gap: 8, alignItems: 'center'}}>
-              <span>Bonjour {userState}</span>
-              <NavLink className="btn ghost no-border" to="/account">Profil</NavLink>
+              <span>{t("account.hello")} {userState}</span>
+              <NavLink className="btn ghost no-border" to="/account">{t("account.title")}</NavLink>
             </div>
           ) : (
-            <NavLink to="/account">Compte</NavLink>
+            <NavLink to="/account">{t("account.title")}</NavLink>
           )}
-          <NavLink to="/contacts">Contacts</NavLink>
+          <NavLink to="/contacts">{t("common.contacts")}</NavLink>
         </nav>
       </header>
       <Routes>

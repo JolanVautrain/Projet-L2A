@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
+import Statistics from "./Statistics.jsx";
+import LanguageSelector from "./LanguageSelector.jsx";
 import "../css/Index.css";
 import "../css/Account.css";
 import LoginModal from "./LoginModal.jsx";
+import { useLanguage } from "./useLanguage.jsx";
 
 /**
  * Composant Account
@@ -22,6 +25,7 @@ function Account({ user, setUser }) {
   const [resetUserLoading, setResetUserLoading] = useState(false);
   const [resetUserSessionsLoading, setResetUserSessionsLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
@@ -51,7 +55,7 @@ function Account({ user, setUser }) {
 
   // Réinitialiser le classement du compte admin lui-même
   const handleResetAdmin = async () => {
-    if (!confirm("Réinitialiser votre propre classement ?")) return;
+    if (!confirm(t("account.confirmResetSelfScore"))) return;
     try {
       setResetLoading(true);
       const res = await fetch("/api/admin/reset-test", { method: "POST" });
@@ -75,7 +79,7 @@ function Account({ user, setUser }) {
 
   // Réinitialiser les sessions du compte admin lui-même
   const handleResetAdminSessions = async () => {
-    if (!confirm("Réinitialiser vos autres parties ?")) return;
+    if (!confirm(t("account.confirmResetSelfSessions"))) return;
     try {
       setResetSessionsLoading(true);
       const res = await fetch("/api/admin/reset-sessions/admin", {
@@ -103,12 +107,7 @@ function Account({ user, setUser }) {
   // Réinitialiser le classement d'un utilisateur sélectionné
   const handleResetUser = async () => {
     if (!selectedUser) return;
-    if (
-      !confirm(
-        `Réinitialiser le classement pour ${selectedUser} ?`
-      )
-    )
-      return;
+    if (!confirm(`${t("account.confirmResetUserScore")} ${selectedUser} ?`)) return;
     try {
       setResetUserLoading(true);
       const res = await fetch(`/api/admin/reset-user/${selectedUser}`, {
@@ -136,12 +135,7 @@ function Account({ user, setUser }) {
   // Réinitialiser les sessions d'un utilisateur sélectionné
   const handleResetUserSessions = async () => {
     if (!selectedUser) return;
-    if (
-      !confirm(
-        `Réinitialiser les autres parties pour ${selectedUser} ?`
-      )
-    )
-      return;
+    if (!confirm(`${t("account.confirmResetUserSessions")} ${selectedUser} ?`)) return;
     try {
       setResetUserSessionsLoading(true);
       const res = await fetch(`/api/admin/reset-sessions/${selectedUser}`, {
@@ -170,9 +164,13 @@ function Account({ user, setUser }) {
     // Utilisateur connecté : afficher les informations de compte
     return (
       <>
-        <h1>Compte</h1>
+        <h1>{t("account.title")}</h1>
         <div className="account-actions">
-          <p>Bonjour {user}, voici votre page de compte.</p>
+          <p>{t("account.hello")} {user}, {t("account.yourAccountPage")}.</p>
+          
+          <Statistics user={user} />
+          
+          <LanguageSelector />
           
           {user === "admin" && (
             <div
@@ -184,36 +182,36 @@ function Account({ user, setUser }) {
                 backgroundColor: "rgba(79,158,246,0.05)",
               }}
             >
-              <h3 style={{ marginTop: 0 }}>⚙️ Outils Administrateur</h3>
+              <h3 style={{ marginTop: 0 }}>{t("account.adminTools")}</h3>
 
               <div style={{ marginBottom: 16 }}>
-                <h4>Réinitialiser votre classement</h4>
+                <h4>{t("account.resetYourRanking")}</h4>
                 <button
                   className="btn ghost"
                   disabled={resetLoading}
                   onClick={handleResetAdmin}
                 >
                   {resetLoading
-                    ? "Réinitialisation…"
-                    : "Réinitialiser"}
+                    ? t("account.resetting")
+                    : t("account.reset")}
                 </button>
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <h4>Réinitialiser vos autres parties</h4>
+                <h4>{t("account.resetOtherGames")}</h4>
                 <button
                   className="btn ghost"
                   disabled={resetSessionsLoading}
                   onClick={handleResetAdminSessions}
                 >
                   {resetSessionsLoading
-                    ? "Réinitialisation…"
-                    : "Réinitialiser"}
+                    ? t("account.resetting")
+                    : t("account.reset")}
                 </button>
               </div>
 
               <div>
-                <h4>Réinitialiser le classement d'un autre joueur</h4>
+                <h4>{t("account.manageUsers")}</h4>
                 <div
                   style={{
                     display: "flex",
@@ -246,14 +244,14 @@ function Account({ user, setUser }) {
                     onClick={handleResetUser}
                   >
                     {resetUserLoading
-                      ? "Réinitialisation…"
-                      : "Réinitialiser"}
+                      ? t("account.resetting")
+                      : t("account.resetUserScores")}
                   </button>
                 </div>
               </div>
 
               <div style={{ marginTop: 16 }}>
-                <h4>Réinitialiser les autres parties d'un joueur</h4>
+                <h4>{t("account.resetUserSessions")}</h4>
                 <div
                   style={{
                     display: "flex",
@@ -286,8 +284,8 @@ function Account({ user, setUser }) {
                     onClick={handleResetUserSessions}
                   >
                     {resetUserSessionsLoading
-                      ? "Réinitialisation…"
-                      : "Réinitialiser"}
+                      ? t("account.resetting")
+                      : t("account.reset")}
                   </button>
                 </div>
               </div>
@@ -299,7 +297,7 @@ function Account({ user, setUser }) {
             onClick={handleLogout}
             style={{ marginTop: 16 }}
           >
-            Déconnexion
+            {t("common.logout")}
           </button>
         </div>
       </>
@@ -308,8 +306,8 @@ function Account({ user, setUser }) {
   // Utilisateur non connecté : afficher le bouton de connexion
   return (
     <>
-      <h1>Compte</h1>
-      <button onClick={() => setIsOpen(true)}>Login</button>
+      <h1>{t("account.title")}</h1>
+      <button onClick={() => setIsOpen(true)}>{t("common.login")}</button>
       <LoginModal isOpen={isOpen} action={setUser} onClose={() => setIsOpen(false)} />
     </>
   );

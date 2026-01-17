@@ -1,0 +1,91 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "login": "Login",
+    "logout": "Logout",
+    "account": "Account",
+    "leaderboard": "Leaderboard",
+    "rules": "Rules",
+    "home": "Home",
+    "contacts": "Contacts",
+    "play": "Play",
+    "score": "Score",
+    "stage": "Stage",
+    "timer": "Time",
+    "gameOver": "Game Over",
+    "replay": "Replay",
+    "returnHome": "Return Home",
+    "loading": "Loading...",
+    "error": "Error",
+    "noData": "No data available"
+  },
+  "game": {
+    "reloadGame": "Reload Game",
+    "youReachedScore": "You reached a score of",
+    "atStage": "at stage"
+  },
+  "leaderboard": {
+    "title": "Player Leaderboard",
+    "yourBestScore": "Your Best Score",
+    "yourOtherGames": "Your Other Games",
+    "globalRanking": "Global Ranking",
+    "rank": "Rank",
+    "player": "Player",
+    "noScoresRecorded": "No scores recorded",
+    "date": "Date/Time"
+  },
+  "account": {
+    "title": "Account",
+    "hello": "Hello",
+    "yourAccountPage": "here is your account page",
+    "adminTools": "⚙️ Administrator Tools",
+    "resetYourRanking": "Reset Your Ranking",
+    "reset": "Reset",
+    "resetting": "Resetting…",
+    "resetOtherGames": "Reset Your Other Games",
+    "manageUsers": "Manage Users",
+    "selectUser": "Select a user",
+    "resetUserScores": "Reset scores for this user",
+    "resetUserSessions": "Reset other games for this user",
+    "language": "Language",
+    "confirmResetSelfScore": "Reset your own ranking?",
+    "confirmResetSelfSessions": "Reset your other games?",
+    "confirmResetUserScore": "Reset ranking for",
+    "confirmResetUserSessions": "Reset other games for"
+  },
+  "statistics": {
+    "title": "Your Statistics",
+    "totalGames": "Total Games",
+    "totalPlayTime": "Total Play Time",
+    "totalScore": "Total Score",
+    "averageScore": "Average Score",
+    "bestScore": "Best Score",
+    "averageStage": "Average Stage",
+    "highestStage": "Highest Stage",
+    "averagePlayTime": "Average Play Time",
+    "loginToViewStats": "Login to view your statistics"
+  },
+  "accueil": {
+    "title": "Home",
+    "welcome": "Welcome to the game",
+    "playNow": "Play Now",
+    "loginFirst": "Please login first",
+    "alreadyPlaying": "You are already playing"
+  },
+  "rules": {
+    "title": "Game Rules",
+    "objective": "Objective",
+    "objectiveDesc": "Collect stars and avoid bombs to accumulate the maximum points.",
+    "controls": "Controls",
+    "controlsDesc": "Use arrow keys or WASD to move. Collect stars to increase your score.",
+    "stages": "Stages",
+    "stagesDesc": "At each stage, more bombs appear. Reaching a certain score automatically increases the stage."
+  },
+  "loginModal": {
+    "title": "Login",
+    "username": "Username",
+    "password": "Password",
+    "login": "Login",
+    "close": "Close"
+  }
+}
