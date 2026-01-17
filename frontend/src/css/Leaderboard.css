@@ -1,21 +1,51 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+:root{
+  --bg:#0f1720;
+  --card:#0b1220;
+  --muted:#9aa4b2;
+  --accent:#6ee7b7;
+  --panel:#0f1726;
 }
 
-.scores-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
+/* Container */
+.leaderboard{
+  max-width:1100px;
+  margin:28px auto;
+  padding:20px;
+  color:#e6eef6;
 }
-.scores-table th,
-.scores-table td {
-  border: 1px solid #ddd;
-  padding: 0.5rem 0.75rem;
-  text-align: left;
+
+.leaderboard__card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  border-radius:12px;
+  padding:18px;
+  box-shadow:0 6px 20px rgba(2,6,23,0.6);
+  border:1px solid rgba(255,255,255,0.03);
 }
-.scores-table th {
-  background: #f5f5f5;
+
+.leaderboard h1{margin:0 0 12px 0;font-size:1.5rem;text-align:center}
+
+.table-wrapper{overflow:auto;border-radius:8px}
+
+.scores-table{width:100%;border-collapse:separate;border-spacing:0;background:transparent}
+.scores-table thead th{position:sticky;top:0;background:rgba(255,255,255,0.04);color:var(--accent);font-weight:600;padding:12px 16px;text-align:center;font-size:0.9rem;letter-spacing:0.4px}
+.scores-table tbody td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d7e6f5}
+
+.scores-table tbody tr:nth-child(odd){background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00))}
+.scores-table tbody tr:hover{background:rgba(110,231,183,0.04)}
+
+.scores-table td.rank{width:72px;font-weight:700;color:var(--accent)}
+.scores-table td.player{min-width:160px}
+.scores-table td.score{width:120px;text-align:right}
+
+.empty-message{padding:20px;color:var(--muted);text-align:center}
+
+/* Responsive */
+@media (max-width:720px){
+  .leaderboard{padding:12px}
+  .scores-table thead th{display:none}
+  .scores-table tbody td{display:block;padding:10px 12px}
+  .scores-table tbody tr{margin-bottom:8px;border-radius:8px;display:block;background:rgba(255,255,255,0.01)}
+  .scores-table td.player{font-weight:600}
+  .scores-table td.score{text-align:left}
 }
+
