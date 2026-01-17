@@ -8,6 +8,7 @@ authentification token, TLS, etc.).
 """
 
 import logging
+import os
 
 # Disable import-error for third-party packages that may be missing
 # in the static analysis environment (editors/CI).
@@ -31,10 +32,12 @@ def connect_to_database():
         OperationalError: if the connection to the database fails.
     """
     try:
+        # Utiliser une variable d'environnement pour le mot de passe
+        db_password = os.environ.get("POSTGRES_PASSWORD", "password_change")
         return psycopg2.connect(
             database="ma_db",
             user="mon_user",
-            password="mon_pass",
+            password=db_password,
             host="db",
             port="5432",
         )

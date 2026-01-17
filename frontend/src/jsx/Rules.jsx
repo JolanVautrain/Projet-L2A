@@ -3,9 +3,7 @@ import "../css/Rules.css";
 
 function Rules() {
   return (
-    <>
-      <h1>Règles du jeu:</h1>
-    </>
+    <h1>Règles du jeu:</h1>
   );
 }
 

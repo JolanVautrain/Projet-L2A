@@ -9,8 +9,8 @@ function PageNotFound() {
   const eyesDataRef = useRef([]);
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
-  const [pitch, setPitch] = useState(1);
-  const [rate, setRate] = useState(1);
+  const [pitch] = useState(1);
+  const [rate] = useState(1);
   const [speakingId, setSpeakingId] = useState(null);
   const [clickedId, setClickedId] = useState(null);
   const speeches = {
@@ -73,25 +73,25 @@ function PageNotFound() {
     updateEyeCenters();
 
     // passive listeners to avoid main-thread blocking
-    window.addEventListener("mousemove", onMove, { passive: true });
-    window.addEventListener("resize", updateEyeCenters, { passive: true });
-    window.addEventListener("scroll", updateEyeCenters, { passive: true });
+    globalThis.addEventListener("mousemove", onMove, { passive: true });
+    globalThis.addEventListener("resize", updateEyeCenters, { passive: true });
+    globalThis.addEventListener("scroll", updateEyeCenters, { passive: true });
 
-    rafId = requestAnimationFrame(animate);
+    rafId = globalThis.requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("resize", updateEyeCenters);
-      window.removeEventListener("scroll", updateEyeCenters);
-      cancelAnimationFrame(rafId);
+      globalThis.removeEventListener("mousemove", onMove);
+      globalThis.removeEventListener("resize", updateEyeCenters);
+      globalThis.removeEventListener("scroll", updateEyeCenters);
+      globalThis.cancelAnimationFrame(rafId);
     };
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (typeof globalThis === "undefined" || !("speechSynthesis" in globalThis)) return;
 
     function loadVoices() {
-      const vs = window.speechSynthesis.getVoices() || [];
+      const vs = globalThis.speechSynthesis.getVoices() || [];
       setVoices(vs);
       if (vs.length && !selectedVoice) {
         // prefer a French voice that is not a Microsoft robotic voice
@@ -101,67 +101,28 @@ function PageNotFound() {
     }
 
     loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    return () => { try { window.speechSynthesis.onvoiceschanged = null; } catch (e) {} };
+    globalThis.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => { globalThis.speechSynthesis.onvoiceschanged = null; };
   }, [selectedVoice]);
 
   function handleSpeak(id = "main") {
     const text = speeches[id] || speeches.main;
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const ut = new SpeechSynthesisUtterance(text);
-        ut.lang = "fr-FR";
-        // apply chosen voice, pitch and rate
-        const v = voices.find((x) => x.name === selectedVoice);
-        if (v) ut.voice = v;
-        ut.pitch = Math.max(0.1, Math.min(2, pitch));
-        ut.rate = Math.max(0.1, Math.min(10, rate));
-        window.speechSynthesis.speak(ut);
-      } catch (e) {
-        // fallback
-        // eslint-disable-next-line no-alert
-        alert(text);
-      }
+    if (typeof globalThis !== "undefined" && "speechSynthesis" in globalThis) {
+      globalThis.speechSynthesis.cancel();
+      const ut = new globalThis.SpeechSynthesisUtterance(text);
+      ut.lang = "fr-FR";
+      // apply chosen voice, pitch and rate
+      const v = voices.find((x) => x.name === selectedVoice);
+      if (v) ut.voice = v;
+      ut.pitch = Math.max(0.1, Math.min(2, pitch));
+      ut.rate = Math.max(0.1, Math.min(10, rate));
+      globalThis.speechSynthesis.speak(ut);
     } else {
       // eslint-disable-next-line no-alert
       alert(text);
     }
   }
-
-  function handleTestVoice() {
-    const sample = "Ceci est un test de voix.";
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const ut = new SpeechSynthesisUtterance(sample);
-        ut.lang = "fr-FR";
-        const v = voices.find((x) => x.name === selectedVoice);
-        if (v) ut.voice = v;
-        ut.pitch = Math.max(0.1, Math.min(2, pitch));
-        ut.rate = Math.max(0.1, Math.min(10, rate));
-        window.speechSynthesis.speak(ut);
-      } catch (e) {
-        // eslint-disable-next-line no-alert
-        alert(sample);
-      }
-    } else {
-      // eslint-disable-next-line no-alert
-      alert(sample);
-    }
-  }
-
-  function applyGravePreset() {
-    // attempt to pick a deep French voice and set pitch/rate to a grave timbre
-    const pref = voices.find((v) => /fr/i.test(v.lang) && /male|homme|garçon|antoine|thomas|quentin|antoine/i.test(v.name)) || voices.find((v) => /fr/i.test(v.lang));
-    if (pref) setSelectedVoice(pref.name);
-    setPitch(0.8);
-    setRate(0.95);
-    // inform user about limitations
-    // eslint-disable-next-line no-alert
-    alert("Remarque : ceci est une approximation du timbre grave, pas une imitation exacte d'une personne réelle.");
-  }
-
+  
   function handleClickGeom(id = "main") {
     setClickedId(id);
     setSpeakingId(id);

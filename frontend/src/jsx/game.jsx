@@ -58,15 +58,11 @@ function create() {
     setXY: { x: 12, y: 0, stepX: 70 },
   });
   stars.children.iterate(function (child) {
-    child.setBounceY(window.Phaser.Math.FloatBetween(0.4, 0.8));
+    child.setBounceY(globalThis.Phaser.Math.FloatBetween(0.4, 0.8));
   });
   bombs = this.physics.add.group();
   // spawn initial bombs for starting stage
-  try {
-    for (let i = 0; i < internalStage; i++) spawnBomb();
-  } catch (e) {
-    console.warn('spawnBomb not available yet', e);
-  }
+  for (let i = 0; i < internalStage; i++) spawnBomb();
   this.physics.add.collider(stars, platforms);
   this.physics.add.collider(bombs, platforms);
   this.physics.add.overlap(player, stars, collectStar, null, this);
@@ -115,11 +111,11 @@ function collectStar(player, star) {
   star.disableBody(true, true);
   // update score and notify React overlay
   score += 10;
-  window.dispatchEvent(new CustomEvent('score-up', { detail: score }));
+  globalThis.dispatchEvent(new CustomEvent('score-up', { detail: score }));
   if (stars.countActive(true) === 0) {
     internalStage += 1;
     console.log('[Phaser] Stage completed! New stage:', internalStage);
-    window.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
+    globalThis.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
     stars.children.iterate(function (child) {
       child.enableBody(true, child.x, 0, true, true);
     });
@@ -135,11 +131,9 @@ function collectStar(player, star) {
 
 // helper to call Phaser.Math.Between safely if Phaser not yet on global scope
 function PhaserSafeBetween(min, max) {
-  try {
-    if (window && window.Phaser && window.Phaser.Math && typeof window.Phaser.Math.Between === 'function') {
-      return window.Phaser.Math.Between(min, max);
-    }
-  } catch (e) {}
+  if (typeof globalThis?.Phaser?.Math?.Between === 'function') {
+    return globalThis.Phaser.Math.Between(min, max);
+  }
   // fallback
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -148,7 +142,7 @@ function PhaserSafeBetween(min, max) {
 function spawnBomb() {
   if (!bombs) return;
   const x = PhaserSafeBetween(50, 750);
-  var b;
+  let b;
   try {
     b = bombs.create(x, 16, "bomb");
   } catch (e) {
@@ -157,7 +151,9 @@ function spawnBomb() {
   }
   b.setBounce(1);
   b.setCollideWorldBounds(true);
-  const speed = window.Phaser && window.Phaser.Math ? window.Phaser.Math.Between(-150 - internalStage * 10, 150 + internalStage * 10) : (Math.random() * 400 - 200);
+  const speed = globalThis.Phaser?.Math?.Between
+    ? globalThis.Phaser.Math.Between(-150 - internalStage * 10, 150 + internalStage * 10)
+    : (Math.random() * 400 - 200);
   b.setVelocity(speed, 20);
   b.allowGravity = false;
 }
@@ -167,12 +163,12 @@ function hitBomb(player, bomb) {
   // reset stage and score on death
   internalStage = 1;
   score = 0;
-  window.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
-  window.dispatchEvent(new CustomEvent('score-up', { detail: score }));
+  globalThis.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
+  globalThis.dispatchEvent(new CustomEvent('score-up', { detail: score }));
   // remove existing bombs immediately
   if (bombs) {
     bombs.children.iterate(function (child) {
-      try { child.destroy(); } catch (e) { /* ignore */ }
+      child.destroy();
     });
   }
 }
@@ -208,7 +204,7 @@ function Game() {
       
       console.log('Creating Phaser game instance...');
       const config = {
-        type: window.Phaser.AUTO,
+        type: globalThis.Phaser.AUTO,
         width: 800,
         height: 600,
         physics: {
@@ -221,7 +217,7 @@ function Game() {
         scene: { preload, create, update },
         parent: gameContainer.current,
       };
-      gameInstance = new window.Phaser.Game(config);
+      gameInstance = new globalThis.Phaser.Game(config);
       gameContainer.current._phaserGame = gameInstance;
       
       // Ensure canvas is visible
@@ -239,21 +235,34 @@ function Game() {
     };
 
     const initPhaser = () => {
-      console.log('[initPhaser] Called. destroyed=', destroyed, 'Phaser=', !!window.Phaser);
+      console.log('[initPhaser] Called. destroyed=', destroyed, 'Phaser=', !!globalThis.Phaser);
       if (destroyed) return;
       
-      if (window.Phaser) {
+      if (globalThis.Phaser) {
         console.log('[initPhaser] Phaser available, calling createGame');
         createGame();
         return;
       }
 
       let script = document.querySelector('script[data-phaser-dynamic]');
-      if (!script) {
+      if (script) {
+        console.log('Phaser script exists but not ready, polling...');
+        const checkPhaser = setInterval(() => {
+          if (destroyed) {
+            clearInterval(checkPhaser);
+            return;
+          }
+          if (globalThis.Phaser) {
+            console.log('Phaser ready from polling');
+            clearInterval(checkPhaser);
+            createGame();
+          }
+        }, 100);
+      } else {
         console.log('Loading Phaser script from CDN...');
         script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js';
-        script.setAttribute('data-phaser-dynamic', '1');
+        script.dataset.phaserDynamic = '1';
         script.onload = () => {
           console.log('Phaser script loaded');
           if (!destroyed) createGame();
@@ -262,19 +271,6 @@ function Game() {
           console.error('Failed to load Phaser script');
         };
         document.head.appendChild(script);
-      } else {
-        console.log('Phaser script exists but not ready, polling...');
-        const checkPhaser = setInterval(() => {
-          if (destroyed) {
-            clearInterval(checkPhaser);
-            return;
-          }
-          if (window.Phaser) {
-            console.log('Phaser ready from polling');
-            clearInterval(checkPhaser);
-            createGame();
-          }
-        }, 100);
       }
     };
 
@@ -299,18 +295,18 @@ function Game() {
 
   useEffect(() => {
     const onStage = (e) => {
-      if (e && e.detail) setStage(e.detail);
+      if (e?.detail) setStage(e.detail);
     };
-    window.addEventListener('stage-up', onStage);
-    return () => window.removeEventListener('stage-up', onStage);
+    globalThis.addEventListener('stage-up', onStage);
+    return () => globalThis.removeEventListener('stage-up', onStage);
   }, []);
 
   useEffect(() => {
     const onScore = (e) => {
-      if (e && typeof e.detail !== 'undefined') setScoreDisplay(e.detail);
+      if (e?.detail !== undefined) setScoreDisplay(e.detail);
     };
-    window.addEventListener('score-up', onScore);
-    return () => window.removeEventListener('score-up', onScore);
+    globalThis.addEventListener('score-up', onScore);
+    return () => globalThis.removeEventListener('score-up', onScore);
   }, []);
 
   
@@ -329,7 +325,7 @@ function Game() {
       <div ref={gameContainer} id="phaser-container" style={{width: 800, height: 600, background: '#0b1222', borderRadius: 12, overflow: 'hidden', display: 'block', position: 'relative'}} />
 
       <div className="options-buttons">
-        <button className="btn ghost" onClick={() => window.location.reload()}>Recharger le jeu</button>
+        <button className="btn ghost" onClick={() => globalThis.location.reload()}>Recharger le jeu</button>
         <Link className="btn accent" to="/">Quitter le jeu</Link>
       </div>
     </div>

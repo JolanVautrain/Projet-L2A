@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import "../css/LoginModal.css";
 import { useState } from "react";
+import PropTypes from "prop-types";
 
 
 function LoginModal({ isOpen, onClose, action }) {
@@ -38,7 +39,7 @@ function LoginModal({ isOpen, onClose, action }) {
       .then((data) => {
         if (!data.userExist) {
           setError("Nom d'utilisateur incorrect.");
-        } else if (!data.passwordIsCorrect) {
+        } else if (data.passwordIsCorrect === false) {
           setError("Mot de passe incorrect.");
         } else {
           // renvoie le nom d'utilisateur au parent pour affichage dans le header
@@ -102,3 +103,9 @@ function LoginModal({ isOpen, onClose, action }) {
 }
 
 export default LoginModal;
+
+LoginModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  action: PropTypes.func.isRequired,
+};
