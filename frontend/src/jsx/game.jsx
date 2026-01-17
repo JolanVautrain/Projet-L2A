@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ModalGameOver from "./ModalGameOver";
+import { useLanguage } from "./useLanguage.jsx";
 import "../css/Index.css";
 import "../css/Game.css";
 
@@ -293,6 +294,7 @@ function Game() {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleReplay = () => {
     setShowGameOverModal(false);
@@ -502,16 +504,16 @@ function Game() {
     <div className="game-wrap">
       <div className="game-overlay">
         <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
-          <div className="stage-pill">Stage {stage}</div>
+          <div className="stage-pill">{t("common.stage")} {stage}</div>
         </div>
         <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
-          <div className="score-display">Score: {scoreDisplay}</div>
-          <div className="timer-display">Temps: {formatTime(timerSeconds)}</div>
+          <div className="score-display">{t("common.score")}: {scoreDisplay}</div>
+          <div className="timer-display">{t("game.time")}: {formatTime(timerSeconds)}</div>
         </div>
       </div>
       <div ref={gameContainer} id="phaser-container" style={{width: 800, height: 600, background: '#0b1222', borderRadius: 12, overflow: 'hidden', display: 'block', position: 'relative'}} />
         <div className="options-buttons">
-          <button className="btn ghost" onClick={() => globalThis.location.reload()}>Recharger le jeu</button>
+          <button className="btn ghost" onClick={() => globalThis.location.reload()}>{t("game.reloadGame")}</button>
         </div>
       
       <ModalGameOver 

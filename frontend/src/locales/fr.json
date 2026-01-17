@@ -17,12 +17,18 @@
     "returnHome": "Retour à l'accueil",
     "loading": "Chargement...",
     "error": "Erreur",
-    "noData": "Aucune donnée disponible"
+    "noData": "Aucune donnée disponible",
+    "close": "Fermer"
+  },
+  "nav": {
+    "hello": "Bonjour",
+    "profile": "Profil"
   },
   "game": {
     "reloadGame": "Recharger le jeu",
     "youReachedScore": "Vous avez atteint le score de",
-    "atStage": "au stage"
+    "atStage": "au stage",
+    "time": "Temps"
   },
   "leaderboard": {
     "title": "Classement des joueurs",
@@ -31,8 +37,10 @@
     "globalRanking": "Classement global",
     "rank": "Rang",
     "player": "Joueur",
-    "noScoresRecorded": "Aucun score enregistré",
-    "date": "Date/Heure"
+    "noScoresRecorded": "Aucun score enregistré.",
+    "date": "Date/Heure",
+    "timerSeconds": "Timer (s)",
+    "loadingLeaderboard": "Chargement du classement..."
   },
   "account": {
     "title": "Compte",
@@ -43,10 +51,10 @@
     "reset": "Réinitialiser",
     "resetting": "Réinitialisation…",
     "resetOtherGames": "Réinitialiser vos autres parties",
-    "manageUsers": "Gérer les utilisateurs",
+    "manageUsers": "Réinitialiser le classement d'un autre joueur",
     "selectUser": "Sélectionner un utilisateur",
-    "resetUserScores": "Réinitialiser les scores de cet utilisateur",
-    "resetUserSessions": "Réinitialiser les autres parties de cet utilisateur",
+    "resetUserScores": "Réinitialiser",
+    "resetUserSessions": "Réinitialiser les autres parties d'un joueur",
     "language": "Langue",
     "confirmResetSelfScore": "Réinitialiser votre propre classement ?",
     "confirmResetSelfSessions": "Réinitialiser vos autres parties ?",
@@ -66,11 +74,92 @@
     "loginToViewStats": "Connectez-vous pour voir vos statistiques"
   },
   "accueil": {
-    "title": "Accueil",
-    "welcome": "Bienvenue sur le jeu",
-    "playNow": "Jouer maintenant",
-    "loginFirst": "Veuillez vous connecter d'abord",
-    "alreadyPlaying": "Vous êtes déjà en train de jouer"
+    "readyToPlay": "Prêt à jouer ?",
+    "tagline": "Aligne, anticipe,",
+    "taglineHighlight": "gagne",
+    "welcomeText": "Bienvenue dans le jeu d'alignement ultime où chaque coup compte.",
+    "startGame": "Lancer une partie",
+    "seeRules": "Voir les règles",
+    "connectButton": "Se connecter",
+    "gamesInProgress": "Parties en cours",
+    "stableServers": "Serveurs stables et synchronisés",
+    "averageTime": "Temps moyen",
+    "fastGames": "Parties rapides et intenses",
+    "activePlayers": "Joueurs actifs",
+    "communityReady": "Communauté prête à jouer",
+    "atmosphere": "Atmosphère",
+    "animatedInterface": "Interface animée",
+    "atmosphereDesc": "Des dégradés dynamiques, des cartes flottantes et un parcours guidé pour que chaque visite sur l'accueil soit une invitation à lancer une partie.",
+    "instantGames": "Parties instantanées",
+    "instantGamesDesc": "Lance une partie en quelques secondes et reprends là où tu t'es arrêté.",
+    "breathtakingVision": "Vision à couper le souffle",
+    "breathtakingVisionDesc": "Animations fluides et grille lisible pour suivre chaque coup sans effort.",
+    "extraordinaryChallenge": "Un challenge hors du commun",
+    "extraordinaryChallengeDesc": "Une tension avec des bombes prêtes à exploser au moindre toucher.",
+    "howItWorks": "Comment ça marche",
+    "clearPath": "Un parcours clair, animé étape par étape",
+    "clearPathDesc": "Chaque bloc s'affiche avec un léger mouvement pour garder le rythme et t'amener naturellement vers le bouton \"Jouer\".",
+    "chooseYourSide": "Choisis ton camp",
+    "chooseYourSideDesc": "Sélectionne ton rôle et vérifie la configuration en un coup d'œil.",
+    "observeTerrain": "Observe le terrain",
+    "observeTerrainDesc": "La grille surdimensionnée et les repères colorés te guident en temps réel.",
+    "alignAndWin": "Aligne et gagne",
+    "alignAndWinDesc": "Enchaîne les coups avec les animations de feedback, puis partage la victoire.",
+    "joinTheGame": "Rejoins la partie",
+    "connectToSave": "Connecte-toi pour sauvegarder tes coups",
+    "oneClickConnect": "Un clic suffit pour ouvrir la modal et reprendre là où tu t'étais arrêté.",
+    "openLogin": "Ouvrir la connexion"
+  },
+  "contacts": {
+    "title": "Équipe — Contacts",
+    "intro": "Nos valeureux développeurs — fidèles compagnons des longues nuits, des cafés et des commits héroïques.",
+    "clickForAnecdote": "Cliquer pour une anecdote...",
+    "hideAnecdote": "Masquer l'anecdote de",
+    "showAnecdote": "Afficher l'anecdote de",
+    "footer": "C'est beau le travail",
+    "jolan": {
+      "role": "Chef mise en place du projet",
+      "egg": "Maîtrise secrète de la mise en place du projet (docker)."
+    },
+    "gabriel": {
+      "role": "Camarade efficace dans le travail",
+      "egg": "Détient un record personnel : 42 pull-requests en une journée."
+    },
+    "ethan": {
+      "role": "Le travailleur mécontent",
+      "egg": "Râle mais délivre ; spécialiste des fixes 23:00."
+    },
+    "lalo": {
+      "role": "Heureux dans la vie",
+      "egg": "Distribue des sourires et parfois des cookies (virtuels)."
+    }
+  },
+  "loginModal": {
+    "title": "Connexion",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "login": "Se connecter",
+    "close": "Fermer",
+    "connecting": "Connexion...",
+    "usernamePlaceholder": "Votre pseudo",
+    "passwordPlaceholder": "••••••••",
+    "usernamePasswordRequired": "Nom d'utilisateur et mot de passe requis.",
+    "incorrectUsername": "Nom d'utilisateur incorrect.",
+    "incorrectPassword": "Mot de passe incorrect.",
+    "connectionError": "Erreur de connexion. Réessayez."
+  },
+  "pageNotFound": {
+    "title": "404 — Page introuvable",
+    "subtitle": "Oups — cette page a pris un raccourci vers l'inconnu. Revenons sur des terres connues.",
+    "returnHome": "Retour à l'accueil",
+    "seeHome": "Voir l'accueil",
+    "hint": "Astuce : essayez de vérifier l'URL ou revenez en arrière.",
+    "interactiveCharacter": "Personnage interactif — appuyez pour entendre un message",
+    "secondaryFigure": "Figure secondaire — appuyez pour entendre un message",
+    "speechMain": "Halte qui va là",
+    "speechOne": "Qui va là ? Montrez-vous !",
+    "speechTwo": "Attention — accès réservé !",
+    "speechThree": "Énoncez votre identité immédiatement !"
   },
   "rules": {
     "title": "Règles du jeu",
@@ -80,12 +169,5 @@
     "controlsDesc": "Utilisez les flèches du clavier ou WASD pour vous déplacer. Collectez les étoiles pour augmenter votre score.",
     "stages": "Stages",
     "stagesDesc": "À chaque stage, plus de bombes apparaissent. Atteindre un certain score augmente automatiquement le stage."
-  },
-  "loginModal": {
-    "title": "Connexion",
-    "username": "Nom d'utilisateur",
-    "password": "Mot de passe",
-    "login": "Connexion",
-    "close": "Fermer"
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "./useLanguage.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
 
@@ -7,6 +8,7 @@ function Leaderboard({ user }) {
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     let mounted = true;
@@ -46,14 +48,28 @@ function Leaderboard({ user }) {
     };
   }, [user]);
 
-  if (loading) return <p>Chargement du classement...</p>;
-  if (error) return <p>Erreur: {error}</p>;
+  if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
+  if (error) return <p>{t("common.error")}: {error}</p>;
 
   const userBestScore = scores.find((s) => s.username === user);
 
+  // Fonction pour formater la date selon la langue
+  const formatDate = (dateStr) => {
+    const locale = language === 'en' ? 'en-US' : 'fr-FR';
+    return new Date(dateStr).toLocaleString(locale, { 
+      timeZone: "Europe/Paris", 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    });
+  };
+
   return (
     <div className="leaderboard">
-      <h1>Classement des joueurs</h1>
+      <h1>{t("leaderboard.title")}</h1>
 
       {/* Section : Meilleur temps du joueur connecté */}
       {user && userBestScore && (
@@ -66,14 +82,14 @@ function Leaderboard({ user }) {
             border: "1px solid rgba(79, 158, 246, 0.3)",
           }}
         >
-          <h2 style={{ marginTop: 0 }}>Votre meilleur score</h2>
+          <h2 style={{ marginTop: 0 }}>{t("leaderboard.yourBestScore")}</h2>
           <table className="scores-table" style={{ marginBottom: 0 }}>
             <thead>
               <tr>
-                <th>Joueur</th>
-                <th>Score</th>
-                <th>Stage</th>
-                <th>Timer (s)</th>
+                <th>{t("leaderboard.player")}</th>
+                <th>{t("common.score")}</th>
+                <th>{t("common.stage")}</th>
+                <th>{t("leaderboard.timerSeconds")}</th>
               </tr>
             </thead>
             <tbody>
@@ -93,15 +109,15 @@ function Leaderboard({ user }) {
       {/* Section : Tous les temps du joueur connecté */}
       {user && userSessions.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <h2>Vos autres parties</h2>
+          <h2>{t("leaderboard.yourOtherGames")}</h2>
           <table className="scores-table">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Score</th>
-                <th>Stage</th>
-                <th>Timer (s)</th>
-                <th>Date/Heure</th>
+                <th>{t("common.score")}</th>
+                <th>{t("common.stage")}</th>
+                <th>{t("leaderboard.timerSeconds")}</th>
+                <th>{t("leaderboard.date")}</th>
               </tr>
             </thead>
             <tbody>
@@ -111,7 +127,7 @@ function Leaderboard({ user }) {
                   <td>{s.score}</td>
                   <td>{s.stage ?? 0}</td>
                   <td>{s.timer ?? 0}</td>
-                  <td>{new Date(s.playedAt).toLocaleString("fr-FR", { timeZone: "Europe/Paris", year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                  <td>{formatDate(s.playedAt)}</td>
                 </tr>
               ))}
             </tbody>
@@ -121,18 +137,18 @@ function Leaderboard({ user }) {
 
       {/* Section : Classement global */}
       <div>
-        <h2>Classement global</h2>
+        <h2>{t("leaderboard.globalRanking")}</h2>
         {scores.length === 0 ? (
-          <p>Aucun score enregistré.</p>
+          <p>{t("leaderboard.noScoresRecorded")}</p>
         ) : (
           <table className="scores-table">
             <thead>
               <tr>
-                <th>Rang</th>
-                <th>Joueur</th>
-                <th>Score</th>
-                <th>Stage</th>
-                <th>Timer (s)</th>
+                <th>{t("leaderboard.rank")}</th>
+                <th>{t("leaderboard.player")}</th>
+                <th>{t("common.score")}</th>
+                <th>{t("common.stage")}</th>
+                <th>{t("leaderboard.timerSeconds")}</th>
               </tr>
             </thead>
             <tbody>

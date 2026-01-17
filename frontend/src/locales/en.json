@@ -17,12 +17,18 @@
     "returnHome": "Return Home",
     "loading": "Loading...",
     "error": "Error",
-    "noData": "No data available"
+    "noData": "No data available",
+    "close": "Close"
+  },
+  "nav": {
+    "hello": "Hello",
+    "profile": "Profile"
   },
   "game": {
     "reloadGame": "Reload Game",
     "youReachedScore": "You reached a score of",
-    "atStage": "at stage"
+    "atStage": "at stage",
+    "time": "Time"
   },
   "leaderboard": {
     "title": "Player Leaderboard",
@@ -31,8 +37,10 @@
     "globalRanking": "Global Ranking",
     "rank": "Rank",
     "player": "Player",
-    "noScoresRecorded": "No scores recorded",
-    "date": "Date/Time"
+    "noScoresRecorded": "No scores recorded.",
+    "date": "Date/Time",
+    "timerSeconds": "Timer (s)",
+    "loadingLeaderboard": "Loading leaderboard..."
   },
   "account": {
     "title": "Account",
@@ -43,10 +51,10 @@
     "reset": "Reset",
     "resetting": "Resetting…",
     "resetOtherGames": "Reset Your Other Games",
-    "manageUsers": "Manage Users",
+    "manageUsers": "Reset another player's ranking",
     "selectUser": "Select a user",
-    "resetUserScores": "Reset scores for this user",
-    "resetUserSessions": "Reset other games for this user",
+    "resetUserScores": "Reset",
+    "resetUserSessions": "Reset another player's other games",
     "language": "Language",
     "confirmResetSelfScore": "Reset your own ranking?",
     "confirmResetSelfSessions": "Reset your other games?",
@@ -66,11 +74,92 @@
     "loginToViewStats": "Login to view your statistics"
   },
   "accueil": {
-    "title": "Home",
-    "welcome": "Welcome to the game",
-    "playNow": "Play Now",
-    "loginFirst": "Please login first",
-    "alreadyPlaying": "You are already playing"
+    "readyToPlay": "Ready to play?",
+    "tagline": "Align, anticipate,",
+    "taglineHighlight": "win",
+    "welcomeText": "Welcome to the ultimate alignment game where every move counts.",
+    "startGame": "Start a game",
+    "seeRules": "See the rules",
+    "connectButton": "Sign in",
+    "gamesInProgress": "Games in progress",
+    "stableServers": "Stable and synchronized servers",
+    "averageTime": "Average time",
+    "fastGames": "Fast and intense games",
+    "activePlayers": "Active players",
+    "communityReady": "Community ready to play",
+    "atmosphere": "Atmosphere",
+    "animatedInterface": "Animated interface",
+    "atmosphereDesc": "Dynamic gradients, floating cards, and a guided journey so that each visit to the home page is an invitation to start a game.",
+    "instantGames": "Instant games",
+    "instantGamesDesc": "Start a game in seconds and pick up where you left off.",
+    "breathtakingVision": "Breathtaking vision",
+    "breathtakingVisionDesc": "Smooth animations and readable grid to follow each move effortlessly.",
+    "extraordinaryChallenge": "An extraordinary challenge",
+    "extraordinaryChallengeDesc": "A tension with bombs ready to explode at the slightest touch.",
+    "howItWorks": "How it works",
+    "clearPath": "A clear path, animated step by step",
+    "clearPathDesc": "Each block appears with a slight movement to keep the rhythm and naturally lead you to the \"Play\" button.",
+    "chooseYourSide": "Choose your side",
+    "chooseYourSideDesc": "Select your role and check the configuration at a glance.",
+    "observeTerrain": "Observe the terrain",
+    "observeTerrainDesc": "The oversized grid and colored markers guide you in real time.",
+    "alignAndWin": "Align and win",
+    "alignAndWinDesc": "Chain moves with feedback animations, then share the victory.",
+    "joinTheGame": "Join the game",
+    "connectToSave": "Sign in to save your moves",
+    "oneClickConnect": "One click is enough to open the modal and pick up where you left off.",
+    "openLogin": "Open login"
+  },
+  "contacts": {
+    "title": "Team — Contacts",
+    "intro": "Our brave developers — faithful companions of long nights, coffees, and heroic commits.",
+    "clickForAnecdote": "Click for an anecdote...",
+    "hideAnecdote": "Hide anecdote for",
+    "showAnecdote": "Show anecdote for",
+    "footer": "Work is beautiful",
+    "jolan": {
+      "role": "Project setup lead",
+      "egg": "Secret mastery of project setup (docker)."
+    },
+    "gabriel": {
+      "role": "Efficient work buddy",
+      "egg": "Holds a personal record: 42 pull requests in one day."
+    },
+    "ethan": {
+      "role": "The disgruntled worker",
+      "egg": "Complains but delivers; specialist in 11 PM fixes."
+    },
+    "lalo": {
+      "role": "Happy in life",
+      "egg": "Distributes smiles and sometimes (virtual) cookies."
+    }
+  },
+  "loginModal": {
+    "title": "Login",
+    "username": "Username",
+    "password": "Password",
+    "login": "Sign in",
+    "close": "Close",
+    "connecting": "Connecting...",
+    "usernamePlaceholder": "Your username",
+    "passwordPlaceholder": "••••••••",
+    "usernamePasswordRequired": "Username and password required.",
+    "incorrectUsername": "Incorrect username.",
+    "incorrectPassword": "Incorrect password.",
+    "connectionError": "Connection error. Please try again."
+  },
+  "pageNotFound": {
+    "title": "404 — Page not found",
+    "subtitle": "Oops — this page took a shortcut to the unknown. Let's go back to known territory.",
+    "returnHome": "Return home",
+    "seeHome": "See home",
+    "hint": "Tip: try checking the URL or go back.",
+    "interactiveCharacter": "Interactive character — press to hear a message",
+    "secondaryFigure": "Secondary figure — press to hear a message",
+    "speechMain": "Halt, who goes there",
+    "speechOne": "Who goes there? Show yourself!",
+    "speechTwo": "Warning — restricted access!",
+    "speechThree": "State your identity immediately!"
   },
   "rules": {
     "title": "Game Rules",
@@ -80,12 +169,5 @@
     "controlsDesc": "Use arrow keys or WASD to move. Collect stars to increase your score.",
     "stages": "Stages",
     "stagesDesc": "At each stage, more bombs appear. Reaching a certain score automatically increases the stage."
-  },
-  "loginModal": {
-    "title": "Login",
-    "username": "Username",
-    "password": "Password",
-    "login": "Login",
-    "close": "Close"
   }
 }

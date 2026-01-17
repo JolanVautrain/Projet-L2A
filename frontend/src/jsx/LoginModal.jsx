@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import "../css/LoginModal.css";
 import { useState } from "react";
 import PropTypes from "prop-types";
+import { useLanguage } from "./useLanguage.jsx";
 
 /** 
  * Composant LoginModal
@@ -13,6 +14,7 @@ function LoginModal({ isOpen, onClose, action }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { t } = useLanguage();
 
   /**
    * Gère la soumission du formulaire de connexion.
@@ -25,7 +27,7 @@ function LoginModal({ isOpen, onClose, action }) {
     const passTrim = password.trim();
     // Validation basique des champs
     if (!userTrim || !passTrim) {
-      setError("Nom d'utilisateur et mot de passe requis.");
+      setError(t("loginModal.usernamePasswordRequired"));
       return;
     }
     // Envoi de la requête de connexion au backend
@@ -51,9 +53,9 @@ function LoginModal({ isOpen, onClose, action }) {
       // Analyse des données reçues
       .then((data) => {
         if (!data.userExist) {
-          setError("Nom d'utilisateur incorrect.");
+          setError(t("loginModal.incorrectUsername"));
         } else if (data.passwordIsCorrect === false) {
-          setError("Mot de passe incorrect.");
+          setError(t("loginModal.incorrectPassword"));
         } else {
           // renvoie le nom d'utilisateur au parent pour affichage dans le header
           // transmet le nom d'utilisateur au parent pour affichage dans l'en-tête
@@ -64,9 +66,9 @@ function LoginModal({ isOpen, onClose, action }) {
         }
       })
       // Gestion des erreurs réseau ou autres
-      .catch((error) => {
-        setError("Erreur de connexion. Réessayez.");
-        console.error("Erreur:", error);
+      .catch((err) => {
+        setError(t("loginModal.connectionError"));
+        console.error("Erreur:", err);
       })
       .finally(() => setLoading(false));
   };
@@ -79,12 +81,12 @@ function LoginModal({ isOpen, onClose, action }) {
     <div className="login-modal styled-modal">
       <div className="modal-card">
         <header className="modal-header">
-          <h2>Connexion</h2>
+          <h2>{t("loginModal.title")}</h2>
         </header>
-        <button className="modal-close" onClick={onClose} title="Fermer">×</button>
+        <button className="modal-close" onClick={onClose} title={t("common.close")}>×</button>
         <form className="modal-form" onSubmit={handleSubmit}>
           <div className="modal-field">
-            <label htmlFor="username">Nom d'utilisateur</label>
+            <label htmlFor="username">{t("loginModal.username")}</label>
             <input
               id="username"
               type="text"
@@ -93,11 +95,11 @@ function LoginModal({ isOpen, onClose, action }) {
               onChange={(e) => setUsername(e.target.value)}
               required
               className="modal-input"
-              placeholder="Votre pseudo"
+              placeholder={t("loginModal.usernamePlaceholder")}
             />
           </div>
           <div className="modal-field">
-            <label htmlFor="password">Mot de passe</label>
+            <label htmlFor="password">{t("loginModal.password")}</label>
             <input
               id="password"
               type="password"
@@ -106,12 +108,12 @@ function LoginModal({ isOpen, onClose, action }) {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="modal-input"
-              placeholder="••••••••"
+              placeholder={t("loginModal.passwordPlaceholder")}
             />
           </div>
           {error && <div className="modal-error">{error}</div>}
           <button type="submit" className="btn primary" disabled={loading}>
-            {loading ? "Connexion..." : "Se connecter"}
+            {loading ? t("loginModal.connecting") : t("loginModal.login")}
           </button>
         </form>
       </div>
