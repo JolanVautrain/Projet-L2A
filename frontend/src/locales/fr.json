@@ -39,6 +39,11 @@
     "player": "Joueur",
     "noScoresRecorded": "Aucun score enregistré.",
     "date": "Date/Heure",
+    "chart": {
+      "xLabel": "Date/Heure",
+      "yLabel": "Score",
+      "title": "Évolution des scores"
+    },
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Chargement du classement..."
   },

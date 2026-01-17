@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
 
@@ -139,6 +139,92 @@ function Leaderboard({ user }) {
           </table>
         </div>
       )}
+      {/* Graphique des scores par date (bas de page) */}
+      {user && userSessions.length > 0 && (
+        <div className="score-chart">
+          <ScoreChart sessions={userSessions} t={t} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScoreChart({ sessions, t }) {
+  if (!sessions || sessions.length === 0) return null;
+
+  const width = 800;
+  const height = 220;
+  const margin = { top: 14, right: 20, bottom: 36, left: 52 };
+
+  // Trier par date ascendante
+  const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
+  const times = sorted.map((s) => new Date(s.playedAt).getTime());
+  const scores = sorted.map((s) => Number(s.score || 0));
+
+  const tMin = Math.min(...times);
+  const tMax = Math.max(...times);
+  const sMin = Math.min(...scores);
+  const sMax = Math.max(...scores);
+
+  const xFor = (ts) => {
+    const innerW = width - margin.left - margin.right;
+    const denom = tMax - tMin || 1;
+    return margin.left + ((ts - tMin) / denom) * innerW;
+  };
+
+  const yFor = (s) => {
+    const innerH = height - margin.top - margin.bottom;
+    const denom = sMax - sMin || 1;
+    return margin.top + (1 - (s - sMin) / denom) * innerH;
+  };
+
+  const points = sorted.map((s) => `${xFor(new Date(s.playedAt).getTime())},${yFor(Number(s.score||0))}`).join(' ');
+
+  const firstLabel = new Date(tMin).toLocaleString();
+  const lastLabel = new Date(tMax).toLocaleString();
+  const yLabel = t ? t('leaderboard.chart.yLabel') : 'Score';
+  const xLabel = t ? t('leaderboard.chart.xLabel') : 'Date';
+
+  return (
+    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <h3 style={{ margin: '6px 0 8px', textAlign: 'center', color: '#e6eef8' }}>{t('leaderboard.chart.title')}</h3>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="rgba(79,158,246,0.18)" />
+            <stop offset="100%" stopColor="rgba(79,158,246,0.02)" />
+          </linearGradient>
+        </defs>
+
+        {/* Area under the line */}
+        <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#grad)" />
+
+        {/* Line */}
+        <polyline points={points} fill="none" stroke="rgba(79,158,246,0.95)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Points */}
+        {sorted.map((s, i) => {
+          const cx = xFor(new Date(s.playedAt).getTime());
+          const cy = yFor(Number(s.score||0));
+          return (
+            <g key={s.id || i}>
+              <circle cx={cx} cy={cy} r={4.5} fill="#0b1222" stroke="rgba(79,158,246,0.98)" strokeWidth={2} />
+            </g>
+          );
+        })}
+
+        {/* Y labels (min/max) */}
+        <text x={8} y={yFor(sMax)} fill="#9aa4b2" fontSize={12}>{sMax}</text>
+        <text x={8} y={yFor(sMin)} fill="#9aa4b2" fontSize={12}>{sMin}</text>
+
+        {/* X labels */}
+        <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
+        <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
+
+        {/* Axis labels */}
+        <text x={width / 2} y={height - 2} fill="#9aa4b2" fontSize={12} textAnchor="middle">{xLabel}</text>
+        <text x={12} y={height / 2} fill="#9aa4b2" fontSize={12} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
+      </svg>
     </div>
   );
 }

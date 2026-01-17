@@ -1,5 +1,5 @@
 import "../css/ModalGameOver.css";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 
 function ModalGameOver({ isOpen, score, stage, onReplay, onReturnHome }) {
   const { t } = useLanguage();

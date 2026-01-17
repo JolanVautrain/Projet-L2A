@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Contacts.css";
 import jolanImg from "../assets/contacts/jolan.png";

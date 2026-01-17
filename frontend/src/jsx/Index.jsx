@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 
 /**
  * Rend une route protégée qui nécessite une authentification.

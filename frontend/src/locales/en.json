@@ -39,6 +39,11 @@
     "player": "Player",
     "noScoresRecorded": "No scores recorded.",
     "date": "Date/Time",
+    "chart": {
+      "xLabel": "Date/Time",
+      "yLabel": "Score",
+      "title": "Score over time"
+    },
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Loading leaderboard..."
   },

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ModalGameOver from "./ModalGameOver";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Game.css";
 
@@ -312,6 +312,7 @@ function Game() {
     setTimerSeconds(0);
     resetGameObjects();
     gameOver = false;
+    sessionPosted = false;  // Permettre l'enregistrement de la prochaine partie
   };
 
   const handleReturnHome = async () => {

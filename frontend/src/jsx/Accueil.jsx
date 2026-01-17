@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import LoginModal from "./LoginModal.jsx";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 import "../css/Accueil.css";
 
 /**

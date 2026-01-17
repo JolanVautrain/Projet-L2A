@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import Statistics from "./Statistics.jsx";
-import LanguageSelector from "./LanguageSelector.jsx";
+import { LanguageSelector, useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Account.css";
 import LoginModal from "./LoginModal.jsx";
-import { useLanguage } from "./useLanguage.jsx";
 
 /**
  * Composant Account
@@ -23,7 +22,8 @@ function Account({ user, setUser }) {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [resetUserLoading, setResetUserLoading] = useState(false);
-  const [resetUserSessionsLoading, setResetUserSessionsLoading] = useState(false);
+  const [resetUserSessionsLoading, setResetUserSessionsLoading] =
+    useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -107,7 +107,8 @@ function Account({ user, setUser }) {
   // Réinitialiser le classement d'un utilisateur sélectionné
   const handleResetUser = async () => {
     if (!selectedUser) return;
-    if (!confirm(`${t("account.confirmResetUserScore")} ${selectedUser} ?`)) return;
+    if (!confirm(`${t("account.confirmResetUserScore")} ${selectedUser} ?`))
+      return;
     try {
       setResetUserLoading(true);
       const res = await fetch(`/api/admin/reset-user/${selectedUser}`, {
@@ -135,7 +136,8 @@ function Account({ user, setUser }) {
   // Réinitialiser les sessions d'un utilisateur sélectionné
   const handleResetUserSessions = async () => {
     if (!selectedUser) return;
-    if (!confirm(`${t("account.confirmResetUserSessions")} ${selectedUser} ?`)) return;
+    if (!confirm(`${t("account.confirmResetUserSessions")} ${selectedUser} ?`))
+      return;
     try {
       setResetUserSessionsLoading(true);
       const res = await fetch(`/api/admin/reset-sessions/${selectedUser}`, {
@@ -166,12 +168,14 @@ function Account({ user, setUser }) {
       <>
         <h1>{t("account.title")}</h1>
         <div className="account-actions">
-          <p>{t("account.hello")} {user}, {t("account.yourAccountPage")}.</p>
-          
+          <p>
+            {t("account.hello")} {user}, {t("account.yourAccountPage")}.
+          </p>
+
           <Statistics user={user} />
-          
+
           <LanguageSelector />
-          
+
           {user === "admin" && (
             <div
               style={{
@@ -183,32 +187,6 @@ function Account({ user, setUser }) {
               }}
             >
               <h3 style={{ marginTop: 0 }}>{t("account.adminTools")}</h3>
-
-              <div style={{ marginBottom: 16 }}>
-                <h4>{t("account.resetYourRanking")}</h4>
-                <button
-                  className="btn ghost"
-                  disabled={resetLoading}
-                  onClick={handleResetAdmin}
-                >
-                  {resetLoading
-                    ? t("account.resetting")
-                    : t("account.reset")}
-                </button>
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
-                <h4>{t("account.resetOtherGames")}</h4>
-                <button
-                  className="btn ghost"
-                  disabled={resetSessionsLoading}
-                  onClick={handleResetAdminSessions}
-                >
-                  {resetSessionsLoading
-                    ? t("account.resetting")
-                    : t("account.reset")}
-                </button>
-              </div>
 
               <div>
                 <h4>{t("account.manageUsers")}</h4>
@@ -240,52 +218,34 @@ function Account({ user, setUser }) {
                   </select>
                   <button
                     className="btn ghost"
-                    disabled={resetUserLoading}
-                    onClick={handleResetUser}
-                  >
-                    {resetUserLoading
-                      ? t("account.resetting")
-                      : t("account.resetUserScores")}
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 16 }}>
-                <h4>{t("account.resetUserSessions")}</h4>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <select
-                    value={selectedUser}
-                    onChange={(e) => setSelectedUser(e.target.value)}
-                    style={{
-                      padding: 8,
-                      borderRadius: 4,
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      backgroundColor: "#0b1222",
-                      color: "#e6eef8",
-                      minWidth: 120,
+                    disabled={resetSessionsLoading}
+                    onClick={() => {
+                      if (selectedUser) {
+                        if (
+                          !confirm(
+                            `${t("account.confirmResetUserSessions")} ${selectedUser} ?`,
+                          )
+                        )
+                          return;
+                        setResetSessionsLoading(true);
+                        fetch(`/api/admin/reset-sessions/${selectedUser}`, {
+                          method: "POST",
+                          headers: { "X-Admin-User": "admin" },
+                        })
+                          .then((res) => {
+                            if (!res.ok) throw new Error("Erreur serveur");
+                            alert(
+                              `${t("account.resetUserSessions")} ${selectedUser} réinitialisées.`,
+                            );
+                          })
+                          .catch((e) => alert("Échec: " + e.message))
+                          .finally(() => setResetSessionsLoading(false));
+                      }
                     }}
                   >
-                    {allUsers.map((u) => (
-                      <option key={u.username} value={u.username}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    className="btn ghost"
-                    disabled={resetUserSessionsLoading}
-                    onClick={handleResetUserSessions}
-                  >
-                    {resetUserSessionsLoading
+                    {resetSessionsLoading
                       ? t("account.resetting")
-                      : t("account.reset")}
+                      : t("account.resetUserSessions")}
                   </button>
                 </div>
               </div>
@@ -308,7 +268,11 @@ function Account({ user, setUser }) {
     <>
       <h1>{t("account.title")}</h1>
       <button onClick={() => setIsOpen(true)}>{t("common.login")}</button>
-      <LoginModal isOpen={isOpen} action={setUser} onClose={() => setIsOpen(false)} />
+      <LoginModal
+        isOpen={isOpen}
+        action={setUser}
+        onClose={() => setIsOpen(false)}
+      />
     </>
   );
 }

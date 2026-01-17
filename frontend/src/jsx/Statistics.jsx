@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "../css/Statistics.css";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 
 function Statistics({ user }) {
   const [stats, setStats] = useState(null);

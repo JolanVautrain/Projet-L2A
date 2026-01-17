@@ -2,7 +2,7 @@ import { createPortal } from "react-dom";
 import "../css/LoginModal.css";
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 
 /** 
  * Composant LoginModal

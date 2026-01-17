@@ -2,7 +2,7 @@ import "../css/Index.css";
 import "../css/PageNotFound.css";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { useLanguage } from "./useLanguage.jsx";
+import { useLanguage } from "./Language.jsx";
 
 /**
  * Composant PageNotFound
