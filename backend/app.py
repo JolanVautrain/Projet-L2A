@@ -21,6 +21,7 @@ POSTGRES_PASSWORD est définie sur le mot de passe souhaité.
 
 import logging
 import os
+from typing import Any, List, TypedDict
 
 import psycopg2  # type: ignore
 from flask import Flask, Response, jsonify, request
@@ -32,8 +33,33 @@ app = Flask(__name__)
 CORS(app)
 logging.basicConfig(level=logging.INFO)
 
+BAD_REQUEST = "Bad Request"
+DATABASE_ERROR = "Database error"
+INTERNAL_SERVER_ERROR = "Internal Server Error"
 
-def connect_to_database():
+
+class Highscore(TypedDict):
+    """Représente une entrée dans le high scores, c'est-à-dire
+    un high score d'utilisateur."""
+
+    username: str
+    highScore: int
+    stage: int
+    timer: int
+
+
+class UserSession(TypedDict):
+    """Représente une session de jeu d'un utilisateur. Soit une partie
+    jouée."""
+
+    id: int
+    score: int
+    stage: int
+    timer: int
+    playedAt: str
+
+
+def connect_to_database() -> Any:
     """Établir et retourner une nouvelle connexion à la base de données
     PostgreSQL.
 
@@ -62,11 +88,9 @@ def connect_to_database():
 try:
     init_conn = connect_to_database()
     init_cur = init_conn.cursor()
-
     # Drop tables with CASCADE to handle foreign key dependencies
     init_cur.execute("DROP TABLE IF EXISTS highscores CASCADE;")
     init_cur.execute("DROP TABLE IF EXISTS users CASCADE;")
-
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS users (
         username varchar(100) PRIMARY KEY,
@@ -74,14 +98,12 @@ try:
         language varchar(10) DEFAULT 'fr'
         );"""
     )
-
     init_cur.execute(
         """INSERT INTO users (username, password, language) VALUES
         ('admin', '1234', 'fr'),
         ('username', 'password', 'fr'),
         ('azerty', 'qsdfgh', 'fr');"""
     )
-
     # Table pour stocker le meilleur score par utilisateur
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS highscores (
@@ -92,7 +114,6 @@ try:
         FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
     );"""
     )
-
     # Table pour enregistrer toutes les sessions de jeu
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS game_sessions (
@@ -105,28 +126,15 @@ try:
         FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
     );"""
     )
-
     init_conn.commit()
-
     init_cur.close()
     init_conn.close()
 except psycopg2.Error as err:
     app.logger.exception("Failed to initialize database: %s", err)
 
 
-@app.route("/api/login")
-def check_login_test():
-    """Endpoint de test qui retourne une chaîne de caractères de salutation
-    simple.
-
-    Utilisé pour vérifier que le serveur est en cours d'exécution et
-    accessible.
-    """
-    return "hello world"
-
-
 @app.route("/api/login", methods=["POST"])
-def check_login():
+def check_login() -> Response:
     """Handle POST /api/login: validate credentials against the users table.
 
     Expected JSON body: {"username": str, "password": str}.
@@ -137,28 +145,23 @@ def check_login():
         if not data or "username" not in data or "password" not in data:
             resp = jsonify(
                 {
-                    "error": "Bad Request",
-                    "message": "username and password required",
+                    "error": INTERNAL_SERVER_ERROR,
+                    "message": "An unexpected error occurred.",
                 }
             )
             resp.status_code = 400
             return resp
-
         username = str(data["username"]).strip()
         password = str(data["password"]).strip()
-
         conn = connect_to_database()
         cur = conn.cursor()
-
         cur.execute(
             "SELECT username, password FROM users WHERE username = %s",
             (username,),
         )
         row = cur.fetchone()
-
         cur.close()
         conn.close()
-
         if not row:
             app.logger.info("Login attempt: user '%s' not found", username)
             # Le frontend s'attend à un JSON avec les clés :
@@ -166,7 +169,6 @@ def check_login():
             resp = jsonify({"userExist": False, "passwordIsCorrect": False})
             resp.status_code = 200
             return resp
-
         stored_username, stored_password = row
         if stored_password != password:
             app.logger.info(
@@ -176,7 +178,6 @@ def check_login():
             resp = jsonify({"userExist": True, "passwordIsCorrect": False})
             resp.status_code = 200
             return resp
-
         app.logger.info("User '%s' authenticated", stored_username)
         resp = jsonify(
             {
@@ -187,20 +188,101 @@ def check_login():
         )
         resp.status_code = 200
         return resp
-
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception("Unexpected error in /api/login: %s", err)
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
+def _parse_optional_int(data: dict[str, Any], key: str) -> int | None:
+    """Parse an optional integer field from data."""
+    if key not in data:
+        return None
+    try:
+        return int(data[key]) if data[key] is not None else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _insert_game_session(
+    cur: Any, username: str, score: int, stage: int | None, timer: int | None
+) -> None:
+    """Insert a game session record."""
+    cur.execute(
+        "INSERT INTO game_sessions (username, score, stage, timer) VALUES "
+        "(%s, %s, %s, %s)",
+        (
+            username,
+            score,
+            stage if stage is not None else 0,
+            timer if timer is not None else 0,
+        ),
+    )
+
+
+def _handle_new_highscore(
+    cur: Any,
+    conn: Any,
+    username: str,
+    score: int,
+    stage: int | None,
+    timer: int | None,
+) -> tuple[int, bool]:
+    """Insert a new highscore record."""
+    cur.execute(
+        "INSERT INTO highscores (username, high_score, stage, timer) "
+        "VALUES (%s, %s, %s, %s)",
+        (
+            username,
+            score,
+            stage if stage is not None else 0,
+            timer if timer is not None else 0,
+        ),
+    )
+    conn.commit()
+    return score, True
+
+
+def _update_highscore_if_better(
+    cur: Any,
+    conn: Any,
+    username: str,
+    score: int,
+    stage: int | None,
+    timer: int | None,
+    current_high: int,
+) -> tuple[int, bool]:
+    """Update highscore if the new score is better."""
+    if score <= current_high:
+        return current_high, False
+
+    if stage is not None or timer is not None:
+        cur.execute(
+            "UPDATE highscores SET high_score = %s, stage = %s, "
+            "timer = %s WHERE username = %s",
+            (
+                score,
+                stage if stage is not None else 0,
+                timer if timer is not None else 0,
+                username,
+            ),
+        )
+    else:
+        cur.execute(
+            "UPDATE highscores SET high_score = %s WHERE username = %s",
+            (score, username),
+        )
+    conn.commit()
+    return score, True
+
+
 @app.route("/api/score", methods=["POST"])
-def submit_score():
+def submit_score() -> Response:
     """Soumettre un score pour un utilisateur.
 
     Corps attendu: {"username": str, "score": int}
@@ -212,7 +294,7 @@ def submit_score():
         if not data or "username" not in data or "score" not in data:
             resp = jsonify(
                 {
-                    "error": "Bad Request",
+                    "error": BAD_REQUEST,
                     "message": "username and score required",
                 }
             )
@@ -224,44 +306,19 @@ def submit_score():
             score = int(data["score"])
         except (ValueError, TypeError):
             resp = jsonify(
-                {"error": "Bad Request", "message": "score must be an integer"}
+                {"error": BAD_REQUEST, "message": "score must be an integer"}
             )
             resp.status_code = 400
             return resp
 
-        # optional fields
-        stage = None
-        timer = None
-        if "stage" in data:
-            try:
-                stage = (
-                    int(data["stage"]) if data["stage"] is not None else None
-                )
-            except (ValueError, TypeError):
-                stage = None
-        if "timer" in data:
-            try:
-                timer = (
-                    int(data["timer"]) if data["timer"] is not None else None
-                )
-            except (ValueError, TypeError):
-                timer = None
+        stage = _parse_optional_int(data, "stage")
+        timer = _parse_optional_int(data, "timer")
 
         conn = connect_to_database()
         cur = conn.cursor()
 
-        # Enregistrer la session de jeu dans game_sessions
-        cur.execute(
-            "INSERT INTO game_sessions (username, score, stage, timer) VALUES (%s, %s, %s, %s)",
-            (
-                username,
-                score,
-                stage if stage is not None else 0,
-                timer if timer is not None else 0,
-            ),
-        )
+        _insert_game_session(cur, username, score, stage, timer)
 
-        # Vérifier si un high score existe
         cur.execute(
             "SELECT high_score FROM highscores WHERE username = %s",
             (username,),
@@ -269,69 +326,34 @@ def submit_score():
         row = cur.fetchone()
 
         if not row:
-            # Insérer un nouveau record
-            cur.execute(
-                "INSERT INTO highscores (username, high_score, stage, timer) VALUES (%s, %s, %s, %s)",
-                (
-                    username,
-                    score,
-                    stage if stage is not None else 0,
-                    timer if timer is not None else 0,
-                ),
+            high, updated = _handle_new_highscore(
+                cur, conn, username, score, stage, timer
             )
-            conn.commit()
-            high = score
-            updated = True
         else:
             current_high = int(row[0])
-            if score > current_high:
-                # update high score and associated stage/timer if provided
-                if stage is not None or timer is not None:
-                    cur.execute(
-                        "UPDATE highscores SET high_score = %s, stage = %s, timer = %s WHERE username = %s",
-                        (
-                            score,
-                            stage if stage is not None else 0,
-                            timer if timer is not None else 0,
-                            username,
-                        ),
-                    )
-                else:
-                    cur.execute(
-                        "UPDATE highscores SET high_score = %s WHERE username = %s",
-                        (score, username),
-                    )
-                conn.commit()
-                high = score
-                updated = True
-            else:
-                # Ne pas modifier `stage`/`timer` si le score n'a pas augmenté.
-                # On conserve les valeurs associées au highscore existant.
-                high = current_high
-                updated = False
+            high, updated = _update_highscore_if_better(
+                cur, conn, username, score, stage, timer, current_high
+            )
 
         cur.close()
         conn.close()
-
         resp = jsonify({"updated": updated, "highScore": high})
         resp.status_code = 200
         return resp
-
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception("Unexpected error in /api/score: %s", err)
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/score/<username>")
-def get_high_score(username: str):
+def get_high_score(username: str) -> Response:
     """Retourne le meilleur score pour `username`.
-
     Réponse JSON: {"username": str, "highScore": int} ou 404 si non trouvé.
     """
     try:
@@ -339,7 +361,8 @@ def get_high_score(username: str):
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute(
-            "SELECT high_score, stage, timer FROM highscores WHERE username = %s",
+            "SELECT high_score, stage, timer FROM highscores WHERE username "
+            "= %s",
             (username,),
         )
         row = cur.fetchone()
@@ -352,7 +375,6 @@ def get_high_score(username: str):
             )
             resp.status_code = 404
             return resp
-
         resp = jsonify(
             {
                 "username": username,
@@ -363,62 +385,59 @@ def get_high_score(username: str):
         )
         resp.status_code = 200
         return resp
-
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/score/<username>: %s", err
         )
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/score", methods=["GET"])
-def list_high_scores():
+def list_high_scores() -> Response:
     """Retourne la liste de tous les high scores triée par score décroissant.
-
     Réponse JSON: [{"username": str, "highScore": int}, ...]
     """
     try:
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute(
-            "SELECT username, high_score, stage, timer FROM highscores ORDER BY high_score DESC"
+            "SELECT username, high_score, stage, timer FROM highscores ORDER "
+            "BY high_score DESC"
         )
         rows = cur.fetchall()
         cur.close()
         conn.close()
-
-        result = [
-            {
-                "username": r[0],
+        result: List[Highscore] = []
+        for r in rows:
+            hs: Highscore = {
+                "username": str(r[0]),
                 "highScore": int(r[1]),
                 "stage": int(r[2] or 0),
                 "timer": int(r[3] or 0),
             }
-            for r in rows
-        ]
+            result.append(hs)
         resp = jsonify(result)
         resp.status_code = 200
         return resp
-
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception("Unexpected error in GET /api/score: %s", err)
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/admin/reset-test", methods=["POST"])
-def reset_test_account():
+def reset_test_account() -> Response:
     """Reset the highscores entry for the `admin` account.
 
     If the environment variable `ADMIN_SECRET` is set, a matching
@@ -428,15 +447,13 @@ def reset_test_account():
     try:
         admin_secret = os.environ.get("ADMIN_SECRET")
         header = request.headers.get("X-Admin-Token")
-        if admin_secret:
-            if not header or header != admin_secret:
-                resp = jsonify({"error": "unauthorized"})
-                resp.status_code = 401
-                return resp
-
+        if admin_secret and header != admin_secret:
+            resp = jsonify({"error": "unauthorized"})
+            resp.status_code = 401
+            return resp
         conn = connect_to_database()
         cur = conn.cursor()
-        # Insert or update the admin user's highscores to zeroes
+        # inserte ou met à jour les scores du compte admin à zéro
         cur.execute(
             """
             INSERT INTO highscores (username, high_score, stage, timer)
@@ -455,20 +472,20 @@ def reset_test_account():
         resp.status_code = 200
         return resp
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/admin/reset-test: %s", err
         )
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/admin/users", methods=["GET"])
-def list_all_users():
+def list_all_users() -> Response:
     """List all users in the system.
 
     Returns JSON: [{"username": str}, ...]
@@ -480,32 +497,29 @@ def list_all_users():
             resp = jsonify({"error": "unauthorized"})
             resp.status_code = 401
             return resp
-
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute("SELECT username FROM users ORDER BY username")
         rows = cur.fetchall()
         cur.close()
         conn.close()
-
         result = [{"username": r[0]} for r in rows]
         resp = jsonify(result)
         resp.status_code = 200
         return resp
-
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception("Unexpected error in /api/admin/users: %s", err)
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/admin/reset-user/<username>", methods=["POST"])
-def reset_user_scores(username: str):
+def reset_user_scores(username: str) -> Response:
     """Reset the highscores entry for a specific user.
 
     Returns JSON: {"ok": true} on success.
@@ -517,11 +531,10 @@ def reset_user_scores(username: str):
             resp = jsonify({"error": "unauthorized"})
             resp.status_code = 401
             return resp
-
         username = str(username).strip()
         conn = connect_to_database()
         cur = conn.cursor()
-        # Insert or update the user's highscores to zeroes
+        # inserte ou met à jour les scores du compte à zéro
         cur.execute(
             """
             INSERT INTO highscores (username, high_score, stage, timer)
@@ -540,20 +553,20 @@ def reset_user_scores(username: str):
         resp.status_code = 200
         return resp
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/admin/reset-user: %s", err
         )
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/admin/reset-sessions/<username>", methods=["POST"])
-def reset_user_sessions(username: str):
+def reset_user_sessions(username: str) -> Response:
     """Reset all game sessions for a specific user.
 
     Returns JSON: {"ok": true} on success.
@@ -574,6 +587,11 @@ def reset_user_sessions(username: str):
             "DELETE FROM game_sessions WHERE username = %s",
             (username,),
         )
+        # Delete highscore entry as well (complete reset)
+        cur.execute(
+            "DELETE FROM highscores WHERE username = %s",
+            (username,),
+        )
         conn.commit()
         cur.close()
         conn.close()
@@ -581,65 +599,67 @@ def reset_user_sessions(username: str):
         resp.status_code = 200
         return resp
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/admin/reset-sessions: %s", err
         )
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/user/sessions/<username>", methods=["GET"])
-def get_user_sessions(username: str):
-    """Retourne toutes les sessions de jeu d'un utilisateur, triées par score DESC.
+def get_user_sessions(username: str) -> Response:
+    """Retourne toutes les sessions de jeu d'un utilisateur, triées par score
+    DESC.
 
-    Réponse JSON: [{"id": int, "score": int, "stage": int, "timer": int, "playedAt": str}, ...]
+    Réponse JSON: [{"id": int, "score": int, "stage": int, "timer": int,
+    "playedAt": str}, ...]
     """
     try:
         username = str(username).strip()
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute(
-            "SELECT id, score, stage, timer, played_at FROM game_sessions WHERE username = %s ORDER BY score DESC",
+            "SELECT id, score, stage, timer, played_at FROM game_sessions "
+            "WHERE username = %s ORDER BY score DESC",
             (username,),
         )
         rows = cur.fetchall()
         cur.close()
         conn.close()
-
-        result = [
-            {
+        result: List[UserSession] = []
+        for r in rows:
+            session: UserSession = {
                 "id": int(r[0]),
                 "score": int(r[1]),
                 "stage": int(r[2] or 0),
                 "timer": int(r[3] or 0),
                 "playedAt": str(r[4]),
             }
-            for r in rows
-        ]
+            result.append(session)
         resp = jsonify(result)
         resp.status_code = 200
         return resp
 
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/user/sessions/<username>: %s", err
         )
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/user/stats/<username>", methods=["GET"])
-def get_user_stats(username: str):
+def get_user_stats(username: str) -> Response:
     """Retourne les statistiques agrégées d'un utilisateur.
 
     Réponse JSON: {
@@ -657,11 +677,9 @@ def get_user_stats(username: str):
         username = str(username).strip()
         conn = connect_to_database()
         cur = conn.cursor()
-
-        # Récupérer les stats agrégées
         cur.execute(
             """
-            SELECT 
+            SELECT
                 COUNT(*) as total_games,
                 SUM(timer) as total_playtime,
                 SUM(score) as total_score,
@@ -670,7 +688,7 @@ def get_user_stats(username: str):
                 MAX(score) as best_score,
                 MAX(stage) as highest_stage,
                 AVG(timer) as avg_playtime
-            FROM game_sessions 
+            FROM game_sessions
             WHERE username = %s
             """,
             (username,),
@@ -678,7 +696,6 @@ def get_user_stats(username: str):
         row = cur.fetchone()
         cur.close()
         conn.close()
-
         if not row or row[0] == 0:
             resp = jsonify(
                 {
@@ -707,22 +724,21 @@ def get_user_stats(username: str):
             )
         resp.status_code = 200
         return resp
-
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/user/stats/<username>: %s", err
         )
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/user/language/<username>", methods=["GET"])
-def get_user_language(username: str):
+def get_user_language(username: str) -> Response:
     """Retourne la langue préférée d'un utilisateur."""
     try:
         username = str(username).strip()
@@ -734,7 +750,6 @@ def get_user_language(username: str):
         row = cur.fetchone()
         cur.close()
         conn.close()
-
         if not row:
             resp = jsonify({"language": "fr"})
         else:
@@ -742,20 +757,20 @@ def get_user_language(username: str):
         resp.status_code = 200
         return resp
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/user/language/<username>: %s", err
         )
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
 
 @app.route("/api/user/language", methods=["POST"])
-def set_user_language():
+def set_user_language() -> Response:
     """Met à jour la langue préférée d'un utilisateur."""
     try:
         data = request.get_json(force=True)
@@ -765,7 +780,6 @@ def set_user_language():
             resp = jsonify({"error": "username required"})
             resp.status_code = 400
             return resp
-
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute(
@@ -779,12 +793,12 @@ def set_user_language():
         resp.status_code = 200
         return resp
     except OperationalError:
-        resp = jsonify({"error": "Database error"})
+        resp = jsonify({"error": DATABASE_ERROR})
         resp.status_code = 500
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception("Unexpected error in /api/user/language: %s", err)
-        resp = jsonify({"error": "Internal Server Error"})
+        resp = jsonify({"error": INTERNAL_SERVER_ERROR})
         resp.status_code = 500
         return resp
 
@@ -814,7 +828,7 @@ def handle_exception(e: Exception) -> Response:
     app.logger.exception(e)
     resp = jsonify(
         {
-            "error": "Internal Server Error",
+            "error": INTERNAL_SERVER_ERROR,
             "message": "An unexpected error occurred.",
         }
     )
