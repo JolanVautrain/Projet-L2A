@@ -63,7 +63,9 @@ try:
     init_conn = connect_to_database()
     init_cur = init_conn.cursor()
 
-    init_cur.execute("DROP TABLE IF EXISTS users;")
+    # Drop tables with CASCADE to handle foreign key dependencies
+    init_cur.execute("DROP TABLE IF EXISTS highscores CASCADE;")
+    init_cur.execute("DROP TABLE IF EXISTS users CASCADE;")
 
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS users (
@@ -78,11 +80,12 @@ try:
     )
 
     # Table pour stocker le meilleur score par utilisateur
-    init_cur.execute("DROP TABLE IF EXISTS highscores;")
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS highscores (
         username varchar(100) PRIMARY KEY,
         high_score integer NOT NULL,
+        stage integer DEFAULT 0,
+        timer integer DEFAULT 0,
         FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
     );"""
     )
@@ -210,6 +213,24 @@ def submit_score():
             resp.status_code = 400
             return resp
 
+        # optional fields
+        stage = None
+        timer = None
+        if "stage" in data:
+            try:
+                stage = (
+                    int(data["stage"]) if data["stage"] is not None else None
+                )
+            except (ValueError, TypeError):
+                stage = None
+        if "timer" in data:
+            try:
+                timer = (
+                    int(data["timer"]) if data["timer"] is not None else None
+                )
+            except (ValueError, TypeError):
+                timer = None
+
         conn = connect_to_database()
         cur = conn.cursor()
 
@@ -223,8 +244,13 @@ def submit_score():
         if not row:
             # Insérer un nouveau record
             cur.execute(
-                "INSERT INTO highscores (username, high_score) VALUES (%s, %s)",
-                (username, score),
+                "INSERT INTO highscores (username, high_score, stage, timer) VALUES (%s, %s, %s, %s)",
+                (
+                    username,
+                    score,
+                    stage if stage is not None else 0,
+                    timer if timer is not None else 0,
+                ),
             )
             conn.commit()
             high = score
@@ -232,14 +258,37 @@ def submit_score():
         else:
             current_high = int(row[0])
             if score > current_high:
-                cur.execute(
-                    "UPDATE highscores SET high_score = %s WHERE username = %s",
-                    (score, username),
-                )
+                # update high score and associated stage/timer if provided
+                if stage is not None or timer is not None:
+                    cur.execute(
+                        "UPDATE highscores SET high_score = %s, stage = %s, timer = %s WHERE username = %s",
+                        (
+                            score,
+                            stage if stage is not None else 0,
+                            timer if timer is not None else 0,
+                            username,
+                        ),
+                    )
+                else:
+                    cur.execute(
+                        "UPDATE highscores SET high_score = %s WHERE username = %s",
+                        (score, username),
+                    )
                 conn.commit()
                 high = score
                 updated = True
             else:
+                # Even if score did not improve, update stage/timer if provided
+                if stage is not None or timer is not None:
+                    cur.execute(
+                        "UPDATE highscores SET stage = %s, timer = %s WHERE username = %s",
+                        (
+                            stage if stage is not None else 0,
+                            timer if timer is not None else 0,
+                            username,
+                        ),
+                    )
+                    conn.commit()
                 high = current_high
                 updated = False
 
@@ -272,7 +321,7 @@ def get_high_score(username: str):
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute(
-            "SELECT high_score FROM highscores WHERE username = %s",
+            "SELECT high_score, stage, timer FROM highscores WHERE username = %s",
             (username,),
         )
         row = cur.fetchone()
@@ -286,7 +335,14 @@ def get_high_score(username: str):
             resp.status_code = 404
             return resp
 
-        resp = jsonify({"username": username, "highScore": int(row[0])})
+        resp = jsonify(
+            {
+                "username": username,
+                "highScore": int(row[0]),
+                "stage": int(row[1] or 0),
+                "timer": int(row[2] or 0),
+            }
+        )
         resp.status_code = 200
         return resp
 
@@ -313,13 +369,21 @@ def list_high_scores():
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute(
-            "SELECT username, high_score FROM highscores ORDER BY high_score DESC"
+            "SELECT username, high_score, stage, timer FROM highscores ORDER BY high_score DESC"
         )
         rows = cur.fetchall()
         cur.close()
         conn.close()
 
-        result = [{"username": r[0], "highScore": int(r[1])} for r in rows]
+        result = [
+            {
+                "username": r[0],
+                "highScore": int(r[1]),
+                "stage": int(r[2] or 0),
+                "timer": int(r[3] or 0),
+            }
+            for r in rows
+        ]
         resp = jsonify(result)
         resp.status_code = 200
         return resp
@@ -330,6 +394,56 @@ def list_high_scores():
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception("Unexpected error in GET /api/score: %s", err)
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/admin/reset-test", methods=["POST"])
+def reset_test_account():
+    """Reset the highscores entry for the `test` account.
+
+    If the environment variable `ADMIN_SECRET` is set, a matching
+    `X-Admin-Token` header is required. If not set, the endpoint
+    will allow the operation (convenience for local development).
+    """
+    try:
+        admin_secret = os.environ.get("ADMIN_SECRET")
+        header = request.headers.get("X-Admin-Token")
+        if admin_secret:
+            if not header or header != admin_secret:
+                resp = jsonify({"error": "unauthorized"})
+                resp.status_code = 401
+                return resp
+
+        conn = connect_to_database()
+        cur = conn.cursor()
+        # Insert or update the test user's highscores to zeroes
+        cur.execute(
+            """
+            INSERT INTO highscores (username, high_score, stage, timer)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (username) DO UPDATE
+            SET high_score = EXCLUDED.high_score,
+                stage = EXCLUDED.stage,
+                timer = EXCLUDED.timer
+            """,
+            ("test", 0, 0, 0),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        resp = jsonify({"ok": True})
+        resp.status_code = 200
+        return resp
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception(
+            "Unexpected error in /api/admin/reset-test: %s", err
+        )
         resp = jsonify({"error": "Internal Server Error"})
         resp.status_code = 500
         return resp

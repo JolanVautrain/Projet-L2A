@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import "../css/App.css";
+import "../css/Index.css";
 import "../css/Contacts.css";
 import jolanImg from "../assets/contacts/jolan.png";
 import gabImg from "../assets/contacts/gab.jpg";

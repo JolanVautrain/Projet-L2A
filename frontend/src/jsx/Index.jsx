@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
 
 /**
@@ -47,7 +47,7 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
+    <>
       <header>
         <nav className="navbar">
           <NavLink to="/">Accueil</NavLink>
@@ -71,7 +71,7 @@ function App() {
         <Route path="/game" element={<RequireAuth user={userState}><Game /></RequireAuth>} />
         <Route path="/*" element={<PageNotFound />}/>
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
 

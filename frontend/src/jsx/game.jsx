@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import "../css/App.css";
+import { Link, useNavigate } from "react-router-dom";
+import "../css/Index.css";
 import "../css/Game.css";
 
 // Game state (module-level to persist across renders)
@@ -9,6 +9,7 @@ let score = 0;
 let gameOver = false;
 let touchingGround = false;
 let internalStage = 1;
+let startTime = 0;
 
 /**
  * Précharge les assets Phaser.
@@ -35,6 +36,8 @@ function preload() {
  */
 function create() {
   console.log('[Phaser] create() called');
+  // start the in-game timer
+  startTime = Date.now();
   this.add.image(400, 300, "sky");
   globalThis.platforms = this.physics.add.staticGroup();
   globalThis.platforms.create(400, 568, "ground").setScale(2).refreshBody();
@@ -117,6 +120,8 @@ function resetGameObjects() {
   } catch (e) {
     console.warn('spawnBomb unavailable during reset', e);
   }
+  // reset timer when objects reset
+  startTime = Date.now();
 }
 
 /**
@@ -223,6 +228,8 @@ function hitBomb(player, bomb) {
   gameOver = true;
   // capture le score final avant de réinitialiser
   const finalScore = score;
+  const elapsedMs = startTime ? Date.now() - startTime : 0;
+  const timerSeconds = Math.floor(elapsedMs / 1000);
   // envoyer le score au backend si l'utilisateur est connecté
   try {
     const username = localStorage.getItem("user");
@@ -230,7 +237,7 @@ function hitBomb(player, bomb) {
       fetch("/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, score: finalScore }),
+        body: JSON.stringify({ username, score: finalScore, stage: internalStage, timer: timerSeconds }),
       })
         .then((r) => r.json())
         .then((data) => {
@@ -243,6 +250,7 @@ function hitBomb(player, bomb) {
   }
   internalStage = 1; // reset stage
   score = 0;
+  startTime = Date.now();
   // Replace le joueur à la position de départ et stoppe son mouvement
   if (globalThis.player) {
     globalThis.player.setX(100);
@@ -274,6 +282,37 @@ function Game() {
   const gameContainer = useRef(null);
   const [stage, setStage] = useState(1);
   const [scoreDisplay, setScoreDisplay] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const navigate = useNavigate();
+
+  // envoie le score/stage/timer au backend; useBeacon favorise l'envoi lors unload
+  const sendScore = async (useBeacon = false) => {
+    try {
+      const username = localStorage.getItem("user");
+      if (!username) return;
+      const elapsedMs = startTime ? Date.now() - startTime : 0;
+      const timerSeconds = Math.floor(elapsedMs / 1000);
+      const payload = { username, score: score, stage: internalStage, timer: timerSeconds };
+      if (useBeacon && typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        navigator.sendBeacon("/api/score", blob);
+        return;
+      }
+      await fetch("/api/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+    } catch (e) {
+      console.warn("Failed to send score on exit/quit", e);
+    }
+  };
+
+  const handleQuit = async () => {
+    await sendScore(false);
+    navigate("/");
+  };
 
   // reset des variables globales du module à l'initialisation du composant
   useEffect(() => {
@@ -296,6 +335,34 @@ function Game() {
   useEffect(() => {
     let destroyed = false;
     let gameInstance = null;
+    let handleBeforeUnload = null;
+
+    const registerBeforeUnload = () => {
+      if (handleBeforeUnload) return;
+      handleBeforeUnload = () => {
+        try {
+          const username = localStorage.getItem("user");
+          if (!username) return;
+          const elapsedMs = startTime ? Date.now() - startTime : 0;
+          const timerSeconds = Math.floor(elapsedMs / 1000);
+          const payload = { username, score: score, stage: internalStage, timer: timerSeconds };
+          if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+            const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+            navigator.sendBeacon("/api/score", blob);
+          } else {
+            fetch("/api/score", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              keepalive: true,
+            }).catch(() => {});
+          }
+        } catch (e) {
+          console.warn('beforeunload send failed', e);
+        }
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    };
 
     // Crée l'instance du jeu Phaser
     const createGame = () => {
@@ -354,10 +421,11 @@ function Game() {
             return;
           }
           if (globalThis.Phaser) {
-            console.log('Phaser ready from polling');
-            clearInterval(checkPhaser);
-            createGame();
-          }
+                registerBeforeUnload();
+                console.log('Phaser ready from polling');
+                clearInterval(checkPhaser);
+                createGame();
+              }
         }, 100);
       } else { // charge le script
         console.log('Loading Phaser script from CDN...');
@@ -366,7 +434,10 @@ function Game() {
         script.dataset.phaserDynamic = '1';
         script.onload = () => {
           console.log('Phaser script loaded');
-          if (!destroyed) createGame();
+          if (!destroyed) {
+            registerBeforeUnload();
+            createGame();
+          }
         };
         script.onerror = () => {
           console.error('Failed to load Phaser script');
@@ -392,6 +463,32 @@ function Game() {
       if (gameContainer.current) {
         gameContainer.current._phaserGame = null;
       }
+      // attempt to send current run data on component unmount
+      if (handleBeforeUnload) {
+        try { window.removeEventListener('beforeunload', handleBeforeUnload); } catch (e) { /* ignore */ }
+      }
+      try {
+        const username = localStorage.getItem("user");
+        if (!username) return;
+        const elapsedMs = startTime ? Date.now() - startTime : 0;
+        const timerSeconds = Math.floor(elapsedMs / 1000);
+        const payload = { username, score: score, stage: internalStage, timer: timerSeconds };
+        if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+          const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+          navigator.sendBeacon("/api/score", blob);
+        } else {
+          (async () => {
+            await fetch("/api/score", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              keepalive: true,
+            });
+          })();
+        }
+      } catch (e) {
+        console.warn('Error sending score on unmount', e);
+      }
     };
   }, []);
 
@@ -413,6 +510,24 @@ function Game() {
     return () => globalThis.removeEventListener('score-up', onScore);
   }, []);
 
+  // Met à jour le chronomètre affiché toutes les 500ms
+  useEffect(() => {
+    const updateTimer = () => {
+      const elapsedMs = startTime ? Date.now() - startTime : 0;
+      setTimerSeconds(Math.floor(elapsedMs / 1000));
+    };
+    updateTimer();
+    const id = setInterval(updateTimer, 500);
+    return () => clearInterval(id);
+  }, []);
+
+  // Formate le temps en mm:ss
+  const formatTime = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
   // Rendu du composant Game avec l'overlay  
   return (
     <div className="game-wrap">
@@ -422,13 +537,14 @@ function Game() {
         </div>
         <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
           <div className="score-display">Score: {scoreDisplay}</div>
+          <div className="timer-display">Temps: {formatTime(timerSeconds)}</div>
         </div>
       </div>
       <div ref={gameContainer} id="phaser-container" style={{width: 800, height: 600, background: '#0b1222', borderRadius: 12, overflow: 'hidden', display: 'block', position: 'relative'}} />
-      <div className="options-buttons">
-        <button className="btn ghost" onClick={() => globalThis.location.reload()}>Recharger le jeu</button>
-        <Link className="btn accent" to="/">Quitter le jeu</Link>
-      </div>
+        <div className="options-buttons">
+          <button className="btn ghost" onClick={() => globalThis.location.reload()}>Recharger le jeu</button>
+          <button className="btn accent" onClick={handleQuit}>Quitter le jeu</button>
+        </div>
     </div>
   );
 }

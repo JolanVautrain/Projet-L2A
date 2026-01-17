@@ -58,6 +58,7 @@ services:
     environment:
       - NODE_ENV=development
       - COREPACK_ENABLE_DOWNLOAD_PROMPT=0  # Pas de confirmation pour yarn
+      - BACKEND_PROXY=http://backend:5000  # Configure le proxy Vite vers le backend Docker
     command: sh -c "yarn install && yarn dev --host 0.0.0.0"
     depends_on:
       - backend

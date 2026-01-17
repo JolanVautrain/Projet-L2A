@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "../css/App.css";
+import "../css/Index.css";
 import "../css/Leaderboard.css";
 
 function Leaderboard() {
@@ -43,6 +43,8 @@ function Leaderboard() {
               <th>Rang</th>
               <th>Joueur</th>
               <th>Score</th>
+              <th>Stage</th>
+              <th>Timer (s)</th>
             </tr>
           </thead>
           <tbody>
@@ -51,6 +53,8 @@ function Leaderboard() {
                 <td>{idx + 1}</td>
                 <td>{s.username}</td>
                 <td>{s.highScore}</td>
+                <td>{s.stage ?? 0}</td>
+                <td>{s.timer ?? 0}</td>
               </tr>
             ))}
           </tbody>
