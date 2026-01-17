@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ModalGameOver from "./ModalGameOver";
 import "../css/Index.css";
 import "../css/Game.css";
 
@@ -513,48 +514,13 @@ function Game() {
           <button className="btn ghost" onClick={() => globalThis.location.reload()}>Recharger le jeu</button>
         </div>
       
-      {/* Modal Game Over */}
-      {showGameOverModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-        }}>
-          <div style={{
-            backgroundColor: '#1a2849',
-            border: '1px solid rgba(79, 158, 246, 0.3)',
-            borderRadius: 12,
-            padding: 28,
-            textAlign: 'center',
-            maxWidth: 600,
-            width: 'min(90%, 600px)'
-          }}>
-            <h2 style={{ marginTop: 0, color: '#e6eef8' }}>Game Over</h2>
-            <p style={{ color: '#a0aec0', marginBottom: 24 }}>Vous avez atteint le score de <strong>{scoreDisplay}</strong> au stage <strong>{stage}</strong></p>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-              <button 
-                className="btn accent"
-                onClick={handleReplay}
-              >
-                Rejouer
-              </button>
-              <button 
-                className="btn ghost"
-                onClick={handleReturnHome}
-              >
-                Retour à l'accueil
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ModalGameOver 
+        isOpen={showGameOverModal}
+        score={scoreDisplay}
+        stage={stage}
+        onReplay={handleReplay}
+        onReturnHome={handleReturnHome}
+      />
     </div>
   );
 }

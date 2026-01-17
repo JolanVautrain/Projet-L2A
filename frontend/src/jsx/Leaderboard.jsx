@@ -111,7 +111,7 @@ function Leaderboard({ user }) {
                   <td>{s.score}</td>
                   <td>{s.stage ?? 0}</td>
                   <td>{s.timer ?? 0}</td>
-                  <td>{new Date(s.playedAt).toLocaleString("fr-FR")}</td>
+                  <td>{new Date(s.playedAt).toLocaleString("fr-FR", { timeZone: "Europe/Paris", year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
                 </tr>
               ))}
             </tbody>
