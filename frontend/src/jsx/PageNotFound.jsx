@@ -3,7 +3,13 @@ import "../css/PageNotFound.css";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * Composant PageNotFound
+ * 
+ * Affiche une page 404 personnalisée avec animation interactive.
+ */
 function PageNotFound() {
+  // Refs et états pour l'animation des yeux et la synthèse vocale
   const leftPupil = useRef(null);
   const rightPupil = useRef(null);
   const eyesDataRef = useRef([]);
@@ -13,6 +19,7 @@ function PageNotFound() {
   const [rate] = useState(1);
   const [speakingId, setSpeakingId] = useState(null);
   const [clickedId, setClickedId] = useState(null);
+  // Textes parlés par les différentes figures
   const speeches = {
     main: "Halte qui va là",
     one: "Qui va là ? Montrez-vous !",
@@ -20,17 +27,19 @@ function PageNotFound() {
     three: "Énoncez votre identité immédiatement !",
   };
 
+  // Animation des yeux qui suivent le curseur
   useEffect(() => {
     let targetX = window.innerWidth / 2;
     let targetY = window.innerHeight / 2;
     let rafId = null;
 
+    // mise à jour des coordonnées cibles au mouvement de la souris
     function onMove(e) {
-      // only record target, do minimal work in event handler
       targetX = e.clientX;
       targetY = e.clientY;
     }
 
+    // collecte des éléments "œil" et de leurs pupilles
     function gatherEyes() {
       const container = document.querySelector(".follow-geom");
       if (!container) return;
@@ -41,8 +50,13 @@ function PageNotFound() {
       });
     }
 
+    /**
+     * Composant PageNotFound
+     * 
+     * Met à jour les centres des yeux pour le calcul des mouvements des pupilles.
+     */
     function updateEyeCenters() {
-      // compute eye centers for all eyes once (called on mount/resize/scroll)
+      // calcule les centres des yeux (lecture du layout)
       if (!eyesDataRef.current || eyesDataRef.current.length === 0) return;
       eyesDataRef.current.forEach((entry) => {
         const r = entry.eyeEl.getBoundingClientRect();
@@ -51,9 +65,13 @@ function PageNotFound() {
       });
     }
 
+    /**
+     * Composant PageNotFound
+     * 
+     * Anime les pupilles pour qu'elles suivent la position cible.
+     */
     function animate() {
-      // update pupils using cached centers (no layout reads here)
-      const max = 10; // max pupil offset
+      const max = 10; // max déplacement en pixels
       eyesDataRef.current.forEach(({ pupilEl: el, center }) => {
         if (!el || !center) return;
         const dx = targetX - center.x;
@@ -61,68 +79,74 @@ function PageNotFound() {
         const dist = Math.hypot(dx, dy) || 1;
         const nx = (dx / dist) * Math.min(max, dist / 6);
         const ny = (dy / dist) * Math.min(max, dist / 6);
-        // use translate3d for GPU acceleration and preserve centering
+        // utilisation de translate3d pour de meilleures performances
         el.style.transform = `translate3d(${nx}px, ${ny}px, 0) translate3d(-50%, -50%, 0)`;
       });
-
       rafId = requestAnimationFrame(animate);
     }
-
-    // gather eye elements and initial centers
+    // initialisation
     gatherEyes();
     updateEyeCenters();
-
-    // passive listeners to avoid main-thread blocking
+    // écouteurs d'événements
     globalThis.addEventListener("mousemove", onMove, { passive: true });
     globalThis.addEventListener("resize", updateEyeCenters, { passive: true });
     globalThis.addEventListener("scroll", updateEyeCenters, { passive: true });
-
+    // démarrage de l'animation
     rafId = globalThis.requestAnimationFrame(animate);
 
-    return () => {
+    return () => { // nettoyage des écouteurs et de l'animation
       globalThis.removeEventListener("mousemove", onMove);
       globalThis.removeEventListener("resize", updateEyeCenters);
       globalThis.removeEventListener("scroll", updateEyeCenters);
       globalThis.cancelAnimationFrame(rafId);
     };
   }, []);
-
+  // Chargement des voix disponibles pour la synthèse vocale
   useEffect(() => {
     if (typeof globalThis === "undefined" || !("speechSynthesis" in globalThis)) return;
-
+    // fonction de chargement des voix
     function loadVoices() {
       const vs = globalThis.speechSynthesis.getVoices() || [];
       setVoices(vs);
       if (vs.length && !selectedVoice) {
-        // prefer a French voice that is not a Microsoft robotic voice
         const pref = vs.find((v) => /fr/i.test(v.lang) && !/Microsoft/i.test(v.name));
         setSelectedVoice(pref ? pref.name : vs[0].name);
       }
     }
-
+    // initial les voix
     loadVoices();
     globalThis.speechSynthesis.onvoiceschanged = loadVoices;
     return () => { globalThis.speechSynthesis.onvoiceschanged = null; };
   }, [selectedVoice]);
 
+  /**
+   * Composant PageNotFound
+   * 
+   * Fait parler la synthèse vocale avec le texte associé à l'ID donné.
+   */
   function handleSpeak(id = "main") {
     const text = speeches[id] || speeches.main;
     if (typeof globalThis !== "undefined" && "speechSynthesis" in globalThis) {
       globalThis.speechSynthesis.cancel();
       const ut = new globalThis.SpeechSynthesisUtterance(text);
       ut.lang = "fr-FR";
-      // apply chosen voice, pitch and rate
+      // configuration de la voix
       const v = voices.find((x) => x.name === selectedVoice);
       if (v) ut.voice = v;
       ut.pitch = Math.max(0.1, Math.min(2, pitch));
       ut.rate = Math.max(0.1, Math.min(10, rate));
       globalThis.speechSynthesis.speak(ut);
     } else {
-      // eslint-disable-next-line no-alert
+      // fallback : simple alert
       alert(text);
     }
   }
   
+  /**
+   * Composant PageNotFound
+   * 
+   * Gère le clic sur une figure géométrique pour déclencher la parole et l'animation.
+   */
   function handleClickGeom(id = "main") {
     setClickedId(id);
     setSpeakingId(id);
@@ -131,12 +155,21 @@ function PageNotFound() {
     setTimeout(() => setSpeakingId(null), 1800);
   }
 
+  /**
+   * Composant PageNotFound
+   * 
+   * Gère la pression d'une touche sur une figure géométrique pour déclencher la parole et l'animation.
+   * 
+   * @param {*} e  événement clavier
+   * @param {*} id  ID de la figure géométrique
+   */
   function handleKeyGeom(e, id = "main") {
     if (e.key === "Enter" || e.key === " ") {
       handleClickGeom(id);
     }
   }
 
+  // Rendu du composant PageNotFound
   return (
     <main className="pnf-wrap">
       <section className="pnf-card">
@@ -155,8 +188,7 @@ function PageNotFound() {
               <div className="speech-bubble" aria-live="assertive">{speeches.main}</div>
             )}
           </button>
-
-          {/* three smaller decorative shapes (non-interactive) */}
+          {/* trois figures géométriques */}
           <button
             type="button"
             className={`mini-shape one size-sm c1 ${clickedId === "one" ? "clicked" : ""}`}
@@ -171,7 +203,6 @@ function PageNotFound() {
               <div className="speech-bubble" aria-live="assertive">{speeches.one}</div>
             )}
           </button>
-
           <button
             type="button"
             className={`mini-shape two size-xs c2 ${clickedId === "two" ? "clicked" : ""}`}
@@ -186,7 +217,6 @@ function PageNotFound() {
               <div className="speech-bubble" aria-live="assertive">{speeches.two}</div>
             )}
           </button>
-
           <button
             type="button"
             className={`mini-shape three size-md c3 ${clickedId === "three" ? "clicked" : ""}`}
@@ -215,7 +245,6 @@ function PageNotFound() {
             </g>
           </svg>
         </div>
-
         <div className="pnf-content">
           <h1 className="pnf-title">404 — Page introuvable</h1>
           <p className="pnf-sub">Oups — cette page a pris un raccourci vers l'inconnu.

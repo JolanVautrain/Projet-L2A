@@ -2,14 +2,24 @@ import PropTypes from "prop-types";
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
 
+/**
+ * Rend une route protégée qui nécessite une authentification.
+ * 
+ * @param {*} param0 Props contenant l'utilisateur et les enfants à rendre
+ * @returns Les enfants si l'utilisateur est authentifié, sinon redirige vers l'accueil avec ouverture de la modal de connexion
+ */
 function RequireAuth({ user, children }) {
+  // Si l'utilisateur est authentifié, rendre les enfants
   return user ? children : <Navigate to="/" replace state={{ openLogin: true }} />;
 }
 
+// PropTypes validation pour le composant RequireAuth
 RequireAuth.propTypes = {
   user: PropTypes.string,
   children: PropTypes.node,
 };
+
+// Importation des composants de l'application
 import Accueil from "./Accueil";
 import Rules from "./Rules";
 import Account from "./Account";
@@ -17,9 +27,19 @@ import Contacts from "./Contacts";
 import PageNotFound from "./PageNotFound";
 import Game from "./game";
 
+/**
+ * Composant principal de l'application.
+ * Gère l'état utilisateur et le routage global.
+ */
 function App() {
+
+  // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => localStorage.getItem("user") || null);
 
+  /**
+   * Met à jour l'utilisateur et le stocke dans le localStorage.
+   * @param {string|null} value
+   */
   const setUser = (value) => {
     setUserState(value);
     if (value) localStorage.setItem("user", value);
@@ -54,4 +74,5 @@ function App() {
     </BrowserRouter>
   );
 }
+
 export default App;
