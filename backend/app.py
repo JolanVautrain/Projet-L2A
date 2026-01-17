@@ -305,17 +305,8 @@ def submit_score():
                 high = score
                 updated = True
             else:
-                # Even if score did not improve, update stage/timer if provided
-                if stage is not None or timer is not None:
-                    cur.execute(
-                        "UPDATE highscores SET stage = %s, timer = %s WHERE username = %s",
-                        (
-                            stage if stage is not None else 0,
-                            timer if timer is not None else 0,
-                            username,
-                        ),
-                    )
-                    conn.commit()
+                # Ne pas modifier `stage`/`timer` si le score n'a pas augmenté.
+                # On conserve les valeurs associées au highscore existant.
                 high = current_high
                 updated = False
 

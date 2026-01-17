@@ -72,6 +72,11 @@ function Leaderboard({ user }) {
     });
   };
 
+  // Trier les sessions par date (les plus récentes en premier)
+  const sortedUserSessions = userSessions && userSessions.length > 0
+    ? [...userSessions].sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt))
+    : [];
+
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
@@ -112,13 +117,20 @@ function Leaderboard({ user }) {
       )}
 
       {/* Section : Tous les temps du joueur connecté */}
-      {user && userSessions.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
+      {user && sortedUserSessions.length > 0 && (
+        <div
+          style={{
+            marginBottom: 24,
+            padding: 16,
+            backgroundColor: "rgba(79, 158, 246, 0.1)",
+            borderRadius: 8,
+            border: "1px solid rgba(79, 158, 246, 0.3)",
+          }}
+        >
           <h2>{t("leaderboard.yourOtherGames")}</h2>
           <table className="scores-table">
             <thead>
               <tr>
-                <th>#</th>
                 <th>{t("common.score")}</th>
                 <th>{t("common.stage")}</th>
                 <th>{t("leaderboard.timerSeconds")}</th>
@@ -126,9 +138,8 @@ function Leaderboard({ user }) {
               </tr>
             </thead>
             <tbody>
-              {userSessions.map((s, idx) => (
+              {sortedUserSessions.map((s) => (
                 <tr key={s.id}>
-                  <td>{idx + 1}</td>
                   <td>{s.score}</td>
                   <td>{s.stage ?? 0}</td>
                   <td>{s.timer ?? 0}</td>
@@ -185,8 +196,23 @@ function ScoreChart({ sessions, t }) {
   const yLabel = t ? t('leaderboard.chart.yLabel') : 'Score';
   const xLabel = t ? t('leaderboard.chart.xLabel') : 'Date';
 
+  // Tooltip state
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, score: 0, date: '' });
+
+  const handlePointMove = (e, s) => {
+    const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    // Positionner le tooltip légèrement en dessous et à droite du curseur
+    const left = clientX - svgRect.left + 12;
+    const top = clientY - svgRect.top + 12;
+    setTooltip({ visible: true, x: left, y: top, score: s.score, date: new Date(s.playedAt).toLocaleString() });
+  };
+
+  const handlePointLeave = () => setTooltip({ visible: false, x: 0, y: 0, score: 0, date: '' });
+
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
       <h3 style={{ margin: '6px 0 8px', textAlign: 'center', color: '#e6eef8' }}>{t('leaderboard.chart.title')}</h3>
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
         <defs>
@@ -208,7 +234,17 @@ function ScoreChart({ sessions, t }) {
           const cy = yFor(Number(s.score||0));
           return (
             <g key={s.id || i}>
-              <circle cx={cx} cy={cy} r={4.5} fill="#0b1222" stroke="rgba(79,158,246,0.98)" strokeWidth={2} />
+              <circle
+                cx={cx}
+                cy={cy}
+                r={5}
+                fill="#0b1222"
+                stroke="rgba(79,158,246,0.98)"
+                strokeWidth={2}
+                onMouseMove={(e) => handlePointMove(e, s)}
+                onMouseEnter={(e) => handlePointMove(e, s)}
+                onMouseLeave={handlePointLeave}
+              />
             </g>
           );
         })}
@@ -225,6 +261,19 @@ function ScoreChart({ sessions, t }) {
         <text x={width / 2} y={height - 2} fill="#9aa4b2" fontSize={12} textAnchor="middle">{xLabel}</text>
         <text x={12} y={height / 2} fill="#9aa4b2" fontSize={12} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
       </svg>
+
+      {/* Tooltip */}
+      <div
+        className="score-tooltip"
+        style={{
+          display: tooltip.visible ? 'block' : 'none',
+          left: tooltip.x,
+          top: tooltip.y,
+        }}
+      >
+        <div style={{ fontSize: 12, color: '#e6eef8', fontWeight: 600 }}>{t('common.score')}: {tooltip.score}</div>
+        <div style={{ fontSize: 11, color: '#9aa4b2' }}>{tooltip.date}</div>
+      </div>
     </div>
   );
 }

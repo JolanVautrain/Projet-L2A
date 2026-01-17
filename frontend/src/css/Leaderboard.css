@@ -50,8 +50,31 @@
   .scores-table td.score{text-align:left}
 }
 
-  /* Score chart styling */
-  .score-chart{margin-top:18px;padding:12px;border-radius:10px;background:rgba(11,18,34,0.6);border:1px solid rgba(79,158,246,0.08)}
-  .score-chart svg{display:block}
+  /* Score chart styling (match "Votre meilleur score") */
+  .score-chart{
+    margin-top:22px;
+    padding:16px;
+    border-radius:8px;
+    background-color: rgba(79,158,246,0.1);
+    border:1px solid rgba(79,158,246,0.3);
+    box-shadow: none;
+  }
+  .score-chart svg{display:block; border-radius:6px; background: transparent; padding:8px}
   .score-chart text{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+
+  .score-tooltip{
+    position: absolute;
+    pointer-events: none;
+    background: rgba(11,18,34,0.95);
+    border: 1px solid rgba(79,158,246,0.12);
+    padding: 8px 10px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    transform: none;
+    white-space: nowrap;
+    transition: opacity 0.08s ease;
+    opacity: 0.98;
+  }
+
+  .score-tooltip div{line-height:1}
 

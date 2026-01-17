@@ -28,4 +28,4 @@ dist-ssr
 backend/__pycache__/
 
 # Ignorer les données de la base de données PostgreSQL
-# il faudrait ignorer normalement...
+backend/db_data/
