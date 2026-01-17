@@ -10,6 +10,11 @@ let gameOver = false;
 let touchingGround = false;
 let internalStage = 1;
 let startTime = 0;
+let currentSessionId = null; // ID unique de session pour chaque partie
+let processingDeath = false; // Flag pour éviter les appels dupliqués à hitBomb()
+let sessionPosted = false; // Flag pour garantir qu'une seule requête POST par session
+let showGameOverModalCallback = null; // Callback pour afficher la modal Game Over
+let phaserScene = null; // Référence à la scène Phaser pour la pause/reprise
 
 /**
  * Précharge les assets Phaser.
@@ -36,8 +41,11 @@ function preload() {
  */
 function create() {
   console.log('[Phaser] create() called');
-  // start the in-game timer
+  // start the in-game timer and create a unique session ID
   startTime = Date.now();
+  currentSessionId = Math.random().toString(36).slice(2);
+  sessionPosted = false; // Réinitialiser pour la nouvelle partie
+  phaserScene = this; // Stocker la référence à la scène pour pause/reprise
   this.add.image(400, 300, "sky");
   globalThis.platforms = this.physics.add.staticGroup();
   globalThis.platforms.create(400, 568, "ground").setScale(2).refreshBody();
@@ -105,6 +113,10 @@ function update() {
  * Réinitialise les objets du jeu lors du game over.
  */
 function resetGameObjects() {
+  processingDeath = false; // Réinitialiser le flag pour permettre un nouvel appel à hitBomb()
+  score = 0; // Réinitialiser le score pour la nouvelle partie
+  internalStage = 1; // Réinitialiser la stage pour la nouvelle partie
+  // NE PAS réinitialiser sessionPosted - on doit garder la même session jusqu'à naviguer ailleurs
   globalThis.stars.children.iterate(function (child) {
     child.disableBody(true, true);
   });
@@ -122,6 +134,7 @@ function resetGameObjects() {
   }
   // reset timer when objects reset
   startTime = Date.now();
+  // NE PAS créer un nouvel ID ici - le même ID doit persister jusqu'à l'écran de fin
 }
 
 /**
@@ -225,46 +238,40 @@ function spawnBomb() {
  * Gère la collision avec une bombe (fin de partie).
  */
 function hitBomb(player, bomb) {
+  // Empêcher les appels multiples à hitBomb pendant qu'on traite la mort
+  if (processingDeath) return;
+  processingDeath = true;
+  
   gameOver = true;
   // capture le score final avant de réinitialiser
   const finalScore = score;
   const elapsedMs = startTime ? Date.now() - startTime : 0;
   const timerSeconds = Math.floor(elapsedMs / 1000);
-  // envoyer le score au backend si l'utilisateur est connecté
-  try {
-    const username = localStorage.getItem("user");
-    if (username) {
-      fetch("/api/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, score: finalScore, stage: internalStage, timer: timerSeconds }),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          console.log("Score submitted:", data);
+  // envoyer le score au backend si l'utilisateur est connecté et que la session n'a pas déjà été enregistrée
+  if (currentSessionId && !sessionPosted) {
+    sessionPosted = true; // Marquer immédiatement
+    try {
+      const username = localStorage.getItem("user");
+      if (username) {
+        fetch("/api/score", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, score: finalScore, stage: internalStage, timer: timerSeconds }),
         })
-        .catch((err) => console.warn("Failed to submit score", err));
+          .then((r) => r.json())
+          .then((data) => {
+            console.log("Score submitted:", data);
+          })
+          .catch((err) => console.warn("Failed to submit score", err));
+      }
+    } catch (e) {
+      console.warn("Error while submitting score", e);
     }
-  } catch (e) {
-    console.warn("Error while submitting score", e);
   }
-  internalStage = 1; // reset stage
-  score = 0;
-  startTime = Date.now();
-  // Replace le joueur à la position de départ et stoppe son mouvement
-  if (globalThis.player) {
-    globalThis.player.setX(100);
-    globalThis.player.setY(450);
-    globalThis.player.setVelocity(0, 0);
-    globalThis.player.anims.play("turn");
-  }
-  globalThis.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
-  globalThis.dispatchEvent(new CustomEvent('score-up', { detail: score }));
-  // détruit toutes les bombes à l'écran
-  if (globalThis.bombs) {
-    globalThis.bombs.children.iterate(function (child) {
-      if (child) child.destroy();
-    });
+  
+  // Afficher la modal Game Over au lieu de directement réinitialiser
+  if (showGameOverModalCallback) {
+    showGameOverModalCallback();
   }
 }
 
@@ -283,34 +290,37 @@ function Game() {
   const [stage, setStage] = useState(1);
   const [scoreDisplay, setScoreDisplay] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(0);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
   const navigate = useNavigate();
 
-  // envoie le score/stage/timer au backend; useBeacon favorise l'envoi lors unload
-  const sendScore = async (useBeacon = false) => {
-    try {
-      const username = localStorage.getItem("user");
-      if (!username) return;
-      const elapsedMs = startTime ? Date.now() - startTime : 0;
-      const timerSeconds = Math.floor(elapsedMs / 1000);
-      const payload = { username, score: score, stage: internalStage, timer: timerSeconds };
-      if (useBeacon && typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
-        navigator.sendBeacon("/api/score", blob);
-        return;
+  const handleReplay = () => {
+    setShowGameOverModal(false);
+    // Reprendre la scène Phaser
+    if (phaserScene && phaserScene.scene) {
+      try {
+        phaserScene.scene.resume();
+      } catch (e) {
+        console.warn("Failed to resume scene", e);
       }
-      await fetch("/api/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        keepalive: true,
-      });
-    } catch (e) {
-      console.warn("Failed to send score on exit/quit", e);
     }
+    // Réinitialiser les états React
+    setScoreDisplay(0);
+    setStage(1);
+    setTimerSeconds(0);
+    resetGameObjects();
+    gameOver = false;
   };
 
-  const handleQuit = async () => {
-    await sendScore(false);
+  const handleReturnHome = async () => {
+    setShowGameOverModal(false);
+    // Reprendre la scène temporairement avant de naviguer
+    if (phaserScene && phaserScene.scene) {
+      try {
+        phaserScene.scene.resume();
+      } catch (e) {
+        console.warn("Failed to resume scene", e);
+      }
+    }
     navigate("/");
   };
 
@@ -325,6 +335,20 @@ function Game() {
      globalThis.gameOver = false;
      globalThis.touchingGround = false;
      globalThis.internalStage = 1;
+     currentSessionId = null;
+     processingDeath = false;
+     sessionPosted = false;
+     // Initialiser le callback pour afficher la modal Game Over et mettre en pause
+     showGameOverModalCallback = () => {
+       if (phaserScene && phaserScene.scene) {
+         try {
+           phaserScene.scene.pause();
+         } catch (e) {
+           console.warn("Failed to pause scene", e);
+         }
+       }
+       setShowGameOverModal(true);
+     };
   }, []);
 
   /**
@@ -335,34 +359,6 @@ function Game() {
   useEffect(() => {
     let destroyed = false;
     let gameInstance = null;
-    let handleBeforeUnload = null;
-
-    const registerBeforeUnload = () => {
-      if (handleBeforeUnload) return;
-      handleBeforeUnload = () => {
-        try {
-          const username = localStorage.getItem("user");
-          if (!username) return;
-          const elapsedMs = startTime ? Date.now() - startTime : 0;
-          const timerSeconds = Math.floor(elapsedMs / 1000);
-          const payload = { username, score: score, stage: internalStage, timer: timerSeconds };
-          if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-            const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
-            navigator.sendBeacon("/api/score", blob);
-          } else {
-            fetch("/api/score", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-              keepalive: true,
-            }).catch(() => {});
-          }
-        } catch (e) {
-          console.warn('beforeunload send failed', e);
-        }
-      };
-      window.addEventListener('beforeunload', handleBeforeUnload);
-    };
 
     // Crée l'instance du jeu Phaser
     const createGame = () => {
@@ -421,7 +417,6 @@ function Game() {
             return;
           }
           if (globalThis.Phaser) {
-                registerBeforeUnload();
                 console.log('Phaser ready from polling');
                 clearInterval(checkPhaser);
                 createGame();
@@ -435,7 +430,6 @@ function Game() {
         script.onload = () => {
           console.log('Phaser script loaded');
           if (!destroyed) {
-            registerBeforeUnload();
             createGame();
           }
         };
@@ -462,32 +456,6 @@ function Game() {
       }
       if (gameContainer.current) {
         gameContainer.current._phaserGame = null;
-      }
-      // attempt to send current run data on component unmount
-      if (handleBeforeUnload) {
-        try { window.removeEventListener('beforeunload', handleBeforeUnload); } catch (e) { /* ignore */ }
-      }
-      try {
-        const username = localStorage.getItem("user");
-        if (!username) return;
-        const elapsedMs = startTime ? Date.now() - startTime : 0;
-        const timerSeconds = Math.floor(elapsedMs / 1000);
-        const payload = { username, score: score, stage: internalStage, timer: timerSeconds };
-        if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-          const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
-          navigator.sendBeacon("/api/score", blob);
-        } else {
-          (async () => {
-            await fetch("/api/score", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-              keepalive: true,
-            });
-          })();
-        }
-      } catch (e) {
-        console.warn('Error sending score on unmount', e);
       }
     };
   }, []);
@@ -543,8 +511,50 @@ function Game() {
       <div ref={gameContainer} id="phaser-container" style={{width: 800, height: 600, background: '#0b1222', borderRadius: 12, overflow: 'hidden', display: 'block', position: 'relative'}} />
         <div className="options-buttons">
           <button className="btn ghost" onClick={() => globalThis.location.reload()}>Recharger le jeu</button>
-          <button className="btn accent" onClick={handleQuit}>Quitter le jeu</button>
         </div>
+      
+      {/* Modal Game Over */}
+      {showGameOverModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: '#1a2849',
+            border: '1px solid rgba(79, 158, 246, 0.3)',
+            borderRadius: 12,
+            padding: 28,
+            textAlign: 'center',
+            maxWidth: 600,
+            width: 'min(90%, 600px)'
+          }}>
+            <h2 style={{ marginTop: 0, color: '#e6eef8' }}>Game Over</h2>
+            <p style={{ color: '#a0aec0', marginBottom: 24 }}>Vous avez atteint le score de <strong>{scoreDisplay}</strong> au stage <strong>{stage}</strong></p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button 
+                className="btn accent"
+                onClick={handleReplay}
+              >
+                Rejouer
+              </button>
+              <button 
+                className="btn ghost"
+                onClick={handleReturnHome}
+              >
+                Retour à l'accueil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

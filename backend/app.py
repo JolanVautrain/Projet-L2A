@@ -74,7 +74,7 @@ try:
 
     init_cur.execute(
         """INSERT INTO users (username, password) VALUES
-        ('test', '1234'),
+        ('admin', '1234'),
         ('username', 'password'),
         ('azerty', 'qsdfgh');"""
     )
@@ -86,6 +86,19 @@ try:
         high_score integer NOT NULL,
         stage integer DEFAULT 0,
         timer integer DEFAULT 0,
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    );"""
+    )
+
+    # Table pour enregistrer toutes les sessions de jeu
+    init_cur.execute(
+        """CREATE TABLE IF NOT EXISTS game_sessions (
+        id SERIAL PRIMARY KEY,
+        username varchar(100) NOT NULL,
+        score integer NOT NULL,
+        stage integer DEFAULT 0,
+        timer integer DEFAULT 0,
+        played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
     );"""
     )
@@ -233,6 +246,17 @@ def submit_score():
 
         conn = connect_to_database()
         cur = conn.cursor()
+
+        # Enregistrer la session de jeu dans game_sessions
+        cur.execute(
+            "INSERT INTO game_sessions (username, score, stage, timer) VALUES (%s, %s, %s, %s)",
+            (
+                username,
+                score,
+                stage if stage is not None else 0,
+                timer if timer is not None else 0,
+            ),
+        )
 
         # Vérifier si un high score existe
         cur.execute(
@@ -401,7 +425,7 @@ def list_high_scores():
 
 @app.route("/api/admin/reset-test", methods=["POST"])
 def reset_test_account():
-    """Reset the highscores entry for the `test` account.
+    """Reset the highscores entry for the `admin` account.
 
     If the environment variable `ADMIN_SECRET` is set, a matching
     `X-Admin-Token` header is required. If not set, the endpoint
@@ -418,7 +442,7 @@ def reset_test_account():
 
         conn = connect_to_database()
         cur = conn.cursor()
-        # Insert or update the test user's highscores to zeroes
+        # Insert or update the admin user's highscores to zeroes
         cur.execute(
             """
             INSERT INTO highscores (username, high_score, stage, timer)
@@ -428,7 +452,7 @@ def reset_test_account():
                 stage = EXCLUDED.stage,
                 timer = EXCLUDED.timer
             """,
-            ("test", 0, 0, 0),
+            ("admin", 0, 0, 0),
         )
         conn.commit()
         cur.close()
@@ -443,6 +467,177 @@ def reset_test_account():
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception(
             "Unexpected error in /api/admin/reset-test: %s", err
+        )
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/admin/users", methods=["GET"])
+def list_all_users():
+    """List all users in the system.
+
+    Returns JSON: [{"username": str}, ...]
+    Requires being connected as 'admin' (basic check).
+    """
+    try:
+        user = request.headers.get("X-Admin-User")
+        if user != "admin":
+            resp = jsonify({"error": "unauthorized"})
+            resp.status_code = 401
+            return resp
+
+        conn = connect_to_database()
+        cur = conn.cursor()
+        cur.execute("SELECT username FROM users ORDER BY username")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        result = [{"username": r[0]} for r in rows]
+        resp = jsonify(result)
+        resp.status_code = 200
+        return resp
+
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception("Unexpected error in /api/admin/users: %s", err)
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/admin/reset-user/<username>", methods=["POST"])
+def reset_user_scores(username: str):
+    """Reset the highscores entry for a specific user.
+
+    Returns JSON: {"ok": true} on success.
+    Requires being connected as 'admin' (basic check).
+    """
+    try:
+        user = request.headers.get("X-Admin-User")
+        if user != "admin":
+            resp = jsonify({"error": "unauthorized"})
+            resp.status_code = 401
+            return resp
+
+        username = str(username).strip()
+        conn = connect_to_database()
+        cur = conn.cursor()
+        # Insert or update the user's highscores to zeroes
+        cur.execute(
+            """
+            INSERT INTO highscores (username, high_score, stage, timer)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (username) DO UPDATE
+            SET high_score = EXCLUDED.high_score,
+                stage = EXCLUDED.stage,
+                timer = EXCLUDED.timer
+            """,
+            (username, 0, 0, 0),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        resp = jsonify({"ok": True})
+        resp.status_code = 200
+        return resp
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception(
+            "Unexpected error in /api/admin/reset-user: %s", err
+        )
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/admin/reset-sessions/<username>", methods=["POST"])
+def reset_user_sessions(username: str):
+    """Reset all game sessions for a specific user.
+
+    Returns JSON: {"ok": true} on success.
+    Requires being connected as 'admin' (basic check).
+    """
+    try:
+        user = request.headers.get("X-Admin-User")
+        if user != "admin":
+            resp = jsonify({"error": "unauthorized"})
+            resp.status_code = 401
+            return resp
+
+        username = str(username).strip()
+        conn = connect_to_database()
+        cur = conn.cursor()
+        # Delete all game_sessions for the user
+        cur.execute(
+            "DELETE FROM game_sessions WHERE username = %s",
+            (username,),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        resp = jsonify({"ok": True})
+        resp.status_code = 200
+        return resp
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception(
+            "Unexpected error in /api/admin/reset-sessions: %s", err
+        )
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/user/sessions/<username>", methods=["GET"])
+def get_user_sessions(username: str):
+    """Retourne toutes les sessions de jeu d'un utilisateur, triées par score DESC.
+
+    Réponse JSON: [{"id": int, "score": int, "stage": int, "timer": int, "playedAt": str}, ...]
+    """
+    try:
+        username = str(username).strip()
+        conn = connect_to_database()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, score, stage, timer, played_at FROM game_sessions WHERE username = %s ORDER BY score DESC",
+            (username,),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        result = [
+            {
+                "id": int(r[0]),
+                "score": int(r[1]),
+                "stage": int(r[2] or 0),
+                "timer": int(r[3] or 0),
+                "playedAt": str(r[4]),
+            }
+            for r in rows
+        ]
+        resp = jsonify(result)
+        resp.status_code = 200
+        return resp
+
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception(
+            "Unexpected error in /api/user/sessions/<username>: %s", err
         )
         resp = jsonify({"error": "Internal Server Error"})
         resp.status_code = 500
