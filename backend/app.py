@@ -43,12 +43,16 @@ def connect_to_database():
     try:
         # Utiliser une variable d'environnement pour le mot de passe
         db_password = os.environ.get("POSTGRES_PASSWORD", "password_change")
+        db_host = os.environ.get("POSTGRES_HOST", "localhost")
+        db_port = os.environ.get("POSTGRES_PORT", "5432")
+        db_name = os.environ.get("POSTGRES_DB", "ma_db")
+        db_user = os.environ.get("POSTGRES_USER", "mon_user")
         return psycopg2.connect(
-            database="ma_db",
-            user="mon_user",
+            database=db_name,
+            user=db_user,
             password=db_password,
-            host="db",
-            port="5432",
+            host=db_host,
+            port=db_port,
         )
     except OperationalError:
         app.logger.exception("Database connection failed")
@@ -71,6 +75,16 @@ try:
         ('test', '1234'),
         ('username', 'password'),
         ('azerty', 'qsdfgh');"""
+    )
+
+    # Table pour stocker le meilleur score par utilisateur
+    init_cur.execute("DROP TABLE IF EXISTS highscores;")
+    init_cur.execute(
+        """CREATE TABLE IF NOT EXISTS highscores (
+        username varchar(100) PRIMARY KEY,
+        high_score integer NOT NULL,
+        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+    );"""
     )
 
     init_conn.commit()
@@ -161,6 +175,161 @@ def check_login():
         return resp
     except (psycopg2.Error, ValueError, TypeError) as err:
         app.logger.exception("Unexpected error in /api/login: %s", err)
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/score", methods=["POST"])
+def submit_score():
+    """Soumettre un score pour un utilisateur.
+
+    Corps attendu: {"username": str, "score": int}
+    Si le score est supérieur au high score existant, on met à jour.
+    Retourne JSON: {"updated": bool, "highScore": int}
+    """
+    try:
+        data = request.get_json()
+        if not data or "username" not in data or "score" not in data:
+            resp = jsonify(
+                {
+                    "error": "Bad Request",
+                    "message": "username and score required",
+                }
+            )
+            resp.status_code = 400
+            return resp
+
+        username = str(data["username"]).strip()
+        try:
+            score = int(data["score"])
+        except (ValueError, TypeError):
+            resp = jsonify(
+                {"error": "Bad Request", "message": "score must be an integer"}
+            )
+            resp.status_code = 400
+            return resp
+
+        conn = connect_to_database()
+        cur = conn.cursor()
+
+        # Vérifier si un high score existe
+        cur.execute(
+            "SELECT high_score FROM highscores WHERE username = %s",
+            (username,),
+        )
+        row = cur.fetchone()
+
+        if not row:
+            # Insérer un nouveau record
+            cur.execute(
+                "INSERT INTO highscores (username, high_score) VALUES (%s, %s)",
+                (username, score),
+            )
+            conn.commit()
+            high = score
+            updated = True
+        else:
+            current_high = int(row[0])
+            if score > current_high:
+                cur.execute(
+                    "UPDATE highscores SET high_score = %s WHERE username = %s",
+                    (score, username),
+                )
+                conn.commit()
+                high = score
+                updated = True
+            else:
+                high = current_high
+                updated = False
+
+        cur.close()
+        conn.close()
+
+        resp = jsonify({"updated": updated, "highScore": high})
+        resp.status_code = 200
+        return resp
+
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception("Unexpected error in /api/score: %s", err)
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/score/<username>")
+def get_high_score(username: str):
+    """Retourne le meilleur score pour `username`.
+
+    Réponse JSON: {"username": str, "highScore": int} ou 404 si non trouvé.
+    """
+    try:
+        username = str(username).strip()
+        conn = connect_to_database()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT high_score FROM highscores WHERE username = %s",
+            (username,),
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not row:
+            resp = jsonify(
+                {"error": "Not Found", "message": "No high score for user"}
+            )
+            resp.status_code = 404
+            return resp
+
+        resp = jsonify({"username": username, "highScore": int(row[0])})
+        resp.status_code = 200
+        return resp
+
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception(
+            "Unexpected error in /api/score/<username>: %s", err
+        )
+        resp = jsonify({"error": "Internal Server Error"})
+        resp.status_code = 500
+        return resp
+
+
+@app.route("/api/score", methods=["GET"])
+def list_high_scores():
+    """Retourne la liste de tous les high scores triée par score décroissant.
+
+    Réponse JSON: [{"username": str, "highScore": int}, ...]
+    """
+    try:
+        conn = connect_to_database()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT username, high_score FROM highscores ORDER BY high_score DESC"
+        )
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        result = [{"username": r[0], "highScore": int(r[1])} for r in rows]
+        resp = jsonify(result)
+        resp.status_code = 200
+        return resp
+
+    except OperationalError:
+        resp = jsonify({"error": "Database error"})
+        resp.status_code = 500
+        return resp
+    except (psycopg2.Error, ValueError, TypeError) as err:
+        app.logger.exception("Unexpected error in GET /api/score: %s", err)
         resp = jsonify({"error": "Internal Server Error"})
         resp.status_code = 500
         return resp

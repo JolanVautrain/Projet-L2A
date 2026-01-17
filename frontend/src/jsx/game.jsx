@@ -221,6 +221,26 @@ function spawnBomb() {
  */
 function hitBomb(player, bomb) {
   gameOver = true;
+  // capture le score final avant de réinitialiser
+  const finalScore = score;
+  // envoyer le score au backend si l'utilisateur est connecté
+  try {
+    const username = localStorage.getItem("user");
+    if (username) {
+      fetch("/api/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, score: finalScore }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          console.log("Score submitted:", data);
+        })
+        .catch((err) => console.warn("Failed to submit score", err));
+    }
+  } catch (e) {
+    console.warn("Error while submitting score", e);
+  }
   internalStage = 1; // reset stage
   score = 0;
   // Replace le joueur à la position de départ et stoppe son mouvement

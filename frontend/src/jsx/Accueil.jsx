@@ -79,7 +79,7 @@ function Accueil({ user, setUser }) {
             <Link className="btn primary" to="/game">
               Lancer une partie
             </Link>
-            <Link className="btn ghost" to="/rules">
+            <Link className="btn ghost" to="/leaderboard">
               Voir les règles
             </Link>
             <button

@@ -30,6 +30,13 @@ services:
     ports:
       - "5000:5000"
     environment:
+      # Variables explicites pour que backend/app.py puisse se connecter
+      POSTGRES_USER: mon_user
+      POSTGRES_PASSWORD: mon_pass
+      POSTGRES_DB: ma_db
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      # Garder DATABASE_URL pour compatibilité côté app si nécessaire
       DATABASE_URL: postgresql://mon_user:mon_pass@db/ma_db
       FLASK_ENV: development
     depends_on:

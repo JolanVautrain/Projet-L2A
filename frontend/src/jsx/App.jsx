@@ -21,7 +21,7 @@ RequireAuth.propTypes = {
 
 // Importation des composants de l'application
 import Accueil from "./Accueil";
-import Rules from "./Rules";
+import Leaderboard from "./Leaderboard";
 import Account from "./Account";
 import Contacts from "./Contacts";
 import PageNotFound from "./PageNotFound";
@@ -51,7 +51,7 @@ function App() {
       <header>
         <nav className="navbar">
           <NavLink to="/">Accueil</NavLink>
-          <NavLink to="/rules">Règles</NavLink>
+          <NavLink to="/leaderboard">Classements</NavLink>
           {userState ? (
             <div className="nav-greeting" style={{display: 'inline-flex', gap: 8, alignItems: 'center'}}>
               <span>Bonjour {userState}</span>
@@ -65,7 +65,7 @@ function App() {
       </header>
       <Routes>
         <Route path="/" element={<Accueil user={userState} setUser={setUser} />} />
-        <Route path="/rules" element={<Rules />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/account" element={<Account user={userState} setUser={setUser} />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/game" element={<RequireAuth user={userState}><Game /></RequireAuth>} />
