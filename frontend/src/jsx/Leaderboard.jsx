@@ -52,6 +52,11 @@ function Leaderboard({ user }) {
   if (error) return <p>{t("common.error")}: {error}</p>;
 
   const userBestScore = scores.find((s) => s.username === user);
+  
+  // Calculer le meilleur score depuis les sessions si pas trouvé dans highscores
+  const bestScoreFromSessions = userSessions.length > 0
+    ? userSessions.reduce((max, s) => (s.score > max.score ? s : max))
+    : null;
 
   // Fonction pour formater la date selon la langue
   const formatDate = (dateStr) => {
@@ -72,7 +77,7 @@ function Leaderboard({ user }) {
       <h1>{t("leaderboard.title")}</h1>
 
       {/* Section : Meilleur temps du joueur connecté */}
-      {user && userBestScore && (
+      {user && (userBestScore || bestScoreFromSessions) && (
         <div
           style={{
             marginBottom: 24,
@@ -95,11 +100,11 @@ function Leaderboard({ user }) {
             <tbody>
               <tr style={{ backgroundColor: "rgba(79, 158, 246, 0.2)" }}>
                 <td>
-                  <strong>{userBestScore.username}</strong>
+                  <strong>{user}</strong>
                 </td>
-                <td>{userBestScore.highScore}</td>
-                <td>{userBestScore.stage ?? 0}</td>
-                <td>{userBestScore.timer ?? 0}</td>
+                <td>{(userBestScore || bestScoreFromSessions).highScore || (userBestScore || bestScoreFromSessions).score}</td>
+                <td>{(userBestScore || bestScoreFromSessions).stage ?? 0}</td>
+                <td>{(userBestScore || bestScoreFromSessions).timer ?? 0}</td>
               </tr>
             </tbody>
           </table>
@@ -134,39 +139,6 @@ function Leaderboard({ user }) {
           </table>
         </div>
       )}
-
-      {/* Section : Classement global */}
-      <div>
-        <h2>{t("leaderboard.globalRanking")}</h2>
-        {scores.length === 0 ? (
-          <p>{t("leaderboard.noScoresRecorded")}</p>
-        ) : (
-          <table className="scores-table">
-            <thead>
-              <tr>
-                <th>{t("leaderboard.rank")}</th>
-                <th>{t("leaderboard.player")}</th>
-                <th>{t("common.score")}</th>
-                <th>{t("common.stage")}</th>
-                <th>{t("leaderboard.timerSeconds")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {scores.map((s, idx) => (
-                <tr key={s.username} style={user === s.username ? { backgroundColor: "rgba(79, 158, 246, 0.1)" } : {}}>
-                  <td>{idx + 1}</td>
-                  <td>
-                    {user === s.username ? <strong>{s.username}</strong> : s.username}
-                  </td>
-                  <td>{s.highScore}</td>
-                  <td>{s.stage ?? 0}</td>
-                  <td>{s.timer ?? 0}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
     </div>
   );
 }

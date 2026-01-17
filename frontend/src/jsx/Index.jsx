@@ -33,7 +33,7 @@ import Game from "./Game";
  * Gère l'état utilisateur et le routage global.
  */
 function App() {
-  const { t } = useLanguage();
+  const { t, changeLanguage } = useLanguage();
 
   // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => localStorage.getItem("user") || null);
@@ -46,6 +46,24 @@ function App() {
     setUserState(value);
     if (value) localStorage.setItem("user", value);
     else localStorage.removeItem("user");
+  };
+  
+  // Après connexion, si un utilisateur est défini, charger sa langue depuis le backend
+  const setUserAndLoadLang = (value) => {
+    setUser(value);
+    if (value) {
+      fetch(`/api/user/language/${value}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (data && data.language) {
+            changeLanguage(data.language);
+            localStorage.setItem('language', data.language);
+          }
+        })
+        .catch(() => {});
+    } else {
+      // Déconnexion : on peut laisser la langue ou remettre par défaut
+    }
   };
 
   return (
@@ -66,9 +84,9 @@ function App() {
         </nav>
       </header>
       <Routes>
-        <Route path="/" element={<Accueil user={userState} setUser={setUser} />} />
+        <Route path="/" element={<Accueil user={userState} setUser={setUserAndLoadLang} />} />
         <Route path="/leaderboard" element={<Leaderboard user={userState} />} />
-        <Route path="/account" element={<Account user={userState} setUser={setUser} />} />
+        <Route path="/account" element={<Account user={userState} setUser={setUserAndLoadLang} />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/game" element={<RequireAuth user={userState}><Game /></RequireAuth>} />
         <Route path="/*" element={<PageNotFound />}/>
