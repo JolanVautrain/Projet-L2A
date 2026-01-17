@@ -22,4 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ignorer les fichiers compilés Python
 *.pyc
+backend/__pycache__/
