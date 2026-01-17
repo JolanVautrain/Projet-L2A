@@ -114,21 +114,29 @@ def check_login():
 
         if not row:
             app.logger.info("Login attempt: user '%s' not found", username)
-            # Frontend expects a JSON object with userExist and passwordIsCorrect
+            # Frontend expects JSON with keys:
+            # 'userExist' and 'passwordIsCorrect'
             resp = jsonify({"userExist": False, "passwordIsCorrect": False})
             resp.status_code = 200
             return resp
 
         stored_username, stored_password = row
         if stored_password != password:
-            app.logger.info("Login attempt: incorrect password for user '%s'", username)
+            app.logger.info(
+                "Login attempt: incorrect password for user '%s'",
+                username,
+            )
             resp = jsonify({"userExist": True, "passwordIsCorrect": False})
             resp.status_code = 200
             return resp
 
         app.logger.info("User '%s' authenticated", stored_username)
         resp = jsonify(
-            {"userExist": True, "passwordIsCorrect": True, "username": stored_username}
+            {
+                "userExist": True,
+                "passwordIsCorrect": True,
+                "username": stored_username,
+            }
         )
         resp.status_code = 200
         return resp

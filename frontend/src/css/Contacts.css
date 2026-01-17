@@ -4,13 +4,7 @@
   max-width: 1120px;
   margin: 0 auto;
   padding: 2rem 1.4rem;
-  color: #e8edf6;
-}
-
-.contacts {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  color: #ffffff;
 }
 
 .contacts-header {
@@ -53,11 +47,6 @@
   max-width: 1120px; /* allow even bigger cards */
   margin: 0 auto; /* center horizontally inside grid */
   min-height: 140px; /* ensure comfortable height */
-}
-
-.contact-card {
-  flex: 0 0 auto; /* prevent cards from shrinking */
-  min-height: 88px;
 }
 
 .contact-card:hover {

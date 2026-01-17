@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import "../css/index.css";
 import "../css/Account.css";
@@ -35,5 +36,10 @@ function Account({ user, setUser }) {
     </>
   );
 }
+
+Account.propTypes = {
+  user: PropTypes.string,
+  setUser: PropTypes.func.isRequired,
+};
 
 export default Account;

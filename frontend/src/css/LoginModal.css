@@ -67,7 +67,7 @@
 }
 .modal-close:hover {
   color: #66e3b8;
-  background: rgba(102,227,184,0.08);
+  background: #232e48;
 }
 
 .modal-form {
@@ -92,7 +92,7 @@
   border-radius: 10px;
   border: 1px solid #66e3b8;
   background: #232e48;
-  color: #e8edf6;
+  color: #ffffff;
   font-size: 1.05rem;
   padding: 8px 12px;
   transition: border-color 0.2s;
@@ -104,7 +104,7 @@
 
 .modal-error {
   color: #ff6b6b;
-  background: rgba(255,107,107,0.08);
+  background: #232e48;
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 0.98rem;

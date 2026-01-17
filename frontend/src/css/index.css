@@ -4,7 +4,7 @@
   font-family: "Space Grotesk", "Manrope", "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 500;
-  color: #e8edf6;
+  color: #ffffff;
   background-color: #0b1222;
   color-scheme: dark;
   font-synthesis: none;
@@ -24,7 +24,7 @@ body {
   background: radial-gradient(circle at 10% 20%, #172b4d 0%, #0b1222 36%),
     radial-gradient(circle at 90% 10%, #143766 0%, #0b1222 32%),
     linear-gradient(160deg, #0b1222 0%, #0b162c 45%, #0a1b34 100%);
-  color: #e8edf6;
+  color: #ffffff;
 }
 
 #root {
