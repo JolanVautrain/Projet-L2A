@@ -25,7 +25,7 @@ import Leaderboard from "./Leaderboard";
 import Account from "./Account";
 import Contacts from "./Contacts";
 import PageNotFound from "./PageNotFound";
-import Game from "./game";
+import Game from "./Game";
 
 /**
  * Composant principal de l'application.

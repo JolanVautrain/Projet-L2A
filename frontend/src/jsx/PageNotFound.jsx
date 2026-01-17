@@ -1,4 +1,4 @@
-import "../css/index.css";
+import "../css/App.css";
 import "../css/PageNotFound.css";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";

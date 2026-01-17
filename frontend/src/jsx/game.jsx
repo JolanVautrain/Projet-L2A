@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import "../css/index.css";
-import "../css/game.css";
+import "../css/App.css";
+import "../css/Game.css";
 
 // Game state (module-level to persist across renders)
 // État du jeu (module global pour persister entre les rendus)

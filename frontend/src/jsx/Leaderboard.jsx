@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "../css/index.css";
+import "../css/App.css";
 import "../css/Leaderboard.css";
 
 function Leaderboard() {
