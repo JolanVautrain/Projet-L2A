@@ -92,7 +92,10 @@
     "confirmRemoveXp": "Remove 50 XP from {username}?",
     "removeXpSuccess": "50 XP removed from {username}.",
     "loginRequired": "You must be logged in to access your account.",
-    "openLogin": "Sign in"
+    "openLogin": "Sign in",
+    "deleteXpHistory": "Delete XP history",
+    "confirmDeleteXpHistory": "Delete XP history for {username}?",
+    "deleteXpHistorySuccess": "XP history deleted for {username}."
   },
   "statistics": {
     "title": "Your Statistics",

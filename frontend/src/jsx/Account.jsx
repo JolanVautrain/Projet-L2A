@@ -22,6 +22,7 @@ function Account({ user, setUser }) {
   const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
   const [awardXpLoading, setAwardXpLoading] = useState(false);
   const [removeXpLoading, setRemoveXpLoading] = useState(false);
+  const [deleteHistoryLoading, setDeleteHistoryLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ function Account({ user, setUser }) {
     if (user === "admin") {
       (async () => {
         try {
-          const res = await fetch("/api/admin/users", {
+          const res = await fetch(`${apiBase}/api/admin/users`, {
             headers: { "X-Admin-User": "admin" },
           });
           if (res.ok) {
@@ -137,7 +138,7 @@ function Account({ user, setUser }) {
                       if (selectedUser) {
                         if (!confirm(t("account.confirmResetUserSessions").replace("{username}", selectedUser))) return;
                         setResetSessionsLoading(true);
-                        fetch(`/api/admin/reset-sessions/${selectedUser}`, {
+                        fetch(`${apiBase}/api/admin/reset-sessions/${selectedUser}`, {
                           method: "POST",
                           headers: { "X-Admin-User": "admin" },
                         })
@@ -153,6 +154,30 @@ function Account({ user, setUser }) {
                     {resetSessionsLoading
                       ? t("account.resetting")
                       : t("account.resetUserSessions")}
+                  </button>
+                  <button
+                    className="btn ghost warning"
+                    disabled={deleteHistoryLoading}
+                    onClick={() => {
+                      if (!selectedUser) return;
+                      if (!confirm((t("account.confirmDeleteXpHistory") || `Supprimer l'historique XP de ${selectedUser}?`).replace("{username}", selectedUser))) return;
+                      setDeleteHistoryLoading(true);
+                      fetch(`${apiBase}/api/admin/delete-xp-history/${selectedUser}`, {
+                        method: "POST",
+                        headers: { "X-Admin-User": "admin" },
+                      })
+                        .then((res) => {
+                          if (!res.ok) throw new Error("Erreur serveur");
+                          return res.json();
+                        })
+                        .then((data) => {
+                          alert(t("account.deleteXpHistorySuccess")?.replace("{username}", selectedUser) || `Historique XP supprimé pour ${selectedUser}`);
+                        })
+                        .catch((e) => alert(t("common.failedPrefix") + e.message))
+                        .finally(() => setDeleteHistoryLoading(false));
+                    }}
+                  >
+                    {deleteHistoryLoading ? t('common.saving') : (t('account.deleteXpHistory') || 'Supprimer historique XP')}
                   </button>
                   <button
                     className="btn ghost danger admin-tools__delete"

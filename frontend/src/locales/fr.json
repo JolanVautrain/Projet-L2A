@@ -61,6 +61,7 @@
     "loginRequired": "Vous devez être connecté pour voir votre classement.",
     "openLogin": "Se connecter"
   },
+  
   "account": {
     "title": "Compte",
     "hello": "Bonjour",
@@ -92,7 +93,10 @@
     "confirmRemoveXp": "Retirer 50 XP à {username} ?",
     "removeXpSuccess": "50 XP retirés à {username}.",
     "loginRequired": "Vous devez être connecté pour accéder à votre compte.",
-    "openLogin": "Se connecter"
+    "openLogin": "Se connecter",
+    "deleteXpHistory": "Supprimer l'historique XP",
+    "confirmDeleteXpHistory": "Supprimer l'historique XP de {username} ?",
+    "deleteXpHistorySuccess": "Historique XP supprimé pour {username}."
   },
   "statistics": {
     "title": "Vos statistiques",

@@ -128,6 +128,10 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
 
     @wraps(f)
     def wrapper(*args: Any, **kwargs: Any) -> Response:
+        # Allow OPTIONS preflight requests without authentication
+        if request.method == "OPTIONS":
+            return f(*args, **kwargs)
+
         user = request.headers.get("X-Admin-User")
         if user != "admin":
             return make_response({"error": "unauthorized"}, 401)
@@ -592,6 +596,29 @@ def reset_test_account() -> Response:
                 timer = EXCLUDED.timer
             """,
             ("admin", 0, 0, 0),
+        )
+        conn.commit()
+        return make_response({"ok": True})
+
+
+@app.route("/api/admin/delete-xp-history/<username>", methods=["OPTIONS"])
+def delete_user_xp_history_options(username: str) -> Response:
+    """Respond to CORS preflight for delete-xp-history."""
+    return make_response({}, 200)
+
+
+@app.route("/api/admin/delete-xp-history/<username>", methods=["POST"])
+@handle_db_errors
+@require_admin
+def delete_user_xp_history(username: str) -> Response:
+    """Delete all XP history entries for a specific user.
+
+    Returns JSON: {"ok": True} on success. Requires admin header.
+    """
+    username = username.strip()
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        cur.execute(
+            "DELETE FROM user_xp_history WHERE username = %s", (username,)
         )
         conn.commit()
         return make_response({"ok": True})
