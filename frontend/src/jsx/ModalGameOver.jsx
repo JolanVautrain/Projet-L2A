@@ -1,11 +1,10 @@
 import "../css/ModalGameOver.css";
+import PropTypes from "prop-types";
 import { useLanguage } from "./Language.jsx";
 
 function ModalGameOver({ isOpen, score, stage, onReplay, onReturnHome }) {
   const { t } = useLanguage();
-
   if (!isOpen) return null;
-
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -31,3 +30,11 @@ function ModalGameOver({ isOpen, score, stage, onReplay, onReturnHome }) {
 }
 
 export default ModalGameOver;
+
+ModalGameOver.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  score: PropTypes.number,
+  stage: PropTypes.number,
+  onReplay: PropTypes.func,
+  onReturnHome: PropTypes.func,
+};

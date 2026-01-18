@@ -55,7 +55,7 @@ function App() {
       fetch(`/api/user/language/${value}`)
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
-          if (data && data.language) {
+          if (data?.language) {
             changeLanguage(data.language);
             localStorage.setItem('language', data.language);
           }

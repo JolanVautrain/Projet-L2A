@@ -32,7 +32,6 @@ function Accueil({ user, setUser }) {
       text: t("accueil.extraordinaryChallengeDesc"),
     },
   ];
-
   // Étapes du parcours utilisateur
   const steps = [
     {
@@ -51,7 +50,6 @@ function Accueil({ user, setUser }) {
 
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
-
   const location = useLocation();
 
   // Ouvre la modal de connexion si l'état de navigation le demande
@@ -62,7 +60,6 @@ function Accueil({ user, setUser }) {
       globalThis.history.replaceState({}, document.title, globalThis.location.pathname);
     }
   }, [location]);
-
   // Rendu du composant Accueil
   return (
     <div className="home">

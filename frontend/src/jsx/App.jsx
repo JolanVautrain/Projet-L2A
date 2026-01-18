@@ -32,10 +32,8 @@ import Game from "./Game";
  * Gère l'état utilisateur et le routage global.
  */
 function App() {
-
   // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => localStorage.getItem("user") || null);
-
   /**
    * Met à jour l'utilisateur et le stocke dans le localStorage.
    * @param {string|null} value
@@ -47,12 +45,13 @@ function App() {
   };
 
   return (
-        <header>
+    <>
+      <header>
         <nav className="navbar">
           <NavLink to="/">Accueil</NavLink>
           <NavLink to="/leaderboard">Classements</NavLink>
           {userState ? (
-            <div className="nav-greeting" style={{display: 'inline-flex', gap: 8, alignItems: 'center'}}>
+            <div className="nav-greeting" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
               <span>Bonjour {userState}</span>
               <NavLink className="btn ghost no-border" to="/account">Profil</NavLink>
             </div>
@@ -68,8 +67,9 @@ function App() {
         <Route path="/account" element={<Account user={userState} setUser={setUser} />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/game" element={<RequireAuth user={userState}><Game /></RequireAuth>} />
-        <Route path="/*" element={<PageNotFound />}/>
+        <Route path="/*" element={<PageNotFound />} />
       </Routes>
+    </>
   );
 }
 

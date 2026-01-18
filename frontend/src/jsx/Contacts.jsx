@@ -58,7 +58,6 @@ ContactCard.propTypes = {
  */
 function Contacts() {
   const { t } = useLanguage();
-
   // Données des développeurs avec traductions
   const devs = [
     {
@@ -90,7 +89,6 @@ function Contacts() {
       egg: t("contacts.lalo.egg"),
     },
   ];
-
   // Rendu du composant Contacts
   return (
     <main className="contacts">
@@ -98,13 +96,11 @@ function Contacts() {
         <h1>{t("contacts.title")}</h1>
         <p className="intro">{t("contacts.intro")}</p>
       </header>
-
       <section className="contacts-grid">
         {devs.map((d) => (
           <ContactCard key={d.email} person={d} t={t} />
         ))}
       </section>
-
       <footer className="contacts-footer">
         <small>{t("contacts.footer")}</small>
       </footer>

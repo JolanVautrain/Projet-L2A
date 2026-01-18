@@ -35,7 +35,6 @@ function PageNotFound() {
     let targetX = window.innerWidth / 2;
     let targetY = window.innerHeight / 2;
     let rafId = null;
-
     // mise à jour des coordonnées cibles au mouvement de la souris
     function onMove(e) {
       targetX = e.clientX;
@@ -96,7 +95,6 @@ function PageNotFound() {
     globalThis.addEventListener("scroll", updateEyeCenters, { passive: true });
     // démarrage de l'animation
     rafId = globalThis.requestAnimationFrame(animate);
-
     return () => { // nettoyage des écouteurs et de l'animation
       globalThis.removeEventListener("mousemove", onMove);
       globalThis.removeEventListener("resize", updateEyeCenters);
@@ -171,7 +169,6 @@ function PageNotFound() {
       handleClickGeom(id);
     }
   }
-
   // Rendu du composant PageNotFound
   return (
     <main className="pnf-wrap">
@@ -235,7 +232,6 @@ function PageNotFound() {
             )}
           </button>
         </div>
-
         <div className="pnf-illus" aria-hidden>
           <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="6" width="208" height="148" rx="12" fill="#071227" stroke="#18304a"/>
@@ -251,12 +247,10 @@ function PageNotFound() {
         <div className="pnf-content">
           <h1 className="pnf-title">{t("pageNotFound.title")}</h1>
           <p className="pnf-sub">{t("pageNotFound.subtitle")}</p>
-
           <div className="pnf-actions">
             <Link to="/" className="btn primary">{t("pageNotFound.returnHome")}</Link>
             <Link to="/accueil" className="btn ghost">{t("pageNotFound.seeHome")}</Link>
           </div>
-
           <p className="pnf-hint">{t("pageNotFound.hint")}</p>
         </div>
       </section>

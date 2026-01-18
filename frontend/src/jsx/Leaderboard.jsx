@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
@@ -12,7 +13,6 @@ function Leaderboard({ user }) {
 
   useEffect(() => {
     let mounted = true;
-    
     // Charger le classement global
     Promise.all([
       fetch("/api/score")
@@ -23,7 +23,7 @@ function Leaderboard({ user }) {
       // Charger les sessions du joueur connecté si disponible
       user
         ? fetch(`/api/user/sessions/${user}`)
-            .then((r) => {
+            .then(async (r) => {
               if (!r.ok) return [];
               return r.json();
             })
@@ -42,22 +42,20 @@ function Leaderboard({ user }) {
       .finally(() => {
         if (mounted) setLoading(false);
       });
-    
     return () => {
       mounted = false;
     };
   }, [user]);
-
   if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
   if (error) return <p>{t("common.error")}: {error}</p>;
-
   const userBestScore = scores.find((s) => s.username === user);
-  
   // Calculer le meilleur score depuis les sessions si pas trouvé dans highscores
   const bestScoreFromSessions = userSessions.length > 0
-    ? userSessions.reduce((max, s) => (s.score > max.score ? s : max))
+    ? userSessions.reduce(
+        (max, s) => (s.score > max.score ? s : max),
+        { score: -Infinity, stage: 0, timer: 0 }
+      )
     : null;
-
   // Fonction pour formater la date selon la langue
   const formatDate = (dateStr) => {
     const locale = language === 'en' ? 'en-US' : 'fr-FR';
@@ -71,16 +69,13 @@ function Leaderboard({ user }) {
       second: '2-digit' 
     });
   };
-
   // Trier les sessions par date (les plus récentes en premier)
   const sortedUserSessions = userSessions && userSessions.length > 0
     ? [...userSessions].sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt))
     : [];
-
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
-
       {/* Section : Meilleur temps du joueur connecté */}
       {user && (userBestScore || bestScoreFromSessions) && (
         <div
@@ -115,7 +110,6 @@ function Leaderboard({ user }) {
           </table>
         </div>
       )}
-
       {/* Section : Tous les temps du joueur connecté */}
       {user && sortedUserSessions.length > 0 && (
         <div
@@ -161,44 +155,34 @@ function Leaderboard({ user }) {
 }
 
 function ScoreChart({ sessions, t }) {
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, score: 0, date: '' });
   if (!sessions || sessions.length === 0) return null;
-
   const width = 800;
   const height = 220;
   const margin = { top: 14, right: 20, bottom: 36, left: 52 };
-
   // Trier par date ascendante
   const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
   const times = sorted.map((s) => new Date(s.playedAt).getTime());
   const scores = sorted.map((s) => Number(s.score || 0));
-
   const tMin = Math.min(...times);
   const tMax = Math.max(...times);
   const sMin = Math.min(...scores);
   const sMax = Math.max(...scores);
-
   const xFor = (ts) => {
     const innerW = width - margin.left - margin.right;
     const denom = tMax - tMin || 1;
     return margin.left + ((ts - tMin) / denom) * innerW;
   };
-
   const yFor = (s) => {
     const innerH = height - margin.top - margin.bottom;
     const denom = sMax - sMin || 1;
     return margin.top + (1 - (s - sMin) / denom) * innerH;
   };
-
   const points = sorted.map((s) => `${xFor(new Date(s.playedAt).getTime())},${yFor(Number(s.score||0))}`).join(' ');
-
   const firstLabel = new Date(tMin).toLocaleString();
   const lastLabel = new Date(tMax).toLocaleString();
   const yLabel = t ? t('leaderboard.chart.yLabel') : 'Score';
   const xLabel = t ? t('leaderboard.chart.xLabel') : 'Date';
-
-  // Tooltip state
-  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, score: 0, date: '' });
-
   const handlePointMove = (e, s) => {
     const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
     const clientX = e.clientX;
@@ -208,9 +192,7 @@ function ScoreChart({ sessions, t }) {
     const top = clientY - svgRect.top + 12;
     setTooltip({ visible: true, x: left, y: top, score: s.score, date: new Date(s.playedAt).toLocaleString() });
   };
-
   const handlePointLeave = () => setTooltip({ visible: false, x: 0, y: 0, score: 0, date: '' });
-
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
       <h3 style={{ margin: '6px 0 8px', textAlign: 'center', color: '#e6eef8' }}>{t('leaderboard.chart.title')}</h3>
@@ -221,13 +203,10 @@ function ScoreChart({ sessions, t }) {
             <stop offset="100%" stopColor="rgba(79,158,246,0.02)" />
           </linearGradient>
         </defs>
-
-        {/* Area under the line */}
+        {/* Zone sous la courbe */}
         <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#grad)" />
-
-        {/* Line */}
+        {/* Ligne */}
         <polyline points={points} fill="none" stroke="rgba(79,158,246,0.95)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-
         {/* Points */}
         {sorted.map((s, i) => {
           const cx = xFor(new Date(s.playedAt).getTime());
@@ -248,21 +227,17 @@ function ScoreChart({ sessions, t }) {
             </g>
           );
         })}
-
         {/* Y labels (min/max) */}
         <text x={8} y={yFor(sMax)} fill="#9aa4b2" fontSize={12}>{sMax}</text>
         <text x={8} y={yFor(sMin)} fill="#9aa4b2" fontSize={12}>{sMin}</text>
-
         {/* X labels */}
         <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
         <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
-
         {/* Axis labels */}
         <text x={width / 2} y={height - 2} fill="#9aa4b2" fontSize={12} textAnchor="middle">{xLabel}</text>
         <text x={12} y={height / 2} fill="#9aa4b2" fontSize={12} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
       </svg>
-
-      {/* Tooltip */}
+      {/* Infobulle */}
       <div
         className="score-tooltip"
         style={{
@@ -279,3 +254,12 @@ function ScoreChart({ sessions, t }) {
 }
 
 export default Leaderboard;
+
+Leaderboard.propTypes = {
+  user: PropTypes.string,
+};
+
+ScoreChart.propTypes = {
+  sessions: PropTypes.arrayOf(PropTypes.object),
+  t: PropTypes.func,
+};

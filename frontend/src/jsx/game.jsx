@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ModalGameOver from "./ModalGameOver";
 import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
@@ -16,7 +16,6 @@ let currentSessionId = null; // ID unique de session pour chaque partie
 let processingDeath = false; // Flag pour éviter les appels dupliqués à hitBomb()
 let sessionPosted = false; // Flag pour garantir qu'une seule requête POST par session
 let showGameOverModalCallback = null; // Callback pour afficher la modal Game Over
-let phaserScene = null; // Référence à la scène Phaser pour la pause/reprise
 
 /**
  * Précharge les assets Phaser.
@@ -47,7 +46,8 @@ function create() {
   startTime = Date.now();
   currentSessionId = Math.random().toString(36).slice(2);
   sessionPosted = false; // Réinitialiser pour la nouvelle partie
-  phaserScene = this; // Stocker la référence à la scène pour pause/reprise
+  // Expose a getter instead of assigning `this` to a variable
+  globalThis.getPhaserScene = () => this;
   this.add.image(400, 300, "sky");
   globalThis.platforms = this.physics.add.staticGroup();
   globalThis.platforms.create(400, 568, "ground").setScale(2).refreshBody();
@@ -118,7 +118,6 @@ function resetGameObjects() {
   processingDeath = false; // Réinitialiser le flag pour permettre un nouvel appel à hitBomb()
   score = 0; // Réinitialiser le score pour la nouvelle partie
   internalStage = 1; // Réinitialiser la stage pour la nouvelle partie
-  // NE PAS réinitialiser sessionPosted - on doit garder la même session jusqu'à naviguer ailleurs
   globalThis.stars.children.iterate(function (child) {
     child.disableBody(true, true);
   });
@@ -270,7 +269,6 @@ function hitBomb(player, bomb) {
       console.warn("Error while submitting score", e);
     }
   }
-  
   // Afficher la modal Game Over au lieu de directement réinitialiser
   if (showGameOverModalCallback) {
     showGameOverModalCallback();
@@ -295,13 +293,13 @@ function Game() {
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
-
   const handleReplay = () => {
     setShowGameOverModal(false);
     // Reprendre la scène Phaser
-    if (phaserScene && phaserScene.scene) {
+    const scene = globalThis.getPhaserScene?.();
+    if (scene && scene.scene) {
       try {
-        phaserScene.scene.resume();
+        scene.scene.resume();
       } catch (e) {
         console.warn("Failed to resume scene", e);
       }
@@ -314,20 +312,19 @@ function Game() {
     gameOver = false;
     sessionPosted = false;  // Permettre l'enregistrement de la prochaine partie
   };
-
   const handleReturnHome = async () => {
     setShowGameOverModal(false);
     // Reprendre la scène temporairement avant de naviguer
-    if (phaserScene && phaserScene.scene) {
+    const scene = globalThis.getPhaserScene?.();
+    if (scene && scene.scene) {
       try {
-        phaserScene.scene.resume();
+        scene.scene.resume();
       } catch (e) {
         console.warn("Failed to resume scene", e);
       }
     }
     navigate("/");
   };
-
   // reset des variables globales du module à l'initialisation du composant
   useEffect(() => {
      globalThis.player = undefined;
@@ -342,11 +339,12 @@ function Game() {
      currentSessionId = null;
      processingDeath = false;
      sessionPosted = false;
-     // Initialiser le callback pour afficher la modal Game Over et mettre en pause
+     // Initialiser le callback pour afficher la modal Game Over et mettre en paus
      showGameOverModalCallback = () => {
-       if (phaserScene && phaserScene.scene) {
+       const scene = globalThis.getPhaserScene?.();
+       if (scene && scene.scene) {
          try {
-           phaserScene.scene.pause();
+           scene.scene.pause();
          } catch (e) {
            console.warn("Failed to pause scene", e);
          }
@@ -363,11 +361,9 @@ function Game() {
   useEffect(() => {
     let destroyed = false;
     let gameInstance = null;
-
     // Crée l'instance du jeu Phaser
     const createGame = () => {
       if (destroyed || !gameContainer.current || gameContainer.current._phaserGame) return;
-      
       console.log('Creating Phaser game instance...');
       const config = {
         type: globalThis.Phaser.AUTO,
@@ -385,7 +381,6 @@ function Game() {
       };
       gameInstance = new globalThis.Phaser.Game(config);
       gameContainer.current._phaserGame = gameInstance;
-      
       // Affiche le canvas une fois prêt
       setTimeout(() => {
         const canvas = gameContainer.current?.querySelector('canvas');
@@ -399,7 +394,6 @@ function Game() {
         }
       }, 100);
     };
-
     // Initialise Phaser en chargeant le script si nécessaire
     const initPhaser = () => {
       console.log('[initPhaser] Called. destroyed=', destroyed, 'Phaser=', !!globalThis.Phaser);
@@ -410,7 +404,6 @@ function Game() {
         createGame();
         return;
       }
-
       // charge le script Phaser depuis le CDN
       let script = document.querySelector('script[data-phaser-dynamic]');
       if (script) {
@@ -443,14 +436,12 @@ function Game() {
         document.head.appendChild(script);
       }
     };
-
     // utilise un timeout pour différer l'initialisation
     console.log('[Game] Setting timeout for initPhaser');
     const timer = setTimeout(() => {
       console.log('[Game] Timeout fired, calling initPhaser');
       if (!destroyed) initPhaser();
     }, 50);
-
     // Nettoyage à la destruction du composant
     return () => {
       destroyed = true;
@@ -463,7 +454,6 @@ function Game() {
       }
     };
   }, []);
-
   // Écoute les événements de mise à jour du stage et du score
   useEffect(() => {
     const onStage = (e) => {
@@ -472,7 +462,6 @@ function Game() {
     globalThis.addEventListener('stage-up', onStage);
     return () => globalThis.removeEventListener('stage-up', onStage);
   }, []);
-
   // Écoute les événements de mise à jour du score
   useEffect(() => {
     const onScore = (e) => {
@@ -481,7 +470,6 @@ function Game() {
     globalThis.addEventListener('score-up', onScore);
     return () => globalThis.removeEventListener('score-up', onScore);
   }, []);
-
   // Met à jour le chronomètre affiché toutes les 500ms
   useEffect(() => {
     const updateTimer = () => {
@@ -492,14 +480,12 @@ function Game() {
     const id = setInterval(updateTimer, 500);
     return () => clearInterval(id);
   }, []);
-
   // Formate le temps en mm:ss
   const formatTime = (sec) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
-
   // Rendu du composant Game avec l'overlay  
   return (
     <div className="game-wrap">
@@ -516,7 +502,6 @@ function Game() {
         <div className="options-buttons">
           <button className="btn ghost" onClick={() => globalThis.location.reload()}>{t("game.reloadGame")}</button>
         </div>
-      
       <ModalGameOver 
         isOpen={showGameOverModal}
         score={scoreDisplay}
