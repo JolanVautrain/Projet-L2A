@@ -59,11 +59,17 @@ function Leaderboard({ user, setUser }) {
     return (
       <div className="leaderboard" style={{ textAlign: 'center', padding: 24 }}>
         <h1>{t("leaderboard.title")}</h1>
-        <p style={{ marginTop: 12 }}>{t("leaderboard.loginRequired")}</p>
+        <p style={{ marginTop: 50 }}>{t("leaderboard.loginRequired")}</p>
         <button className="btn primary" onClick={openLogin} style={{ marginTop: 12 }}>
           {t("leaderboard.openLogin")}
         </button>
         <LoginModal isOpen={isOpen} onClose={closeLogin} action={setUser || (() => {})} afterLogin={() => { /* no-op: setUser already updates leaderboard */ }} />
+        <div className="leaderboard-loader" aria-hidden>
+          <div className="lb-loader">
+            <div className="lb-box"></div>
+            <div className="lb-hill"></div>
+          </div>
+        </div>
       </div>
     );
   }

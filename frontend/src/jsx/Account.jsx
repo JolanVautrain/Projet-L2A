@@ -147,7 +147,7 @@ function Account({ user, setUser }) {
   return (
     <div style={{ textAlign: 'center', padding: 24 }}>
       <h1>{t("account.title")}</h1>
-      <p style={{ marginTop: 12 }}>{t("account.loginRequired")}</p>
+      <p style={{ marginTop: 50 }}>{t("account.loginRequired")}</p>
       <button className="btn primary" onClick={() => setIsOpen(true)} style={{ marginTop: 12 }}>
         {t("account.openLogin")}
       </button>
@@ -157,6 +157,20 @@ function Account({ user, setUser }) {
         onClose={() => setIsOpen(false)}
         afterLogin={() => navigate('/account', { replace: true })}
       />
+
+      {/* Scenic loop animation below the login button */}
+      <div className="account-loop" aria-hidden>
+        <div className="loop-wrapper">
+          <div className="mountain"></div>
+          <div className="hill"></div>
+          <div className="tree"></div>
+          <div className="tree"></div>
+          <div className="tree"></div>
+          <div className="rock"></div>
+          <div className="truck"></div>
+          <div className="wheels"></div>
+        </div>
+      </div>
     </div>
   );
 }

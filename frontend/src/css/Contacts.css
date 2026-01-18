@@ -13,12 +13,12 @@
 }
 
 .contacts-header h1 {
-  margin: 0 0 6px;
+  margin: 25px 0 6px;
 }
 
 .contacts-header .intro {
   color: #9fb2ff;
-  margin: 0;
+  margin: 50px 0 0;
 }
 
 .contacts-grid {
