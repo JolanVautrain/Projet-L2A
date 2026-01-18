@@ -5,94 +5,167 @@
   text-align: center;
 }
 
-/* Admin tools styling */
+/* Admin tools styling - modernized */
 .admin-tools {
-  margin-top: 24px;
-  padding: 18px;
-  border: 1px solid rgba(255,255,255,0.06);
+  margin-top: 28px;
+  padding: 22px;
   border-radius: 12px;
-  background-color: rgba(79, 158, 246, 0.05);
-  box-shadow: 0 12px 30px rgba(2,8,26,0.6);
+  background-color: rgba(79,158,246,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 30px rgba(2,8,26,0.30);
+  color: #e6eef8;
   text-align: left;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px 20px;
+  align-items: start;
 }
 .admin-tools h3 {
-  margin: 0 0 8px 0;
-  color: #eafffb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
-/* Title variant used when marginTop:0 was inline */
-.admin-tools__title{ margin-top:0 }
+/* Ensure the H2 title spans full width and is centered at top */
+.admin-tools__title {
+  grid-column: 1 / -1;
+  text-align: center;
+  margin: 0 0 12px 0;
+}
 .admin-tools h4 {
   margin: 6px 0 12px 0;
-  color: #d6f7f0;
+  color: #cfeee4;
+  font-weight: 600;
 }
-.admin-tools .controls {
+.admin-tools__controls {
   display: flex;
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
 }
-
-/* Controls variant replacing inline flex styles */
-.admin-tools__controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
+.admin-tools__select,
 .admin-tools select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(102,227,184,0.12);
-  background: linear-gradient(180deg,#071322,#091626);
-  color: #e6eef8;
-  min-width: 160px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  color: inherit;
+  min-width: 200px;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25);
 }
-.admin-tools__select{ padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.2); background-color:#0b1222; color:#e6eef8; min-width:120px }
 .admin-tools .btn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease, background 120ms ease;
+  border: 1px solid rgba(10,36,80,0.85);
+  background: linear-gradient(180deg,#184e9a,#0f3566);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(16,48,97,0.28);
+  text-align: center;
 }
 .admin-tools .btn.ghost {
-  background: rgba(102,227,184,0.04);
-  border: 1px solid rgba(102,227,184,0.16);
-  color: #66e3b8;
+  background: linear-gradient(180deg, rgba(24,78,154,0.12), rgba(15,53,102,0.10));
+  color: #fff;
+  border: 1px solid rgba(10,36,80,0.18);
 }
-.admin-tools .btn.ghost:hover {
-  background: rgba(102,227,184,0.12);
-  box-shadow: 0 6px 16px rgba(102,227,184,0.06);
-}
+.admin-tools .btn.ghost:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(16,48,97,0.22); }
 .admin-tools .btn.danger {
-  background: #dc3545;
-  border: 1px solid rgba(220,53,69,0.9);
-  color: #ffffff;
+  /* uniformisé: utiliser même fond que le bouton principal */
+  background: linear-gradient(180deg,#184e9a,#0f3566);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(16,48,97,0.28);
 }
-.admin-tools .btn.danger:hover {
-  background: #b02a37;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(176,42,55,0.2);
+.admin-tools .btn.danger:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(16,48,97,0.34); }
+.admin-tools .btn.warning {
+  background: linear-gradient(180deg,#184e9a,#0f3566);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(16,48,97,0.28);
 }
 
-/* Small helper for delete button spacing */
-.admin-tools__delete{ margin-left:8px }
+/* Layout for action buttons column */
+.admin-tools .admin-tools__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+/* Center wrapper for select */
+.admin-tools__center {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+}
+
+.admin-actions {
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  width:100%;
+  margin-top: 28px;
+}
+.admin-action {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+}
+  .admin-action button { width: 100%; max-width: 100%; }
+.admin-action__desc { margin:0; color: #bcdccf; font-size:0.95rem }
+.admin-action hr { width:100%; border:none; border-top:1px solid rgba(255,255,255,0.04); margin-top:8px }
+
+/* Users table and search */
+.admin-users-search-row { display:flex; justify-content:center; margin-bottom:8px }
+.admin-users-search { width:320px; padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); color:inherit }
+.admin-users-list { max-height: 360px; overflow: auto; border-radius:8px; border:1px solid rgba(255,255,255,0.06); padding:10px; background: linear-gradient(180deg, rgba(6,10,18,0.72), rgba(4,8,14,0.64)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.02); }
+.admin-users-table { width:100%; border-collapse:collapse; min-width:760px }
+.admin-users-table thead th { text-align:left; padding:8px 12px; font-size:0.95rem; color:#cfeee4; position: sticky; top:0; background: rgba(8,12,20,0.96); border-bottom:1px solid rgba(255,255,255,0.06); }
+.admin-users-table tbody td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.06); color:#eaf6ff }
+
+/* smoother transitions for row interactions */
+.admin-users-table tbody tr, .admin-users-table tbody td { transition: background 180ms ease, color 180ms ease, transform 120ms ease; }
+
+/* Hover: stronger contrast */
+.admin-users-table tbody tr:hover { background: rgba(255,255,255,0.08); cursor:pointer; transform: translateY(-1px); }
+
+/* Selected row: high-contrast, visible left accent and subtle shadow */
+.admin-users-table tbody tr.selected,
+.admin-users-table tbody tr:focus-within {
+  background: linear-gradient(90deg, rgba(8,46,82,0.96), rgba(10,56,104,0.94));
+  color: #ffffff;
+  box-shadow: inset 6px 0 0 rgba(102,227,184,0.95), 0 8px 28px rgba(2,8,26,0.48);
+  border-radius: 6px;
+}
+.admin-users-table tbody tr.selected td,
+.admin-users-table tbody tr:focus-within td { color: inherit; }
+
+/* Subtle zebra striping to separate rows from background */
+.admin-users-table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.01); }
+
+/* Stronger scrollbar for visibility */
+.admin-users-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); }
+.admin-users-table tbody tr button { padding:6px 10px; border-radius:8px }
+
+/* Scrollbar styling for modern browsers */
+.admin-users-list::-webkit-scrollbar { height:8px; width:10px }
+.admin-users-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius:8px }
+.admin-users-list::-webkit-scrollbar-track { background: transparent }
 
 @media (max-width: 720px) {
   .admin-tools {
     padding: 12px;
   }
-  .admin-tools .controls {
+  .admin-tools__controls {
     flex-direction: column;
     align-items: stretch;
   }
   .admin-tools select { width: 100%; }
   .admin-tools .btn { width: 100%; }
-}
-
-/* Scenic loop animation styles scoped to the account page */
-.account-loop {
-  margin: 18px auto 0;
-  display: flex;
-  justify-content: center;
+  .admin-users-list { max-height: 300px; }
 }
 .account-loop .loop-wrapper {
   margin: 0 auto;
