@@ -17,6 +17,7 @@
     "returnHome": "Retour à l'accueil",
     "loading": "Chargement...",
     "error": "Erreur",
+    "saving": "Enregistrement...",
     "failedPrefix": "Échec : ",
     "noData": "Aucune donnée disponible",
     "close": "Fermer"
@@ -45,12 +46,22 @@
       "yLabel": "Score",
       "title": "Évolution des scores"
     },
+    "xpChart": {
+      "xLabel": "Date/Heure",
+      "yLabel": "XP",
+      "title": "Progression XP",
+      "legend": "XP"
+    },
+    "xpLabel": "XP",
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Chargement du classement...",
     "fetchFailed": "Échec du chargement du classement.",
+    "progress": "Progression",
+    "level": "Niveau",
     "loginRequired": "Vous devez être connecté pour voir votre classement.",
     "openLogin": "Se connecter"
   },
+  
   "account": {
     "title": "Compte",
     "hello": "Bonjour",
@@ -62,6 +73,8 @@
     "resetOtherGames": "Réinitialiser vos autres parties",
     "manageUsers": "Réinitialiser le classement d'un autre joueur",
     "selectUser": "Sélectionner un utilisateur",
+    "searchPlaceholder": "Rechercher un joueur...",
+    "select": "Sélectionner",
     "resetUserScores": "Réinitialiser",
     "resetUserSessions": "Réinitialiser les autres parties d'un joueur",
     "language": "Langue",
@@ -71,12 +84,26 @@
     "confirmResetUserSessions": "Réinitialiser les autres parties pour",
     "confirmResetUserSessionsFull": "Réinitialiser les autres parties pour {username} ?",
     "resetUserSessionsSuccess": "Les autres parties de {username} ont été réinitialisées.",
+    "resetSessionsDesc": "Supprime les sessions de jeu et scores de l'utilisateur sélectionné.",
     "confirmDeleteUser": "Supprimer le compte de",
     "confirmDeleteUserFull": "Supprimer le compte de {username} ?\nSupprimer ce compte est irréversible.",
     "deleteUser": "Supprimer l'utilisateur",
     "deleteUserSuccess": "Utilisateur {username} supprimé.",
+    "award50xp": "+50 XP",
+    "confirmAwardXp": "Ajouter 50 XP à {username} ?",
+    "awardXpSuccess": "50 XP ajoutés à {username}.",
+    "awardXpDesc": "Ajouter 50 XP à l'utilisateur sélectionné.",
+    "remove50xp": "-50 XP",
+    "confirmRemoveXp": "Retirer 50 XP à {username} ?",
+    "removeXpSuccess": "50 XP retirés à {username}.",
+    "removeXpDesc": "Retirer 50 XP à l'utilisateur sélectionné.",
     "loginRequired": "Vous devez être connecté pour accéder à votre compte.",
-    "openLogin": "Se connecter"
+    "openLogin": "Se connecter",
+    "deleteXpHistory": "Supprimer l'historique XP",
+    "confirmDeleteXpHistory": "Supprimer l'historique XP de {username} ?",
+    "deleteXpHistorySuccess": "Historique XP supprimé pour {username}."
+    ,"deleteXpHistoryDesc": "Supprime toutes les entrées d'historique XP pour l'utilisateur sélectionné."
+    ,"deleteUserDesc": "Supprime l'utilisateur et toutes les données associées (irréversible)."
   },
   "statistics": {
     "title": "Vos statistiques",

@@ -39,8 +39,6 @@
 
 .leaderboard h1{margin:0 0 12px 0;font-size:1.5rem;text-align:center}
 
-.table-wrapper{overflow:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.02);backdrop-filter:blur(6px)}
-
 .scores-table{width:100%;border-collapse:separate;border-spacing:0;background:transparent; margin-bottom:0}
 .scores-table thead th{position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));color:var(--accent);font-weight:700;padding:14px 18px;text-align:center;font-size:0.95rem;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.04)}
 .scores-table tbody td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.02);color:#e8f5ff}
@@ -156,6 +154,33 @@
   70% { transform: translate(3em, -4em) rotate(217deg); }
   75% { transform: translate(3em, -4em) rotate(220deg); }
   100% { transform: translate(0, -1em) rotate(-225deg); }
+}
+
+/* Compact progress-chart variant to reduce visual size */
+.progress-chart{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  max-width:260px;
+  padding:6px 8px;
+  background: transparent;
+}
+.progress-chart{ margin: 0 auto; justify-content: center; }
+.progress-chart__svg{
+  width:96px;
+  height:96px;
+  display:block;
+}
+.progress-chart__svg circle{ transform-origin:50% 50%; }
+.progress-chart__meta{ display:flex; flex-direction:column; align-items:center; min-width:80px }
+.progress-chart__meta .lvl{ font-weight:700; color:#e6eef8; font-size:14px }
+.progress-chart__meta .xp{ color:var(--muted); font-size:12px }
+
+@media (max-width:720px){
+  .progress-chart{ max-width:160px; gap:8px }
+  .progress-chart__svg{ width:72px; height:72px }
+  .progress-chart__meta .lvl{ font-size:13px }
+  .progress-chart__meta .xp{ font-size:11px }
 }
 
 

@@ -10,7 +10,7 @@ function Statistics({ user }) {
   const { t } = useLanguage();
   useEffect(() => {
     if (!user) {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 0);
       return;
     }
     let mounted = true;
@@ -33,7 +33,7 @@ function Statistics({ user }) {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, t]);
   if (!user) return <p>{t("statistics.loginToViewStats")}</p>;
   if (loading) return <p>{t("common.loading")}</p>;
   if (error) return <p>{t("common.error")}: {error}</p>;

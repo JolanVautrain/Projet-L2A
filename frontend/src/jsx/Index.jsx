@@ -26,7 +26,7 @@ import Leaderboard from "./Leaderboard";
 import Account from "./Account";
 import Contacts from "./Contacts";
 import PageNotFound from "./PageNotFound";
-import Game from "./Game";
+import Game from "./Game.jsx";
 
 /**
  * Composant principal de l'application.

@@ -47,3 +47,13 @@ docker-compose up --build
 ## Contact
 
 Ouvrez une issue pour signaler un bug ou demander une fonctionnalité.
+
+docker compose logs backend --tail 200
+
+curl.exe -v -X OPTIONS "http://localhost:5000/api/admin/delete-xp-history/admin" -H "Origin: http://localhost:5173" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: X-Admin-User"
+
+curl.exe -v -X POST "http://localhost:5000/api/admin/delete-xp-history/admin" -H "X-Admin-User: admin"
+
+npm run lint
+npx eslint . --fix
+détecter code inutiliser

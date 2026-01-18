@@ -60,7 +60,7 @@ function Accueil({ user, setUser }) {
   // Ouvre la modal de connexion si l'état de navigation le demande
   useEffect(() => {
     if (location?.state?.openLogin) {
-      setIsOpen(true);
+      setTimeout(() => setIsOpen(true), 0);
       // Nettoie l'état pour éviter de rouvrir la modal inutilement
       globalThis.history.replaceState({}, document.title, globalThis.location.pathname);
     }

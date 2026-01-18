@@ -6,11 +6,71 @@ import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
 
+// Small helpers to build scale functions used by charts
+const makeXFor = (xMin, xMax, width, margin) => {
+  const innerW = width - margin.left - margin.right;
+  const denom = xMax - xMin || 1;
+  return (ts) => margin.left + ((ts - xMin) / denom) * innerW;
+};
+
+// Convert monotone cubic points to a smooth Bezier path (shared helper)
+const monotoneToBezier = (pts) => {
+  if (!pts || pts.length === 0) return '';
+  const n = pts.length;
+  if (n === 1) return `M ${pts[0].x},${pts[0].y}`;
+  const x = pts.map(p => p.x);
+  const y = pts.map(p => p.y);
+  const dx = new Array(n - 1);
+  const slope = new Array(n - 1);
+  for (let i = 0; i < n - 1; i++) {
+    dx[i] = x[i + 1] - x[i] || 1;
+    slope[i] = (y[i + 1] - y[i]) / dx[i];
+  }
+  const m = new Array(n);
+  m[0] = slope[0];
+  m[n - 1] = slope[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    if (slope[i - 1] === 0 || slope[i] === 0 || (slope[i - 1] > 0) !== (slope[i] > 0)) {
+      m[i] = 0;
+    } else {
+      m[i] = (slope[i - 1] + slope[i]) / 2;
+    }
+  }
+  // Fritsch-Carlson adjustment to avoid overshoot
+  for (let i = 0; i < n - 1; i++) {
+    if (slope[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    const a = m[i] / slope[i];
+    const b = m[i + 1] / slope[i];
+    const sq = a * a + b * b;
+    if (sq > 9) {
+      const t = 3 / Math.sqrt(sq);
+      m[i] = t * a * slope[i];
+      m[i + 1] = t * b * slope[i];
+    }
+  }
+  // Build cubic Bezier path
+  let d = `M ${x[0]},${y[0]}`;
+  for (let i = 0; i < n - 1; i++) {
+    const dxSeg = x[i + 1] - x[i];
+    const cp1x = x[i] + dxSeg / 3;
+    const cp1y = y[i] + m[i] * dxSeg / 3;
+    const cp2x = x[i + 1] - dxSeg / 3;
+    const cp2y = y[i + 1] - m[i + 1] * dxSeg / 3;
+    d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x[i + 1]},${y[i + 1]}`;
+  }
+  return d;
+};
+
 function Leaderboard({ user, setUser }) {
+  // Runtime API base: prefer same host on port 5000 (backend), useful during dev
+  const apiBase = globalThis?.window ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000` : '';
   const [scores, setScores] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [xpHistory, setXpHistory] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const { t, language } = useLanguage();
   const openLogin = () => setIsOpen(true);
@@ -21,19 +81,20 @@ function Leaderboard({ user, setUser }) {
 
   useEffect(() => {
     let mounted = true;
-    // Charger le classement global
     Promise.all([
       fetch("/api/score")
         .then((r) => {
-          if (!r.ok) throw new Error(t("leaderboard.fetchFailed"));
-          return r.json();
+          if (r.ok) {
+            return r.json();
+          }
+          throw new Error(t("leaderboard.fetchFailed"));
         }),
       // Charger les sessions du joueur connecté si disponible
       user
         ? fetch(`/api/user/sessions/${user}`)
             .then(async (r) => {
-              if (!r.ok) return [];
-              return r.json();
+              if (r.ok) return r.json();
+              return [];
             })
             .catch(() => [])
         : Promise.resolve([]),
@@ -50,14 +111,36 @@ function Leaderboard({ user, setUser }) {
       .finally(() => {
         if (mounted) setLoading(false);
       });
+    // Charger XP / niveau du user connecté
+    if (user) {
+      fetch(`${apiBase}/api/user/xp/${user}`)
+        .then((r) => {
+          if (r.ok) {
+            return r.json();
+          }
+          throw new Error("failed to fetch xp");
+        })
+        .then((d) => {
+          if (mounted) {
+            setXp(d.xp || 0);
+            setLevel(d.level || 1);
+          }
+        })
+        .catch(() => {})
+      // Charger l'historique XP
+      fetch(`${apiBase}/api/user/xp/history/${user}?limit=100`)
+        .then((r) => r.ok ? r.json() : [])
+        .then((h) => { if (mounted) setXpHistory(h || []); })
+        .catch(() => {});
+    }
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, apiBase, t]);
   if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
   if (error) return <p>{t("common.error")}: {error}</p>;
   // Si pas connecté, afficher une bannière explicite et proposer d'ouvrir la modal
-  if (!user) {
+  if (user == null) {
     return (
       <div className="leaderboard leaderboard--centered">
         <h1>{t("leaderboard.title")}</h1>
@@ -101,9 +184,24 @@ function Leaderboard({ user, setUser }) {
   const sortedUserSessions = userSessions && userSessions.length > 0
     ? [...userSessions].sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt))
     : [];
+
+  
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
+      {/* XP / Niveau */}
+      {user && (
+        <div className="leaderboard__panel">
+          <h2>{t('leaderboard.progress') || 'Progression'}</h2>
+          {/* Inline compact progress bar and manual award button removed to simplify UI */}
+          <ProgressChart xp={xp} level={level} t={t} />
+          {xpHistory && xpHistory.length > 0 && (
+            <div style={{marginTop:14}} className="score-chart">
+              <ProgressHistoryChart history={xpHistory} t={t} />
+            </div>
+          )}
+        </div>
+      )}
       {/* Section : Meilleur temps du joueur connecté */}
       {user && (userBestScore || bestScoreFromSessions) && (
         <div className="leaderboard__panel">
@@ -165,107 +263,162 @@ function Leaderboard({ user, setUser }) {
     </div>
   );
 }
-function ScoreChart({ sessions, t }) {
-  const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
-  const tooltipRef = useRef(null);
-  if (!sessions || sessions.length === 0) return null;
-  const width = 800;
-  const height = 220;
-  const margin = { top: 14, right: 20, bottom: 36, left: 52 };
-  // Trier par date ascendante
-  const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
-  const times = sorted.map((s) => new Date(s.playedAt).getTime());
-  const scores = sorted.map((s) => Number(s.score || 0));
-  const tMin = Math.min(...times);
-  const tMax = Math.max(...times);
-  const sMin = Math.min(...scores);
-  const sMax = Math.max(...scores);
-  const xFor = (ts) => {
-    const innerW = width - margin.left - margin.right;
-    const denom = tMax - tMin || 1;
-    return margin.left + ((ts - tMin) / denom) * innerW;
-  };
-  const yFor = (s) => {
-    const innerH = height - margin.top - margin.bottom;
-    const denom = sMax - sMin || 1;
-    return margin.top + (1 - (s - sMin) / denom) * innerH;
-  };
-  const points = sorted.map((s) => `${xFor(new Date(s.playedAt).getTime())},${yFor(Number(s.score||0))}`).join(' ');
-  const firstLabel = new Date(tMin).toLocaleString();
-  const lastLabel = new Date(tMax).toLocaleString();
-  const yLabel = t ? t('leaderboard.chart.yLabel') : 'Score';
-  const xLabel = t ? t('leaderboard.chart.xLabel') : 'Date';
-  const handlePointMove = (e, s) => {
-    const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
-    const clientX = e.clientX;
-    const clientY = e.clientY;
-    // Positionner le tooltip légèrement en dessous et à droite du curseur
-    const left = clientX - svgRect.left + 12;
-    const top = clientY - svgRect.top + 12;
-    setTooltip({ visible: true, score: s.score, date: new Date(s.playedAt).toLocaleString() });
-    if (tooltipRef.current) {
-      tooltipRef.current.style.left = `${left}px`;
-      tooltipRef.current.style.top = `${top}px`;
-    }
-  };
-  const handlePointLeave = () => setTooltip({ visible: false, x: 0, y: 0, score: 0, date: '' });
+// (rien à l'extérieur)
+function ProgressChart({ xp, level, t }) {
+  const pct = Math.max(0, Math.min(100, xp % 100));
+  const radius = 36;
+  const circ = 2 * Math.PI * radius;
+    const targetOffset = circ - (pct / 100) * circ; // Calculate target offset for the progress circle
+  const [dashOffset, setDashOffset] = useState(circ);
+
+  useEffect(() => {
+    // animate from full circle to targetOffset
+    // petit timeout pour assurer le rendu initial avec le cercle complet
+    const id = setTimeout(() => setDashOffset(targetOffset), 60);
+    return () => clearTimeout(id);
+  }, [targetOffset]);
+
   return (
-    <div className="score-chart__inner">
-      <h2 className="score-chart__title">{t('leaderboard.chart.title')}</h2>
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
+    <div className="progress-chart">
+      <svg className="progress-chart__svg" viewBox="0 0 100 100">
         <defs>
-          <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="rgba(79,158,246,0.18)" />
-            <stop offset="100%" stopColor="rgba(79,158,246,0.02)" />
+          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#00d4ff" />
+            <stop offset="100%" stopColor="#00ff88" />
           </linearGradient>
         </defs>
-        {/* Zone sous la courbe */}
-        <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#grad)" />
-        {/* Ligne */}
-        <polyline points={points} fill="none" stroke="rgba(79,158,246,0.95)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-        {/* Points */}
-        {sorted.map((s, i) => {
-          const cx = xFor(new Date(s.playedAt).getTime());
-          const cy = yFor(Number(s.score||0));
-          return (
-            <g key={s.id || i}>
-              <circle
-                cx={cx}
-                cy={cy}
-                r={5}
-                fill="#0b1222"
-                stroke="rgba(79,158,246,0.98)"
-                strokeWidth={2}
-                onMouseMove={(e) => handlePointMove(e, s)}
-                onMouseEnter={(e) => handlePointMove(e, s)}
-                onMouseLeave={handlePointLeave}
-              />
-            </g>
-          );
-        })}
-        {/* Y labels (min/max) */}
-        <text x={8} y={yFor(sMax)} fill="#9aa4b2" fontSize={12}>{sMax}</text>
-        <text x={8} y={yFor(sMin)} fill="#9aa4b2" fontSize={12}>{sMin}</text>
-        {/* X labels */}
-        <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
-        <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
-        {/* Axis labels */}
-        <text x={width / 2} y={height - 2} fill="#9aa4b2" fontSize={12} textAnchor="middle">{xLabel}</text>
-        <text x={12} y={height / 2} fill="#9aa4b2" fontSize={12} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
+        {/* Cercle de fond centré */}
+        <circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke="rgba(255,255,255,0.12)"
+          strokeWidth="8"
+        />
+        {/* Cercle de progression centré */}
+        <circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke="url(#progressGradient)"
+          strokeWidth="8"
+          strokeDasharray={`${circ} ${circ}`}
+          strokeDashoffset={dashOffset}
+          strokeOpacity="1"
+          strokeLinecap="round"
+          transform={`rotate(-90 0 0)`}
+          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+        />
+        <text x="50" y="56" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="700">{pct}%</text>
       </svg>
-      {/* Infobulle */}
-      <div
-        ref={tooltipRef}
-        className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}
-      >
-        <div className="score-tooltip__main">{t('common.score')}: {tooltip.score}</div>
-        <div className="score-tooltip__date">{tooltip.date}</div>
+      <div className="progress-chart__meta">
+        <div className="lvl"><strong>Lvl {level}</strong></div>
+        <div className="xp"><span style={{ color: '#00ff88' }}>{xp}</span> {t('leaderboard.xpLabel') || t('leaderboard.xpChart.legend') || 'XP'}</div>
       </div>
     </div>
   );
 }
+  function ScoreChart({ sessions, t }) {
+    const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
+    const tooltipRef = useRef(null);
+    if (sessions && sessions.length > 0) {
+      const width = 860;
+      const height = 260;
+      const margin = { top: 18, right: 30, bottom: 36, left: 48 };
+      const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
+    const times = sorted.map((s) => new Date(s.playedAt).getTime());
+    const xMin = Math.min(...times);
+    const xMax = Math.max(...times);
+    const values = sorted.map((s) => Number(s.highScore ?? s.score ?? 0));
+    const sMin = Math.min(...values);
+    const sMax = Math.max(...values);
+    const xFor = makeXFor(xMin, xMax, width, margin);
+    const yFor = (v) => {
+      const innerH = height - margin.top - margin.bottom;
+      const denom = sMax - sMin || 1;
+      return margin.top + (1 - (v - sMin) / denom) * innerH;
+    };
+    const points = sorted.map((s) => ({
+      x: xFor(new Date(s.playedAt).getTime()),
+      y: yFor(Number(s.highScore ?? s.score ?? 0)),
+      raw: s,
+    }));
+    const firstLabel = new Date(xMin).toLocaleString();
+    const lastLabel = new Date(xMax).toLocaleString();
+    const xLabel = t('leaderboard.date') || '';
+    const yLabel = t('common.score') || '';
+    const handlePointMove = (e, s) => {
+      const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      const left = clientX - svgRect.left + 12;
+      const top = clientY - svgRect.top + 12;
+      setTooltip({ visible: true, score: s.highScore ?? s.score ?? 0, date: new Date(s.playedAt).toLocaleString() });
+      if (tooltipRef.current) {
+        tooltipRef.current.style.left = `${left}px`;
+        tooltipRef.current.style.top = `${top}px`;
+      }
+    };
+    const handlePointLeave = () => setTooltip({ visible: false, score: 0, date: '' });
+      return (
+      <div className="score-chart__inner">
+        <h2 className="score-chart__title">{t('leaderboard.chart.title')}</h2>
+        <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="rgba(0,212,255,0.25)" />
+              <stop offset="100%" stopColor="rgba(0,212,255,0.02)" />
+            </linearGradient>
+          </defs>
+          {/* Smooth monotone path + area */}
+          {points.length > 0 && (
+            (() => {
+              const pts = points;
+              const lineD = monotoneToBezier(pts);
+              const areaD = lineD + ` L ${width - margin.right},${height - margin.bottom} L ${margin.left},${height - margin.bottom} Z`;
+              return (
+                <>
+                  <path d={areaD} fill="url(#grad)" />
+                  <path d={lineD} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              );
+            })()
+          )}
+          {points.map((p) => (
+            <g key={p.raw?.id ?? p.raw?.playedAt ?? `${p.x}-${p.y}`}>
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={4.5}
+                fill="#0b1222"
+                stroke="#00d4ff"
+                strokeWidth={2}
+                onMouseMove={(e) => handlePointMove(e, p.raw)}
+                onMouseEnter={(e) => handlePointMove(e, p.raw)}
+                onMouseLeave={handlePointLeave}
+              />
+            </g>
+          ))}
+          <text x={8} y={yFor(sMax)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMax}</text>
+          <text x={8} y={yFor(sMin)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMin}</text>
+          <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
+          <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
+          <text x={width / 2} y={height - 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle">{xLabel}</text>
+          <text x={12} y={height / 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
+          </svg>
+          <div ref={tooltipRef} className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}>
+            <div className="score-tooltip__main">{(t('common.score') || 'Score') + ': '}{tooltip.score}</div>
+            <div className="score-tooltip__date">{tooltip.date}</div>
+          </div>
+      </div>
+    );
+    }
+    return null;
+  }
 
-export default Leaderboard;
+ProgressChart.propTypes = { xp: PropTypes.number, level: PropTypes.number, t: PropTypes.func };
 
 Leaderboard.propTypes = {
   user: PropTypes.string,
@@ -276,3 +429,96 @@ ScoreChart.propTypes = {
   sessions: PropTypes.arrayOf(PropTypes.object),
   t: PropTypes.func,
 };
+
+function ProgressHistoryChart({ history, t }) {
+  const [tooltip, setTooltip] = useState({ visible: false, xp: 0, date: '' });
+  const tooltipRef = useRef(null);
+  if (history && history.length > 0) {
+  const width = 800;
+  const height = 180;
+  const margin = { top: 12, right: 18, bottom: 28, left: 48 };
+  const sorted = [...history].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const times = sorted.map((h) => new Date(h.createdAt).getTime());
+  const xMin = Math.min(...times);
+  const xMax = Math.max(...times);
+  const values = sorted.map((h) => Number(h.xp || 0));
+  const vMin = Math.min(...values);
+  const vMax = Math.max(...values);
+  const xFor = makeXFor(xMin, xMax, width, margin);
+  const yFor = (v) => {
+    const innerH = height - margin.top - margin.bottom;
+    const denom = vMax - vMin || 1;
+    return margin.top + (1 - (v - vMin) / denom) * innerH;
+  };
+  const points = sorted.map((s) => ({
+    x: xFor(new Date(s.createdAt).getTime()),
+    y: yFor(Number(s.xp || 0)),
+    raw: s,
+  }));
+
+  const handlePoint = (e, s) => {
+    const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    const left = clientX - svgRect.left + 12;
+    const top = clientY - svgRect.top + 12;
+    setTooltip({ visible: true, xp: s.xp, date: new Date(s.createdAt).toLocaleString() });
+    if (tooltipRef.current) {
+      tooltipRef.current.style.left = `${left}px`;
+      tooltipRef.current.style.top = `${top}px`;
+    }
+  };
+  const handleLeave = () => setTooltip({ visible: false, xp: 0, date: '' });
+  const firstLabel = new Date(xMin).toLocaleString();
+  const lastLabel = new Date(xMax).toLocaleString();
+    return (
+    <div className="score-chart__inner">
+      <h3 className="score-chart__title">{t('leaderboard.xpChart.title') || t('leaderboard.progress') || 'Progression'}</h3>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="rgba(0,255,136,0.2)" />
+            <stop offset="100%" stopColor="rgba(0,255,136,0.03)" />
+          </linearGradient>
+        </defs>
+        {/* Smooth path (monotone cubic → Bezier to avoid overshoot) */}
+        {points.length > 0 && (() => {
+          const pts = points;
+          const lineD = monotoneToBezier(pts);
+          const areaD = lineD + ` L ${width - margin.right},${height - margin.bottom} L ${margin.left},${height - margin.bottom} Z`;
+          return (
+            <>
+              <path d={areaD} fill="url(#g2)" />
+              <path d={lineD} fill="none" stroke="#00ff88" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            </>
+          );
+        })()}
+        {points.map((p) => (
+          <g key={p.raw?.id ?? p.raw?.createdAt ?? `${p.x}-${p.y}`}>
+            <circle cx={p.x} cy={p.y} r={3.5} fill="#0b1222" stroke="#00ff88" strokeWidth={1.8}
+              onMouseMove={(e) => handlePoint(e, p.raw)} onMouseEnter={(e) => handlePoint(e, p.raw)} onMouseLeave={handleLeave} />
+          </g>
+        ))}
+        {/* Y axis min/max labels */}
+        <text x={12} y={yFor(vMax)} fill="#e6eef8" fontSize={12} fontWeight="600">{vMax}</text>
+        <text x={12} y={yFor(vMin)} fill="#e6eef8" fontSize={12} fontWeight="600">{vMin}</text>
+        {/* X axis labels */}
+        <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
+        <text x={width - margin.right - 140} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
+        {/* Axis titles */}
+        <text x={width / 2} y={height - 2} fill="#00ff88" fontSize={12} fontWeight="700" textAnchor="middle">{t('leaderboard.xpChart.xLabel') || t('leaderboard.date') || 'Date/Heure'}</text>
+        <text x={12} y={height / 2} fill="#00ff88" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{t('leaderboard.xpChart.yLabel') || t('leaderboard.xpLabel') || 'XP'}</text>
+      </svg>
+      <div ref={tooltipRef} className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}>
+        <div className="score-tooltip__main">{(t('leaderboard.xpLabel') || 'XP') + ': '}{tooltip.xp}</div>
+        <div className="score-tooltip__date">{tooltip.date}</div>
+      </div>
+    </div>
+    );
+  }
+  return null;
+}
+
+ProgressHistoryChart.propTypes = { history: PropTypes.arrayOf(PropTypes.object), t: PropTypes.func };
+
+export default Leaderboard;

@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ModalGameOver from "./ModalGameOver";
+import ModalGameOver from "./ModalGameOver.jsx";
 import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Game.css";
 
-// Game state (module-level to persist across renders)
 // État du jeu (module global pour persister entre les rendus)
 let score = 0;
 let gameOver = false;
@@ -23,7 +22,6 @@ let showGameOverModalCallback = null; // Callback pour afficher la modal Game Ov
  * @return {void}
  */
 function preload() {
-  console.log('[Phaser] preload() called');
   this.load.image("sky", "src/assets/sky.png");
   this.load.image("ground", "src/assets/platform.png");
   this.load.image("star", "src/assets/star.png");
@@ -32,7 +30,6 @@ function preload() {
     frameWidth: 32,
     frameHeight: 48,
   });
-  console.log('[Phaser] preload() finished');
 }
 
 /**
@@ -41,12 +38,11 @@ function preload() {
  * @return {void}
  */
 function create() {
-  console.log('[Phaser] create() called');
-  // start the in-game timer and create a unique session ID
+  // démarrer le minuteur de la partie et créer un identifiant de session unique
   startTime = Date.now();
   currentSessionId = Math.random().toString(36).slice(2);
   sessionPosted = false; // Réinitialiser pour la nouvelle partie
-  // Expose a getter instead of assigning `this` to a variable
+  // Exposer un getter au lieu d'assigner `this` à une variable
   globalThis.getPhaserScene = () => this;
   this.add.image(400, 300, "sky");
   globalThis.platforms = this.physics.add.staticGroup();
@@ -85,7 +81,7 @@ function create() {
   globalThis.bombs = this.physics.add.group();
   // Initialise les contrôles du clavier au scope global
   globalThis.cursors = this.input.keyboard.createCursorKeys();
-  // Keyboard bindings: support AZERTY (ZQSD) and QWERTY (WASD) plus arrows and space
+  // Raccourcis clavier : prise en charge AZERTY (ZQSD) et QWERTY (WASD), ainsi que flèches et espace
   try {
     const defaultBindings = {
       up: ["Z", "W", "UP"],
@@ -125,7 +121,6 @@ function create() {
   this.physics.add.overlap(globalThis.player, globalThis.stars, collectStar, null, this);
   this.physics.add.collider(globalThis.player, globalThis.bombs, hitBomb, null, this);
   this.physics.add.collider(globalThis.player, globalThis.platforms, touchGround, null, this);
-  console.log('[Phaser] create() finished');
 }
 
 /**
@@ -166,7 +161,7 @@ function resetGameObjects() {
   } catch (e) {
     console.warn('spawnBomb unavailable during reset', e);
   }
-  // reset timer when objects reset
+  // réinitialiser le minuteur lorsque les objets sont réinitialisés
   startTime = Date.now();
   // NE PAS créer un nouvel ID ici - le même ID doit persister jusqu'à l'écran de fin
 }
@@ -216,7 +211,6 @@ function handlePlayerMovement(player, cursors) {
  * Gère la collecte d'une étoile par le joueur.
  */
 function collectStar(player, star) {
-  console.log('[Phaser] Star collected! Stage:', internalStage);
   star.disableBody(true, true);
   // met à jour le score
   score += 10;
@@ -224,13 +218,11 @@ function collectStar(player, star) {
   const stars = globalThis.stars;
   if (stars && stars.countActive(true) === 0) {
     internalStage += 1;
-    console.log('[Phaser] Stage completed! New stage:', internalStage);
     globalThis.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
     stars.children.iterate(function (child) {
       child.enableBody(true, child.x, 0, true, true);
     });
     // ajoute une bombe supplémentaire pour le nouveau stage
-    console.log('[Phaser] Adding 1 bomb for new stage');
     try {
       spawnBomb();
     } catch (e) {
@@ -251,7 +243,7 @@ function PhaserSafeBetween(min, max) {
   if (typeof globalThis?.Phaser?.Math?.Between === 'function') {
     return globalThis.Phaser.Math.Between(min, max);
   }
-  // Fallback simple
+  // solution de repli simple
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
@@ -290,7 +282,7 @@ function spawnBomb() {
 /**
  * Gère la collision avec une bombe (fin de partie).
  */
-function hitBomb(player, bomb) {
+function hitBomb(_player, _bomb) {
   // Empêcher les appels multiples à hitBomb pendant qu'on traite la mort
   if (processingDeath) return;
   processingDeath = true;
@@ -313,7 +305,20 @@ function hitBomb(player, bomb) {
         })
           .then((r) => r.json())
           .then((data) => {
-            console.log("Score submitted:", data);
+            // Award XP based on the final score (persist XP automatically)
+            try {
+              const xpAmount = Math.max(0, Math.floor(finalScore / 10) + 10);
+              fetch('/api/user/xp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, xp: xpAmount }),
+              })
+                .then((r) => r.json())
+                .then(() => {})
+                .catch((err) => console.warn('Failed to award XP', err));
+            } catch (e) {
+              console.warn('Error while awarding XP', e);
+            }
           })
           .catch((err) => console.warn("Failed to submit score", err));
       }
@@ -330,7 +335,7 @@ function hitBomb(player, bomb) {
 /**
  * Détecte si le joueur touche le sol.
  */
-function touchGround(player, ground) {
+function touchGround(_player, _ground) {
   touchingGround = true;
 }
 
@@ -413,11 +418,13 @@ function Game() {
   useEffect(() => {
     let destroyed = false;
     let gameInstance = null;
+    const container = gameContainer.current;
     // Crée l'instance du jeu Phaser
     const createGame = () => {
-      if (destroyed || !gameContainer.current || gameContainer.current._phaserGame) return;
-      console.log('Creating Phaser game instance...');
-      const config = {
+    if (destroyed || !container || container._phaserGame) {
+      return;
+    }
+    const config = {
         type: globalThis.Phaser.AUTO,
         width: 800,
         height: 600,
@@ -432,52 +439,44 @@ function Game() {
         parent: gameContainer.current,
       };
       gameInstance = new globalThis.Phaser.Game(config);
-      gameContainer.current._phaserGame = gameInstance;
+      if (container) container._phaserGame = gameInstance;
       // Affiche le canvas une fois prêt
       setTimeout(() => {
-        const canvas = gameContainer.current?.querySelector('canvas');
+        const canvas = container?.querySelector('canvas');
         if (canvas) {
-          console.log('[Canvas] Dimensions:', canvas.width, 'x', canvas.height);
           canvas.style.display = 'block';
           canvas.style.visibility = 'visible';
           canvas.style.opacity = '1';
         } else {
-          console.log('[Canvas] No canvas found');
         }
       }, 100);
     };
     // Initialise Phaser en chargeant le script si nécessaire
     const initPhaser = () => {
-      console.log('[initPhaser] Called. destroyed=', destroyed, 'Phaser=', !!globalThis.Phaser);
       if (destroyed) return;
-      
-      if (globalThis.Phaser) {
-        console.log('[initPhaser] Phaser available, calling createGame');
-        createGame();
-        return;
-      }
+
+        if (globalThis.Phaser) {
+          createGame();
+          return;
+        }
       // charge le script Phaser depuis le CDN
       let script = document.querySelector('script[data-phaser-dynamic]');
       if (script) {
-        console.log('Phaser script exists but not ready, polling...');
         const checkPhaser = setInterval(() => {
           if (destroyed) {
             clearInterval(checkPhaser);
             return;
           }
           if (globalThis.Phaser) {
-                console.log('Phaser ready from polling');
                 clearInterval(checkPhaser);
                 createGame();
               }
         }, 100);
       } else { // charge le script
-        console.log('Loading Phaser script from CDN...');
         script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js';
         script.dataset.phaserDynamic = '1';
         script.onload = () => {
-          console.log('Phaser script loaded');
           if (!destroyed) {
             createGame();
           }
@@ -489,9 +488,7 @@ function Game() {
       }
     };
     // utilise un timeout pour différer l'initialisation
-    console.log('[Game] Setting timeout for initPhaser');
     const timer = setTimeout(() => {
-      console.log('[Game] Timeout fired, calling initPhaser');
       if (!destroyed) initPhaser();
     }, 50);
     // Nettoyage à la destruction du composant
@@ -501,8 +498,8 @@ function Game() {
       if (gameInstance) {
         gameInstance.destroy(true);
       }
-      if (gameContainer.current) {
-        gameContainer.current._phaserGame = null;
+      if (container) {
+        container._phaserGame = null;
       }
     };
   }, []);
