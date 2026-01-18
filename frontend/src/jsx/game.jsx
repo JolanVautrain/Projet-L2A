@@ -534,15 +534,15 @@ function Game() {
   return (
     <div className="game-wrap">
       <div className="game-overlay">
-        <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+        <div className="game-overlay__group">
           <div className="stage-pill">{t("common.stage")} {stage}</div>
         </div>
-        <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+        <div className="game-overlay__group">
           <div className="score-display">{t("common.score")}: {scoreDisplay}</div>
           <div className="timer-display">{t("game.time")}: {formatTime(timerSeconds)}</div>
         </div>
       </div>
-      <div ref={gameContainer} id="phaser-container" style={{width: 800, height: 600, background: '#0b1222', borderRadius: 12, overflow: 'hidden', display: 'block', position: 'relative'}} />
+      <div ref={gameContainer} id="phaser-container" className="phaser-container phaser-canvas" />
         <div className="options-buttons">
           <button className="btn ghost" onClick={() => globalThis.location.reload()}>{t("game.reloadGame")}</button>
         </div>

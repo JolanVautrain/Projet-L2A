@@ -38,9 +38,7 @@ function App() {
     if (value) localStorage.setItem("user", value);
     else localStorage.removeItem("user");
   };
-
   const { t } = useLanguage();
-
   return (
     <>
       <header>
@@ -48,7 +46,7 @@ function App() {
           <NavLink to="/">{t("common.home")}</NavLink>
           <NavLink to="/leaderboard">{t("common.leaderboard")}</NavLink>
           {userState ? (
-            <div className="nav-greeting" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+            <div className="nav-greeting">
               <span>{t("nav.hello")} {userState}</span>
               <NavLink className="btn ghost no-border" to="/account">{t("nav.profile")}</NavLink>
             </div>

@@ -17,6 +17,9 @@
   box-shadow: 0 18px 44px rgba(0,0,0,0.6) inset;
 }
 
+/* phaser container dimensions and appearance */
+.phaser-container{ width:800px; height:600px; background:#0b1222; border-radius:12px; overflow:hidden; display:block; position:relative }
+
 .game-overlay {
   width: 800px;
   display: flex;
@@ -26,6 +29,8 @@
   color: #c9d4f5;
   font-weight: 600;
 }
+
+.game-overlay__group{ display:flex; gap:12px; align-items:center }
 
 .stage-pill {
   background: linear-gradient(120deg,#66e3b8,#1dd3b0);

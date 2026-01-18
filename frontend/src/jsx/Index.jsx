@@ -73,7 +73,7 @@ function App() {
           <NavLink to="/">{t("common.home")}</NavLink>
           <NavLink to="/leaderboard">{t("common.leaderboard")}</NavLink>
           {userState ? (
-            <div className="nav-greeting" style={{display: 'inline-flex', gap: 8, alignItems: 'center'}}>
+            <div className="nav-greeting">
               <span>{t("account.hello")} {userState}</span>
               <NavLink className="btn ghost no-border" to="/account">{t("account.title")}</NavLink>
             </div>

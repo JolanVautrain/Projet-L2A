@@ -14,6 +14,11 @@
   color:#e6eef6;
 }
 
+/* Centered variation used when user is not logged */
+.leaderboard--centered{ text-align:center; padding:24px }
+.leaderboard__notice{ margin-top:50px }
+.leaderboard__login-btn{ margin-top:12px }
+
 .leaderboard__card{
   background: rgba(11,18,34,0.75);
   border-radius:12px;
@@ -22,17 +27,30 @@
   border:1px solid rgba(110,231,183,0.06);
 }
 
+/* Panels that previously used inline highlight/background */
+.leaderboard__panel{
+  margin-bottom:24px;
+  padding:16px;
+  background-color: rgba(79,158,246,0.1);
+  border-radius:8px;
+  border:1px solid rgba(79,158,246,0.3);
+}
+.leaderboard__panel h2{ margin-top:0 }
+
 .leaderboard h1{margin:0 0 12px 0;font-size:1.5rem;text-align:center}
 
 .table-wrapper{overflow:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.02);backdrop-filter:blur(6px)}
 
-.scores-table{width:100%;border-collapse:separate;border-spacing:0;background:transparent}
+.scores-table{width:100%;border-collapse:separate;border-spacing:0;background:transparent; margin-bottom:0}
 .scores-table thead th{position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));color:var(--accent);font-weight:700;padding:14px 18px;text-align:center;font-size:0.95rem;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.04)}
 .scores-table tbody td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.02);color:#e8f5ff}
 
 .scores-table tbody tr:nth-child(odd){background:rgba(255,255,255,0.01)}
 .scores-table tbody tr:nth-child(even){background:rgba(255,255,255,0.008)}
 .scores-table tbody tr:hover{background:rgba(110,231,183,0.06);transform:translateZ(0)}
+
+/* Highlight for single-row panels */
+.highlight-row{ background-color: rgba(79,158,246,0.2) }
 
 .scores-table td.rank{width:72px;font-weight:800;color:var(--accent);text-align:center}
 .scores-table td.player{min-width:160px}
@@ -62,6 +80,10 @@
   .score-chart svg{display:block; border-radius:6px; background: transparent; padding:8px}
   .score-chart text{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
 
+  /* Inner container for the chart (used by ScoreChart component) */
+  .score-chart__inner{ max-width:1000px; margin:0 auto; position:relative }
+  .score-chart__title{ margin:6px 0 8px; text-align:center; color:#e6eef8 }
+
   .score-tooltip{
     position: absolute;
     pointer-events: none;
@@ -74,9 +96,14 @@
     white-space: nowrap;
     transition: opacity 0.08s ease;
     opacity: 0.98;
+    display: none;
   }
 
   .score-tooltip div{line-height:1}
+  .score-tooltip__main{ font-size:12px; color:#e6eef8; font-weight:600 }
+  .score-tooltip__date{ font-size:11px; color:#9aa4b2 }
+
+.score-tooltip--visible{ display: block }
 
 /* Scoped loader animation for leaderboard page (below login button) */
 .leaderboard-loader { display:flex; justify-content:center; margin-top:150px; }

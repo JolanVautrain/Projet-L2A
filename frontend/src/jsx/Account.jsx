@@ -62,28 +62,14 @@ function Account({ user, setUser }) {
           <LanguageSelector />
           {user === "admin" && (
             <div className="admin-tools">
-              <h3 style={{ marginTop: 0 }}>{t("account.adminTools")}</h3>
+              <h3 className="admin-tools__title">{t("account.adminTools")}</h3>
               <div>
                 <h4>{t("account.manageUsers")}</h4>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div className="admin-tools__controls">
                   <select
                     value={selectedUser}
                     onChange={(e) => setSelectedUser(e.target.value)}
-                    style={{
-                      padding: 8,
-                      borderRadius: 4,
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      backgroundColor: "#0b1222",
-                      color: "#e6eef8",
-                      minWidth: 120,
-                    }}
+                    className="admin-tools__select"
                   >
                     {allUsers.map((u) => (
                       <option key={u.username} value={u.username}>
@@ -116,8 +102,7 @@ function Account({ user, setUser }) {
                       : t("account.resetUserSessions")}
                   </button>
                   <button
-                    className="btn ghost danger"
-                    style={{ marginLeft: 8 }}
+                    className="btn ghost danger admin-tools__delete"
                     onClick={() => {
                       if (!selectedUser) return;
                       if (!confirm(t("account.confirmDeleteUserFull").replace("{username}", selectedUser))) return;
@@ -143,9 +128,8 @@ function Account({ user, setUser }) {
             </div>
           )}
           <button
-            className="btn ghost no-border"
+            className="btn ghost no-border account__logout"
             onClick={handleLogout}
-            style={{ marginTop: 16 }}
           >
             {t("common.logout")}
           </button>
@@ -155,10 +139,10 @@ function Account({ user, setUser }) {
   }
   // Utilisateur non connecté : afficher une bannière invitant à se connecter
   return (
-    <div style={{ textAlign: 'center', padding: 24 }}>
+    <div className="account account--centered">
       <h1>{t("account.title")}</h1>
-      <p style={{ marginTop: 50 }}>{t("account.loginRequired")}</p>
-      <button className="btn primary" onClick={() => setIsOpen(true)} style={{ marginTop: 12 }}>
+      <p className="account__notice">{t("account.loginRequired")}</p>
+      <button className="btn primary account__login-btn" onClick={() => setIsOpen(true)}>
         {t("account.openLogin")}
       </button>
       <LoginModal

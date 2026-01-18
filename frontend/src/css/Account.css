@@ -24,6 +24,8 @@
   gap: 8px;
   text-align: center;
 }
+/* Title variant used when marginTop:0 was inline */
+.admin-tools__title{ margin-top:0 }
 .admin-tools h4 {
   margin: 6px 0 12px 0;
   color: #d6f7f0;
@@ -34,6 +36,9 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* Controls variant replacing inline flex styles */
+.admin-tools__controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
 .admin-tools select {
   padding: 8px 12px;
   border-radius: 8px;
@@ -42,6 +47,7 @@
   color: #e6eef8;
   min-width: 160px;
 }
+.admin-tools__select{ padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.2); background-color:#0b1222; color:#e6eef8; min-width:120px }
 .admin-tools .btn {
   padding: 8px 14px;
   border-radius: 8px;
@@ -66,6 +72,9 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(176,42,55,0.2);
 }
+
+/* Small helper for delete button spacing */
+.admin-tools__delete{ margin-left:8px }
 
 @media (max-width: 720px) {
   .admin-tools {
@@ -225,3 +234,9 @@
     transform: translateX(-2000px);
   }
 }
+
+/* Centered account fallback (used when not logged) */
+.account--centered{ text-align:center; padding:24px }
+.account__notice{ margin-top:50px }
+.account__login-btn{ margin-top:12px }
+.account__logout{ margin-top:16px }
