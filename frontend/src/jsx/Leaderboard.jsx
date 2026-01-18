@@ -206,126 +206,20 @@ function Leaderboard({ user, setUser }) {
   );
 }
 // (rien à l'extérieur)
-function ScoreChart({ sessions, t }) {
-  const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
-  const tooltipRef = useRef(null);
-  if (!sessions || sessions.length === 0) return null;
-  const width = 800;
-  const height = 220;
-  const margin = { top: 14, right: 20, bottom: 36, left: 52 };
-  // Trier par date ascendante
-  const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
-  const times = sorted.map((s) => new Date(s.playedAt).getTime());
-  const scores = sorted.map((s) => Number(s.score || 0));
-  const tMin = Math.min(...times);
-  const tMax = Math.max(...times);
-  const sMin = Math.min(...scores);
-  const sMax = Math.max(...scores);
-  const xFor = (ts) => {
-    const innerW = width - margin.left - margin.right;
-    const denom = tMax - tMin || 1;
-    return margin.left + ((ts - tMin) / denom) * innerW;
-  };
-  const yFor = (s) => {
-    const innerH = height - margin.top - margin.bottom;
-    const denom = sMax - sMin || 1;
-    return margin.top + (1 - (s - sMin) / denom) * innerH;
-  };
-  const points = sorted.map((s) => `${xFor(new Date(s.playedAt).getTime())},${yFor(Number(s.score||0))}`).join(' ');
-  const firstLabel = new Date(tMin).toLocaleString();
-  const lastLabel = new Date(tMax).toLocaleString();
-  const yLabel = t ? t('leaderboard.chart.yLabel') : 'Score';
-  const xLabel = t ? t('leaderboard.chart.xLabel') : 'Date';
-  const handlePointMove = (e, s) => {
-    const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
-    const clientX = e.clientX;
-    const clientY = e.clientY;
-    // Positionner le tooltip légèrement en dessous et à droite du curseur
-    const left = clientX - svgRect.left + 12;
-    const top = clientY - svgRect.top + 12;
-    setTooltip({ visible: true, score: s.score, date: new Date(s.playedAt).toLocaleString() });
-    if (tooltipRef.current) {
-      tooltipRef.current.style.left = `${left}px`;
-      tooltipRef.current.style.top = `${top}px`;
-    }
-  };
-  const handlePointLeave = () => setTooltip({ visible: false, x: 0, y: 0, score: 0, date: '' });
-  return (
-    <div className="score-chart__inner">
-      <h2 className="score-chart__title">{t('leaderboard.chart.title')}</h2>
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="rgba(0,212,255,0.25)" />
-            <stop offset="100%" stopColor="rgba(0,212,255,0.02)" />
-          </linearGradient>
-        </defs>
-        {/* Zone sous la courbe */}
-        <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#grad)" />
-        {/* Ligne */}
-        <polyline points={points} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-        {/* Points */}
-        {sorted.map((s, i) => {
-          const cx = xFor(new Date(s.playedAt).getTime());
-          const cy = yFor(Number(s.score||0));
-          return (
-            <g key={s.id || i}>
-              <circle
-                cx={cx}
-                cy={cy}
-                r={5}
-                fill="#0b1222"
-                stroke="#00d4ff"
-                strokeWidth={2.5}
-                onMouseMove={(e) => handlePointMove(e, s)}
-                onMouseEnter={(e) => handlePointMove(e, s)}
-                onMouseLeave={handlePointLeave}
-              />
-            </g>
-          );
-        })}
-        {/* Y labels (min/max) */}
-        <text x={8} y={yFor(sMax)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMax}</text>
-        <text x={8} y={yFor(sMin)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMin}</text>
-        {/* X labels */}
-        <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
-        <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
-        {/* Axis labels */}
-        <text x={width / 2} y={height - 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle">{xLabel}</text>
-        <text x={12} y={height / 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
-      </svg>
-      {/* Infobulle */}
-      <div
-        ref={tooltipRef}
-        className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}
-      >
-        <div className="score-tooltip__main">{t('common.score')}: {tooltip.score}</div>
-        <div className="score-tooltip__date">{tooltip.date}</div>
-      </div>
-      {/* Légende */}
-      <div style={{marginTop: '12px', display: 'flex', gap: '20px', fontSize: '12px', color: '#9aa4b2'}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-          <div style={{width: '3px', height: '16px', background: '#00d4ff', borderRadius: '1px'}}></div>
-          <span>{t('leaderboard.chart.title') || 'Score'}</span>
-        </div>
-        <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-          <svg width="16" height="16" viewBox="0 0 16 16">
-            <text x="0" y="12" fontSize="11" fill="#00d4ff" fontWeight="700">●</text>
-          </svg>
-          <span>{t('common.score')}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default Leaderboard;
-
 function ProgressChart({ xp, level, t }) {
   const pct = Math.max(0, Math.min(100, xp % 100));
   const radius = 36;
   const circ = 2 * Math.PI * radius;
-  const offset = circ - (pct / 100) * circ;
+  const targetOffset = circ - (pct / 100) * circ;
+  const [dashOffset, setDashOffset] = useState(circ);
+
+  useEffect(() => {
+    // animate from full circle to targetOffset
+    // small timeout to ensure initial render with full circle
+    const id = setTimeout(() => setDashOffset(targetOffset), 60);
+    return () => clearTimeout(id);
+  }, [targetOffset]);
+
   return (
     <div className="progress-chart">
       <svg className="progress-chart__svg" viewBox="0 0 100 100">
@@ -335,7 +229,7 @@ function ProgressChart({ xp, level, t }) {
             <stop offset="100%" stopColor="#00ff88" />
           </linearGradient>
         </defs>
-        {/* Cercle de fond */}
+        {/* Cercle de fond centré */}
         <circle
           cx="50"
           cy="50"
@@ -344,6 +238,7 @@ function ProgressChart({ xp, level, t }) {
           stroke="rgba(255,255,255,0.12)"
           strokeWidth="8"
         />
+        {/* Cercle de progression centré */}
         <circle
           cx="50"
           cy="50"
@@ -352,22 +247,125 @@ function ProgressChart({ xp, level, t }) {
           stroke="url(#progressGradient)"
           strokeWidth="8"
           strokeDasharray={`${circ} ${circ}`}
-          strokeDashoffset={offset}
+          strokeDashoffset={dashOffset}
           strokeOpacity="1"
           strokeLinecap="round"
           transform={`rotate(-90 0 0)`}
-          style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
         />
         <text x="50" y="56" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="700">{pct}%</text>
       </svg>
       <div className="progress-chart__meta">
         <div className="lvl"><strong>Lvl {level}</strong></div>
-        <div className="xp"><span style={{color: '#00ff88'}}>{xp}</span> XP</div>
+        <div className="xp"><span style={{ color: '#00ff88' }}>{xp}</span> XP</div>
       </div>
     </div>
   );
 }
+  function ScoreChart({ sessions, t }) {
+    if (!sessions || sessions.length === 0) return null;
+    const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
+    const tooltipRef = useRef(null);
+    const width = 860;
+    const height = 260;
+    const margin = { top: 18, right: 30, bottom: 36, left: 48 };
+    const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
+    const times = sorted.map((s) => new Date(s.playedAt).getTime());
+    const xMin = Math.min(...times);
+    const xMax = Math.max(...times);
+    const values = sorted.map((s) => Number(s.highScore ?? s.score ?? 0));
+    const sMin = Math.min(...values);
+    const sMax = Math.max(...values);
+    const xFor = (ts) => {
+      const innerW = width - margin.left - margin.right;
+      const denom = xMax - xMin || 1;
+      return margin.left + ((ts - xMin) / denom) * innerW;
+    };
+    const yFor = (v) => {
+      const innerH = height - margin.top - margin.bottom;
+      const denom = sMax - sMin || 1;
+      return margin.top + (1 - (v - sMin) / denom) * innerH;
+    };
+    const points = sorted.map((s) => `${xFor(new Date(s.playedAt).getTime())},${yFor(Number(s.highScore ?? s.score ?? 0))}`).join(' ');
+    const firstLabel = new Date(xMin).toLocaleString();
+    const lastLabel = new Date(xMax).toLocaleString();
+    const xLabel = t('leaderboard.date') || '';
+    const yLabel = t('common.score') || '';
+    const handlePointMove = (e, s) => {
+      const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      const left = clientX - svgRect.left + 12;
+      const top = clientY - svgRect.top + 12;
+      setTooltip({ visible: true, score: s.highScore ?? s.score ?? 0, date: new Date(s.playedAt).toLocaleString() });
+      if (tooltipRef.current) {
+        tooltipRef.current.style.left = `${left}px`;
+        tooltipRef.current.style.top = `${top}px`;
+      }
+    };
+    const handlePointLeave = () => setTooltip({ visible: false, score: 0, date: '' });
+    return (
+      <div className="score-chart__inner">
+        <h2 className="score-chart__title">{t('leaderboard.chart.title')}</h2>
+        <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="rgba(0,212,255,0.25)" />
+              <stop offset="100%" stopColor="rgba(0,212,255,0.02)" />
+            </linearGradient>
+          </defs>
+          <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#grad)" />
+          <polyline points={points} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+          {sorted.map((s, i) => {
+            const cx = xFor(new Date(s.playedAt).getTime());
+            const cy = yFor(Number(s.highScore ?? s.score ?? 0));
+            return (
+              <g key={s.id || i}>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={5}
+                  fill="#0b1222"
+                  stroke="#00d4ff"
+                  strokeWidth={2.5}
+                  onMouseMove={(e) => handlePointMove(e, s)}
+                  onMouseEnter={(e) => handlePointMove(e, s)}
+                  onMouseLeave={handlePointLeave}
+                />
+              </g>
+            );
+          })}
+          <text x={8} y={yFor(sMax)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMax}</text>
+          <text x={8} y={yFor(sMin)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMin}</text>
+          <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
+          <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
+          <text x={width / 2} y={height - 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle">{xLabel}</text>
+          <text x={12} y={height / 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
+        </svg>
+        <div
+          ref={tooltipRef}
+          className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}
+        >
+          <div className="score-tooltip__main">{t('common.score')}: {tooltip.score}</div>
+          <div className="score-tooltip__date">{tooltip.date}</div>
+        </div>
+        <div style={{marginTop: '12px', display: 'flex', gap: '20px', fontSize: '12px', color: '#9aa4b2'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <div style={{width: '3px', height: '16px', background: '#00d4ff', borderRadius: '1px'}}></div>
+            <span>{t('leaderboard.chart.title') || 'Score'}</span>
+          </div>
+          <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+            <svg width="16" height="16" viewBox="0 0 16 16">
+              <text x="0" y="12" fontSize="11" fill="#00d4ff" fontWeight="700">●</text>
+            </svg>
+            <span>{t('common.score')}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+export default Leaderboard;
 ProgressChart.propTypes = { xp: PropTypes.number, level: PropTypes.number, t: PropTypes.func };
 
 Leaderboard.propTypes = {
