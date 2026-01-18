@@ -5,6 +5,80 @@
   text-align: center;
 }
 
+/* Admin tools styling */
+.admin-tools {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  background-color: rgba(79, 158, 246, 0.05);
+  box-shadow: 0 12px 30px rgba(2,8,26,0.6);
+  text-align: left;
+}
+.admin-tools h3 {
+  margin: 0 0 8px 0;
+  color: #eafffb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+.admin-tools h4 {
+  margin: 6px 0 12px 0;
+  color: #d6f7f0;
+}
+.admin-tools .controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.admin-tools select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(102,227,184,0.12);
+  background: linear-gradient(180deg,#071322,#091626);
+  color: #e6eef8;
+  min-width: 160px;
+}
+.admin-tools .btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.admin-tools .btn.ghost {
+  background: rgba(102,227,184,0.04);
+  border: 1px solid rgba(102,227,184,0.16);
+  color: #66e3b8;
+}
+.admin-tools .btn.ghost:hover {
+  background: rgba(102,227,184,0.12);
+  box-shadow: 0 6px 16px rgba(102,227,184,0.06);
+}
+.admin-tools .btn.danger {
+  background: #dc3545;
+  border: 1px solid rgba(220,53,69,0.9);
+  color: #ffffff;
+}
+.admin-tools .btn.danger:hover {
+  background: #b02a37;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(176,42,55,0.2);
+}
+
+@media (max-width: 720px) {
+  .admin-tools {
+    padding: 12px;
+  }
+  .admin-tools .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-tools select { width: 100%; }
+  .admin-tools .btn { width: 100%; }
+}
+
 /* Scenic loop animation styles scoped to the account page */
 .account-loop {
   margin: 18px auto 0;

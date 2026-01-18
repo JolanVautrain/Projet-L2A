@@ -61,15 +61,7 @@ function Account({ user, setUser }) {
           <Statistics user={user} />
           <LanguageSelector />
           {user === "admin" && (
-            <div
-              style={{
-                marginTop: 24,
-                padding: 16,
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 8,
-                backgroundColor: "rgba(79,158,246,0.05)",
-              }}
-            >
+            <div className="admin-tools">
               <h3 style={{ marginTop: 0 }}>{t("account.adminTools")}</h3>
               <div>
                 <h4>{t("account.manageUsers")}</h4>
