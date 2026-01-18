@@ -799,35 +799,36 @@ def get_user_xp(username: str) -> Response:
             {"xp": int(row[0] or 0), "level": int(row[1] or 1)}
         )
 
-    @app.route("/api/user/xp/history/<username>")
-    @handle_db_errors
-    def get_user_xp_history(username: str) -> Response:
-        """Retourne l'historique XP pour `username`.
 
-        Query param optional: `limit` (int)
-        """
-        username = username.strip()
-        limit = request.args.get("limit", "50")
-        try:
-            limit = int(limit)
-        except (ValueError, TypeError):
-            limit = 50
+@app.route("/api/user/xp/history/<username>")
+@handle_db_errors
+def get_user_xp_history(username: str) -> Response:
+    """Retourne l'historique XP pour `username`.
 
-        with get_db_connection() as conn, get_db_cursor(conn) as cur:
-            cur.execute(
-                "SELECT xp, level, created_at FROM user_xp_history WHERE username = %s ORDER BY created_at ASC LIMIT %s",
-                (username, limit),
-            )
-            rows = cur.fetchall()
-            result = [
-                {
-                    "xp": int(r[0] or 0),
-                    "level": int(r[1] or 1),
-                    "createdAt": str(r[2]),
-                }
-                for r in rows
-            ]
-            return make_response(result)
+    Query param optional: `limit` (int)
+    """
+    username = username.strip()
+    limit = request.args.get("limit", "50")
+    try:
+        limit = int(limit)
+    except (ValueError, TypeError):
+        limit = 50
+
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        cur.execute(
+            "SELECT xp, level, created_at FROM user_xp_history WHERE username = %s ORDER BY created_at ASC LIMIT %s",
+            (username, limit),
+        )
+        rows = cur.fetchall()
+        result = [
+            {
+                "xp": int(r[0] or 0),
+                "level": int(r[1] or 1),
+                "createdAt": str(r[2]),
+            }
+            for r in rows
+        ]
+        return make_response(result)
 
 
 @app.route("/api/user/xp", methods=["POST"])
@@ -837,6 +838,9 @@ def add_user_xp() -> Response:
 
     Corps attendu: {"username": str, "xp": int} (xp peut être négatif pour retirer)
     """
+    if request.method == "OPTIONS":
+        return make_response({}, 200)
+
     data = request.get_json()
     if not data or "username" not in data or "xp" not in data:
         return make_response(

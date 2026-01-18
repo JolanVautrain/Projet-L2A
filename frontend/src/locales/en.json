@@ -78,6 +78,9 @@
     "confirmDeleteUserFull": "Delete account of {username}?\nDeleting this account is irreversible.",
     "deleteUser": "Delete user",
     "deleteUserSuccess": "User {username} deleted.",
+    "award50xp": "+50 XP",
+    "confirmAwardXp": "Add 50 XP to {username}?",
+    "awardXpSuccess": "50 XP added to {username}.",
     "loginRequired": "You must be logged in to access your account.",
     "openLogin": "Sign in"
   },

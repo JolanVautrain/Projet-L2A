@@ -20,10 +20,12 @@ function Account({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
+  const [awardXpLoading, setAwardXpLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : '';
 
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
@@ -77,6 +79,31 @@ function Account({ user, setUser }) {
                       </option>
                     ))}
                   </select>
+                  <button
+                    className="btn"
+                    disabled={awardXpLoading}
+                    onClick={() => {
+                      if (!selectedUser) return;
+                      if (!confirm(t("account.confirmAwardXp").replace("{username}", selectedUser))) return;
+                      setAwardXpLoading(true);
+                      fetch(`${apiBase}/api/user/xp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
+                        body: JSON.stringify({ username: selectedUser, xp: 50 }),
+                      })
+                        .then((res) => {
+                          if (!res.ok) throw new Error('Erreur serveur');
+                          return res.json();
+                        })
+                        .then(() => {
+                          alert(t("account.awardXpSuccess").replace("{username}", selectedUser));
+                        })
+                        .catch((e) => alert(t('common.failedPrefix') + e.message))
+                        .finally(() => setAwardXpLoading(false));
+                    }}
+                  >
+                    {awardXpLoading ? t('common.saving') : t('account.award50xp')}
+                  </button>
                   <button
                     className="btn ghost"
                     disabled={resetSessionsLoading}

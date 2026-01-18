@@ -7,6 +7,8 @@ import "../css/Index.css";
 import "../css/Leaderboard.css";
 
 function Leaderboard({ user, setUser }) {
+  // Runtime API base: prefer same host on port 5000 (backend), useful during dev
+  const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : '';
   const [scores, setScores] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +57,7 @@ function Leaderboard({ user, setUser }) {
       });
     // Charger XP / niveau du user connecté
     if (user) {
-      fetch(`/api/user/xp/${user}`)
+      fetch(`${apiBase}/api/user/xp/${user}`)
         .then((r) => {
           if (!r.ok) throw new Error("failed to fetch xp");
           return r.json();
@@ -68,7 +70,7 @@ function Leaderboard({ user, setUser }) {
         })
         .catch(() => {})
       // Charger l'historique XP
-      fetch(`/api/user/xp/history/${user}?limit=100`)
+      fetch(`${apiBase}/api/user/xp/history/${user}?limit=100`)
         .then((r) => r.ok ? r.json() : [])
         .then((h) => { if (mounted) setXpHistory(h || []); })
         .catch(() => {});
@@ -254,14 +256,14 @@ function ScoreChart({ sessions, t }) {
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="rgba(79,158,246,0.18)" />
-            <stop offset="100%" stopColor="rgba(79,158,246,0.02)" />
+            <stop offset="0%" stopColor="rgba(0,212,255,0.25)" />
+            <stop offset="100%" stopColor="rgba(0,212,255,0.02)" />
           </linearGradient>
         </defs>
         {/* Zone sous la courbe */}
         <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#grad)" />
         {/* Ligne */}
-        <polyline points={points} fill="none" stroke="rgba(79,158,246,0.95)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={points} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         {/* Points */}
         {sorted.map((s, i) => {
           const cx = xFor(new Date(s.playedAt).getTime());
@@ -273,8 +275,8 @@ function ScoreChart({ sessions, t }) {
                 cy={cy}
                 r={5}
                 fill="#0b1222"
-                stroke="rgba(79,158,246,0.98)"
-                strokeWidth={2}
+                stroke="#00d4ff"
+                strokeWidth={2.5}
                 onMouseMove={(e) => handlePointMove(e, s)}
                 onMouseEnter={(e) => handlePointMove(e, s)}
                 onMouseLeave={handlePointLeave}
@@ -283,14 +285,14 @@ function ScoreChart({ sessions, t }) {
           );
         })}
         {/* Y labels (min/max) */}
-        <text x={8} y={yFor(sMax)} fill="#9aa4b2" fontSize={12}>{sMax}</text>
-        <text x={8} y={yFor(sMin)} fill="#9aa4b2" fontSize={12}>{sMin}</text>
+        <text x={8} y={yFor(sMax)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMax}</text>
+        <text x={8} y={yFor(sMin)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMin}</text>
         {/* X labels */}
         <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
         <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
         {/* Axis labels */}
-        <text x={width / 2} y={height - 2} fill="#9aa4b2" fontSize={12} textAnchor="middle">{xLabel}</text>
-        <text x={12} y={height / 2} fill="#9aa4b2" fontSize={12} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
+        <text x={width / 2} y={height - 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle">{xLabel}</text>
+        <text x={12} y={height / 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
       </svg>
       {/* Infobulle */}
       <div
@@ -299,6 +301,19 @@ function ScoreChart({ sessions, t }) {
       >
         <div className="score-tooltip__main">{t('common.score')}: {tooltip.score}</div>
         <div className="score-tooltip__date">{tooltip.date}</div>
+      </div>
+      {/* Légende */}
+      <div style={{marginTop: '12px', display: 'flex', gap: '20px', fontSize: '12px', color: '#9aa4b2'}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+          <div style={{width: '3px', height: '16px', background: '#00d4ff', borderRadius: '1px'}}></div>
+          <span>{t('leaderboard.chart.title') || 'Score'}</span>
+        </div>
+        <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+          <svg width="16" height="16" viewBox="0 0 16 16">
+            <text x="0" y="12" fontSize="11" fill="#00d4ff" fontWeight="700">●</text>
+          </svg>
+          <span>{t('common.score')}</span>
+        </div>
       </div>
     </div>
   );
@@ -310,25 +325,44 @@ function ProgressChart({ xp, level, t }) {
   const pct = Math.max(0, Math.min(100, xp % 100));
   const radius = 36;
   const circ = 2 * Math.PI * radius;
-  const dash = (pct / 100) * circ;
+  const offset = circ - (pct / 100) * circ;
   return (
     <div className="progress-chart">
       <svg className="progress-chart__svg" viewBox="0 0 100 100">
         <defs>
-          <linearGradient id="g1" x1="0" x2="1">
-            <stop offset="0%" stopColor="#6ee7b7" />
-            <stop offset="100%" stopColor="#4f9ef6" />
+          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#00d4ff" />
+            <stop offset="100%" stopColor="#00ff88" />
           </linearGradient>
         </defs>
-        <g transform="translate(50,50)">
-          <circle r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-          <circle r={radius} fill="none" stroke="url(#g1)" strokeWidth="8" strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round" transform="rotate(-90)" />
-          <text x="0" y="6" textAnchor="middle" fill="#e6eef8" fontSize="12" fontWeight="700">{pct}%</text>
-        </g>
+        {/* Cercle de fond */}
+        <circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke="rgba(255,255,255,0.12)"
+          strokeWidth="8"
+        />
+        <circle
+          cx="50"
+          cy="50"
+          r={radius}
+          fill="none"
+          stroke="url(#progressGradient)"
+          strokeWidth="8"
+          strokeDasharray={`${circ} ${circ}`}
+          strokeDashoffset={offset}
+          strokeOpacity="1"
+          strokeLinecap="round"
+          transform={`rotate(-90 0 0)`}
+          style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+        />
+        <text x="50" y="56" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="700">{pct}%</text>
       </svg>
       <div className="progress-chart__meta">
-        <div className="lvl">{t('leaderboard.level') || 'Niveau'} {level}</div>
-        <div className="xp">{xp} {t('common.score') ? '' : 'XP'}</div>
+        <div className="lvl"><strong>Lvl {level}</strong></div>
+        <div className="xp"><span style={{color: '#00ff88'}}>{xp}</span> XP</div>
       </div>
     </div>
   );
@@ -392,18 +426,18 @@ function ProgressHistoryChart({ history, t }) {
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="rgba(110,231,183,0.16)" />
-            <stop offset="100%" stopColor="rgba(79,158,246,0.04)" />
+            <stop offset="0%" stopColor="rgba(0,255,136,0.2)" />
+            <stop offset="100%" stopColor="rgba(0,255,136,0.03)" />
           </linearGradient>
         </defs>
         <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#g2)" />
-        <polyline points={points} fill="none" stroke="rgba(110,231,183,0.95)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={points} fill="none" stroke="#00ff88" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
         {sorted.map((s, i) => {
           const cx = xFor(new Date(s.createdAt).getTime());
           const cy = yFor(Number(s.xp||0));
           return (
             <g key={i}>
-              <circle cx={cx} cy={cy} r={4} fill="#0b1222" stroke="rgba(110,231,183,0.98)" strokeWidth={1.8}
+              <circle cx={cx} cy={cy} r={4} fill="#0b1222" stroke="#00ff88" strokeWidth={2}
                 onMouseMove={(e) => handlePoint(e, s)} onMouseEnter={(e) => handlePoint(e, s)} onMouseLeave={handleLeave} />
             </g>
           );

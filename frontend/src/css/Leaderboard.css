@@ -39,8 +39,6 @@
 
 .leaderboard h1{margin:0 0 12px 0;font-size:1.5rem;text-align:center}
 
-.table-wrapper{overflow:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.02);backdrop-filter:blur(6px)}
-
 .scores-table{width:100%;border-collapse:separate;border-spacing:0;background:transparent; margin-bottom:0}
 .scores-table thead th{position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));color:var(--accent);font-weight:700;padding:14px 18px;text-align:center;font-size:0.95rem;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.04)}
 .scores-table tbody td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.02);color:#e8f5ff}
