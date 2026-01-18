@@ -78,6 +78,16 @@ class UserSession(TypedDict):
     playedAt: str
 
 
+class XPHistoryEntry(TypedDict):
+    """Représente une entrée de l'historique XP retournée par
+    `/api/user/xp/history/<username>`.
+    """
+
+    xp: int
+    level: int
+    createdAt: str
+
+
 def make_response(data: Any, status: int = 200) -> Response:
     """Créer une réponse JSON avec le code de statut donné."""
     resp = jsonify(data)
@@ -602,7 +612,7 @@ def reset_test_account() -> Response:
 
 
 @app.route("/api/admin/delete-xp-history/<username>", methods=["OPTIONS"])
-def delete_user_xp_history_options(username: str) -> Response:
+def delete_user_xp_history_options(_username: str) -> Response:
     """Respond to CORS preflight for delete-xp-history."""
     return make_response({}, 200)
 
@@ -835,19 +845,20 @@ def get_user_xp_history(username: str) -> Response:
     Query param optional: `limit` (int)
     """
     username = username.strip()
-    limit = request.args.get("limit", "50")
+    limit_str = request.args.get("limit", "50")
     try:
-        limit = int(limit)
+        limit = int(limit_str)
     except (ValueError, TypeError):
         limit = 50
 
     with get_db_connection() as conn, get_db_cursor(conn) as cur:
         cur.execute(
-            "SELECT xp, level, created_at FROM user_xp_history WHERE username = %s ORDER BY created_at ASC LIMIT %s",
+            "SELECT xp, level, created_at FROM user_xp_history WHERE username "
+            "= %s ORDER BY created_at ASC LIMIT %s",
             (username, limit),
         )
         rows = cur.fetchall()
-        result = [
+        result: List[XPHistoryEntry] = [
             {
                 "xp": int(r[0] or 0),
                 "level": int(r[1] or 1),
@@ -863,7 +874,8 @@ def get_user_xp_history(username: str) -> Response:
 def add_user_xp() -> Response:
     """Ajoute du XP à un utilisateur et retourne le nouveau XP/niveau.
 
-    Corps attendu: {"username": str, "xp": int} (xp peut être négatif pour retirer)
+    Corps attendu: {"username": str, "xp": int} (xp peut être négatif pour
+    retirer)
     """
     if request.method == "OPTIONS":
         return make_response({}, 200)
@@ -896,12 +908,14 @@ def add_user_xp() -> Response:
             new_xp = max(0, delta)
             level = new_xp // 100 + 1
             cur.execute(
-                "INSERT INTO user_profiles (username, xp, level) VALUES (%s, %s, %s)",
+                "INSERT INTO user_profiles (username, xp, level) VALUES "
+                "(%s, %s, %s)",
                 (username, new_xp, level),
             )
             # Enregistrer snapshot dans l'historique
             cur.execute(
-                "INSERT INTO user_xp_history (username, xp, level) VALUES (%s, %s, %s)",
+                "INSERT INTO user_xp_history (username, xp, level) VALUES "
+                "(%s, %s, %s)",
                 (username, new_xp, level),
             )
         else:
@@ -909,12 +923,14 @@ def add_user_xp() -> Response:
             new_xp = max(0, current + delta)
             level = new_xp // 100 + 1
             cur.execute(
-                "UPDATE user_profiles SET xp = %s, level = %s WHERE username = %s",
+                "UPDATE user_profiles SET xp = %s, level = %s WHERE username"
+                " = %s",
                 (new_xp, level, username),
             )
             # Enregistrer snapshot dans l'historique
             cur.execute(
-                "INSERT INTO user_xp_history (username, xp, level) VALUES (%s, %s, %s)",
+                "INSERT INTO user_xp_history (username, xp, level) VALUES "
+                "(%s, %s, %s)",
                 (username, new_xp, level),
             )
         conn.commit()

@@ -146,13 +146,12 @@
 /* Subtle zebra striping to separate rows from background */
 .admin-users-table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.01); }
 
-/* Stronger scrollbar for visibility */
-.admin-users-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); }
+/* Stronger scrollbar for visibility consolidated below */
 .admin-users-table tbody tr button { padding:6px 10px; border-radius:8px }
 
 /* Scrollbar styling for modern browsers */
 .admin-users-list::-webkit-scrollbar { height:8px; width:10px }
-.admin-users-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius:8px }
+.admin-users-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius:8px }
 .admin-users-list::-webkit-scrollbar-track { background: transparent }
 
 @media (max-width: 720px) {
