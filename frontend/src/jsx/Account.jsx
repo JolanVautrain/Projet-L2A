@@ -143,17 +143,21 @@ function Account({ user, setUser }) {
       </>
     );
   }
-  // Utilisateur non connecté : afficher le bouton de connexion
+  // Utilisateur non connecté : afficher une bannière invitant à se connecter
   return (
-    <>
+    <div style={{ textAlign: 'center', padding: 24 }}>
       <h1>{t("account.title")}</h1>
-      <button onClick={() => setIsOpen(true)}>{t("common.login")}</button>
+      <p style={{ marginTop: 12 }}>{t("account.loginRequired")}</p>
+      <button className="btn primary" onClick={() => setIsOpen(true)} style={{ marginTop: 12 }}>
+        {t("account.openLogin")}
+      </button>
       <LoginModal
         isOpen={isOpen}
         action={setUser}
         onClose={() => setIsOpen(false)}
+        afterLogin={() => navigate('/account', { replace: true })}
       />
-    </>
+    </div>
   );
 }
 

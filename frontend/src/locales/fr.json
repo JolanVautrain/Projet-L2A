@@ -66,7 +66,9 @@
     "confirmResetSelfScore": "Réinitialiser votre propre classement ?",
     "confirmResetSelfSessions": "Réinitialiser vos autres parties ?",
     "confirmResetUserScore": "Réinitialiser le classement pour",
-    "confirmResetUserSessions": "Réinitialiser les autres parties pour"
+    "confirmResetUserSessions": "Réinitialiser les autres parties pour",
+    "loginRequired": "Vous devez être connecté pour accéder à votre compte.",
+    "openLogin": "Se connecter"
   },
   "statistics": {
     "title": "Vos statistiques",

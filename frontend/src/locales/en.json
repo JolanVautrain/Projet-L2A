@@ -45,7 +45,9 @@
       "title": "Score over time"
     },
     "timerSeconds": "Timer (s)",
-    "loadingLeaderboard": "Loading leaderboard..."
+    "loadingLeaderboard": "Loading leaderboard...",
+    "loginRequired": "You must be logged in to view the leaderboard.",
+    "openLogin": "Sign in"
   },
   "account": {
     "title": "Account",
@@ -64,7 +66,9 @@
     "confirmResetSelfScore": "Reset your own ranking?",
     "confirmResetSelfSessions": "Reset your other games?",
     "confirmResetUserScore": "Reset ranking for",
-    "confirmResetUserSessions": "Reset other games for"
+    "confirmResetUserSessions": "Reset other games for",
+    "loginRequired": "You must be logged in to access your account.",
+    "openLogin": "Sign in"
   },
   "statistics": {
     "title": "Your Statistics",
