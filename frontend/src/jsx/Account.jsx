@@ -21,6 +21,7 @@ function Account({ user, setUser }) {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
   const [awardXpLoading, setAwardXpLoading] = useState(false);
+  const [removeXpLoading, setRemoveXpLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const navigate = useNavigate();
@@ -103,6 +104,31 @@ function Account({ user, setUser }) {
                     }}
                   >
                     {awardXpLoading ? t('common.saving') : t('account.award50xp')}
+                  </button>
+                  <button
+                    className="btn ghost danger"
+                    disabled={removeXpLoading}
+                    onClick={() => {
+                      if (!selectedUser) return;
+                      if (!confirm((t("account.confirmRemoveXp") || `Retirer 50 XP à ${selectedUser}?` ).replace("{username}", selectedUser))) return;
+                      setRemoveXpLoading(true);
+                      fetch(`${apiBase}/api/user/xp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
+                        body: JSON.stringify({ username: selectedUser, xp: -50 }),
+                      })
+                        .then((res) => {
+                          if (!res.ok) throw new Error('Erreur serveur');
+                          return res.json();
+                        })
+                        .then(() => {
+                          alert((t("account.removeXpSuccess") || `-50 XP retirés à ${selectedUser}` ).replace("{username}", selectedUser));
+                        })
+                        .catch((e) => alert(t('common.failedPrefix') + e.message))
+                        .finally(() => setRemoveXpLoading(false));
+                    }}
+                  >
+                    {removeXpLoading ? t('common.saving') : (t('account.remove50xp') || '-50 XP')}
                   </button>
                   <button
                     className="btn ghost"

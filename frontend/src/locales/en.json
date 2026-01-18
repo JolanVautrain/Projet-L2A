@@ -46,6 +46,13 @@
       "yLabel": "Score",
       "title": "Score over time"
     },
+    "xpChart": {
+      "xLabel": "Date/Time",
+      "yLabel": "XP",
+      "title": "XP Progress",
+      "legend": "XP"
+    },
+    "xpLabel": "XP",
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Loading leaderboard...",
     "fetchFailed": "Failed to load leaderboard.",
@@ -81,6 +88,9 @@
     "award50xp": "+50 XP",
     "confirmAwardXp": "Add 50 XP to {username}?",
     "awardXpSuccess": "50 XP added to {username}.",
+    "remove50xp": "-50 XP",
+    "confirmRemoveXp": "Remove 50 XP from {username}?",
+    "removeXpSuccess": "50 XP removed from {username}.",
     "loginRequired": "You must be logged in to access your account.",
     "openLogin": "Sign in"
   },

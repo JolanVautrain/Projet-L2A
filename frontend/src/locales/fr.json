@@ -46,6 +46,13 @@
       "yLabel": "Score",
       "title": "Évolution des scores"
     },
+    "xpChart": {
+      "xLabel": "Date/Heure",
+      "yLabel": "XP",
+      "title": "Progression XP",
+      "legend": "XP"
+    },
+    "xpLabel": "XP",
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Chargement du classement...",
     "fetchFailed": "Échec du chargement du classement.",
@@ -81,6 +88,9 @@
     "award50xp": "+50 XP",
     "confirmAwardXp": "Ajouter 50 XP à {username} ?",
     "awardXpSuccess": "50 XP ajoutés à {username}.",
+    "remove50xp": "-50 XP",
+    "confirmRemoveXp": "Retirer 50 XP à {username} ?",
+    "removeXpSuccess": "50 XP retirés à {username}.",
     "loginRequired": "Vous devez être connecté pour accéder à votre compte.",
     "openLogin": "Se connecter"
   },

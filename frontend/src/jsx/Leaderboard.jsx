@@ -210,7 +210,7 @@ function ProgressChart({ xp, level, t }) {
   const pct = Math.max(0, Math.min(100, xp % 100));
   const radius = 36;
   const circ = 2 * Math.PI * radius;
-  const targetOffset = circ - (pct / 100) * circ;
+    const targetOffset = circ - (pct / 100) * circ; // Calculate target offset for the progress circle
   const [dashOffset, setDashOffset] = useState(circ);
 
   useEffect(() => {
@@ -257,7 +257,7 @@ function ProgressChart({ xp, level, t }) {
       </svg>
       <div className="progress-chart__meta">
         <div className="lvl"><strong>Lvl {level}</strong></div>
-        <div className="xp"><span style={{ color: '#00ff88' }}>{xp}</span> XP</div>
+        <div className="xp"><span style={{ color: '#00ff88' }}>{xp}</span> {t('leaderboard.xpLabel') || t('leaderboard.xpChart.legend') || 'XP'}</div>
       </div>
     </div>
   );
@@ -458,9 +458,9 @@ function ProgressHistoryChart({ history, t }) {
   const handleLeave = () => setTooltip({ visible: false, xp: 0, date: '' });
   const firstLabel = new Date(xMin).toLocaleString();
   const lastLabel = new Date(xMax).toLocaleString();
-  return (
+    return (
     <div className="score-chart__inner">
-      <h3 className="score-chart__title">{t('leaderboard.progress') || 'Progression'}</h3>
+      <h3 className="score-chart__title">{t('leaderboard.xpChart.title') || t('leaderboard.progress') || 'Progression'}</h3>
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1">
@@ -534,11 +534,18 @@ function ProgressHistoryChart({ history, t }) {
               onMouseMove={(e) => handlePoint(e, p.raw)} onMouseEnter={(e) => handlePoint(e, p.raw)} onMouseLeave={handleLeave} />
           </g>
         ))}
+        {/* Y axis min/max labels */}
+        <text x={12} y={yFor(vMax)} fill="#e6eef8" fontSize={12} fontWeight="600">{vMax}</text>
+        <text x={12} y={yFor(vMin)} fill="#e6eef8" fontSize={12} fontWeight="600">{vMin}</text>
+        {/* X axis labels */}
         <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
         <text x={width - margin.right - 140} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
+        {/* Axis titles */}
+        <text x={width / 2} y={height - 2} fill="#00ff88" fontSize={12} fontWeight="700" textAnchor="middle">{t('leaderboard.xpChart.xLabel') || t('leaderboard.date') || 'Date/Heure'}</text>
+        <text x={12} y={height / 2} fill="#00ff88" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{t('leaderboard.xpChart.yLabel') || t('leaderboard.xpLabel') || 'XP'}</text>
       </svg>
       <div ref={tooltipRef} className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}>
-        <div className="score-tooltip__main">XP: {tooltip.xp}</div>
+        <div className="score-tooltip__main">{(t('leaderboard.xpLabel') || 'XP') + ': '}{tooltip.xp}</div>
         <div className="score-tooltip__date">{tooltip.date}</div>
       </div>
     </div>
