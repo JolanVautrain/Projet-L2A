@@ -334,3 +334,39 @@
     padding: 20px;
   }
 }
+
+/* Rainbow gradient hover effect for primary CTA */
+.btn.rainbow {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn.rainbow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(270deg, #ff004c, #ff8a00, #ffee00, #00d084, #00b4ff, #7a00ff, #ff006e);
+  background-size: 400% 400%;
+  opacity: 0;
+  transition: opacity 320ms ease, transform 320ms ease;
+  transform: scale(1.05);
+  border-radius: 14px;
+}
+
+.btn.rainbow:hover::before {
+  opacity: 1;
+  animation: rainbowShift 3s linear infinite;
+}
+
+@keyframes rainbowShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Slight glow when hovered */
+.btn.rainbow:hover {
+  box-shadow: 0 18px 44px rgba(122, 0, 255, 0.18), 0 6px 18px rgba(0, 180, 255, 0.12);
+  transform: translateY(-3px) scale(1.02);
+}

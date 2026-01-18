@@ -73,9 +73,9 @@ function Accueil({ user, setUser }) {
             {t("accueil.welcomeText")}
           </p>
           <div className="hero__actions">
-            <Link className="btn primary" to="/game">
-              {t("accueil.startGame")}
-            </Link>
+            <Link className="btn primary rainbow" to="/game">
+                {t("accueil.startGame")}
+              </Link>
             <Link className="btn ghost" to="/leaderboard">
               {t("accueil.seeRules")}
             </Link>
