@@ -117,6 +117,36 @@ def get_db_cursor(conn: Any) -> Iterator[Any]:
         cur.close()
 
 
+def query_fetchall(
+    sql: str, params: tuple[Any, ...] = ()
+) -> List[tuple[Any, ...]]:
+    """Exécute une requête et retourne toutes les lignes, en gérant la
+    connexion et le curseur.
+
+    Utiliser cet utilitaire pour réduire le code répétitif des endpoints de
+    lecture simple.
+    """
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        cur.execute(sql, params)
+        return cur.fetchall()
+
+
+def query_fetchone(
+    sql: str, params: tuple[Any, ...] = ()
+) -> tuple[Any, ...] | None:  # -> tuple | None
+    """Exécute une requête et retourne une seule ligne ou None."""
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        cur.execute(sql, params)
+        return cur.fetchone()
+
+
+def exec_commit(sql: str, params: tuple[Any, ...] = ()) -> None:
+    """Exécute une instruction SQL et commite la transaction."""
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        cur.execute(sql, params)
+        conn.commit()
+
+
 def handle_db_errors(f: Callable[..., Response]) -> Callable[..., Response]:
     """Décorateur pour gérer automatiquement les erreurs de base de données."""
 
@@ -151,8 +181,8 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
 
 
 def load_default_users() -> List[tuple[str, str, str]]:
-    """Load default users from db_init.json if it exists, otherwise use
-    hardcoded defaults."""
+    """Charge les utilisateurs par défaut depuis `db_init.json` si présent,
+    sinon utilise les valeurs codées en dur."""
     db_init_path = Path(__file__).parent / "db_init.json"
 
     if db_init_path.exists():
@@ -167,15 +197,14 @@ def load_default_users() -> List[tuple[str, str, str]]:
         except (json.JSONDecodeError, KeyError, TypeError) as e:
             app.logger.warning("Failed to load users from db_init.json: %s", e)
 
-    # Fallback to hardcoded defaults
+    # Repli vers des valeurs par défaut codées en dur
     return []
 
 
 def connect_to_database() -> Any:
     """Établir et retourner une nouvelle connexion à la base de données
     PostgreSQL.
-
-    Raises:
+    Lève:
         OperationalError : si la connexion à la base de données échoue.
     """
     try:
@@ -208,8 +237,8 @@ def initialize_database() -> None:
     try:
         init_conn = connect_to_database()
         init_cur = init_conn.cursor()
-        # Ensure users table exists (do NOT drop existing tables to preserve
-        # data)
+        # S'assurer que la table `users` existe (NE PAS supprimer les tables
+        # existantes afin de préserver les données)
         init_cur.execute(
             """CREATE TABLE IF NOT EXISTS users (
             username varchar(100) PRIMARY KEY,
@@ -298,10 +327,10 @@ initialize_database()
 @app.route("/api/login", methods=["POST"])
 @handle_db_errors
 def check_login() -> Response:
-    """Handle POST /api/login: validate credentials against the users table.
+    """Gère POST /api/login : valide les identifiants dans la table `users`.
 
-    Expected JSON body: {"username": str, "password": str}.
-    Returns JSON responses with appropriate HTTP status codes.
+    Corps JSON attendu : {"username": str, "password": str}.
+    Renvoie des réponses JSON avec les codes HTTP appropriés.
     """
     data = request.get_json()
     if not data or "username" not in data or "password" not in data:
@@ -346,11 +375,12 @@ def check_login() -> Response:
 @app.route("/api/register", methods=["POST"])
 @handle_db_errors
 def register_user() -> Response:
-    """Handle POST /api/register: create a new user in the users table.
+    """Gère POST /api/register : crée un nouvel utilisateur dans la table
+      `users`.
 
-    Expected JSON body: {"username": str, "password": str}
-    Returns JSON: {"success": True} on success or {"success": False,
-    "message": str} on error
+    Corps JSON attendu : {"username": str, "password": str}.
+    Renvoie JSON : {"success": True} en cas de succès ou {"success": False,
+    "message": str} en cas d'erreur.
     """
     data = request.get_json()
     if not data or "username" not in data or "password" not in data:
@@ -562,23 +592,21 @@ def list_high_scores() -> Response:
     """Retourne la liste de tous les high scores triée par score décroissant.
     Réponse JSON: [{"username": str, "highScore": int}, ...]
     """
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "SELECT username, high_score, stage, timer FROM highscores "
-            "ORDER BY high_score DESC"
-        )
-        rows = cur.fetchall()
+    rows = query_fetchall(
+        "SELECT username, high_score, stage, timer FROM highscores ORDER BY "
+        "high_score DESC"
+    )
 
-        result: List[Highscore] = [
-            {
-                "username": r[0],
-                "highScore": int(r[1]),
-                "stage": int(r[2] or 0),
-                "timer": int(r[3] or 0),
-            }
-            for r in rows
-        ]
-        return make_response(result)
+    result: List[Highscore] = [
+        {
+            "username": r[0],
+            "highScore": int(r[1]),
+            "stage": int(r[2] or 0),
+            "timer": int(r[3] or 0),
+        }
+        for r in rows
+    ]
+    return make_response(result)
 
 
 @app.route("/api/admin/reset-test", methods=["POST"])
@@ -595,20 +623,18 @@ def reset_test_account() -> Response:
     if admin_secret and header != admin_secret:
         return make_response({"error": "unauthorized"}, 401)
 
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            """
-            INSERT INTO highscores (username, high_score, stage, timer)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (username) DO UPDATE
-            SET high_score = EXCLUDED.high_score,
-                stage = EXCLUDED.stage,
-                timer = EXCLUDED.timer
-            """,
-            ("admin", 0, 0, 0),
-        )
-        conn.commit()
-        return make_response({"ok": True})
+    exec_commit(
+        """
+        INSERT INTO highscores (username, high_score, stage, timer)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT (username) DO UPDATE
+        SET high_score = EXCLUDED.high_score,
+            stage = EXCLUDED.stage,
+            timer = EXCLUDED.timer
+        """,
+        ("admin", 0, 0, 0),
+    )
+    return make_response({"ok": True})
 
 
 @app.route("/api/admin/delete-xp-history/<username>", methods=["OPTIONS"])
@@ -621,94 +647,80 @@ def delete_user_xp_history_options(_username: str) -> Response:
 @handle_db_errors
 @require_admin
 def delete_user_xp_history(username: str) -> Response:
-    """Delete all XP history entries for a specific user.
+    """Supprime toutes les entrées d'historique XP pour un utilisateur donné.
 
-    Returns JSON: {"ok": True} on success. Requires admin header.
+    Renvoie JSON : {"ok": True} en cas de succès. Nécessite l'en-tête admin.
     """
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "DELETE FROM user_xp_history WHERE username = %s", (username,)
-        )
-        conn.commit()
-        return make_response({"ok": True})
+    exec_commit("DELETE FROM user_xp_history WHERE username = %s", (username,))
+    return make_response({"ok": True})
 
 
 @app.route("/api/admin/users", methods=["GET"])
 @handle_db_errors
 @require_admin
 def list_all_users() -> Response:
-    """List all users in the system.
+    """Liste tous les utilisateurs du système.
 
-    Returns JSON: [{"username": str}, ...]
-    Requires being connected as 'admin' (basic check).
+    Renvoie JSON : [{"username": str}, ...].
+    Nécessite d'être connecté en tant qu'admin (vérification basique).
     """
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute("SELECT username FROM users ORDER BY username")
-        rows = cur.fetchall()
-        return make_response([{"username": r[0]} for r in rows])
+    rows = query_fetchall("SELECT username FROM users ORDER BY username")
+    return make_response([{"username": r[0]} for r in rows])
 
 
 @app.route("/api/admin/reset-user/<username>", methods=["POST"])
 @handle_db_errors
 @require_admin
 def reset_user_scores(username: str) -> Response:
-    """Reset the highscores entry for a specific user.
+    """Réinitialise l'entrée des meilleurs scores pour un utilisateur donné.
 
-    Returns JSON: {"ok": true} on success.
-    Requires being connected as 'admin' (basic check).
+    Renvoie JSON : {"ok": true} en cas de succès.
+    Nécessite d'être connecté en tant qu'admin (vérification basique).
     """
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            """
-            INSERT INTO highscores (username, high_score, stage, timer)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (username) DO UPDATE
-            SET high_score = EXCLUDED.high_score,
-                stage = EXCLUDED.stage,
-                timer = EXCLUDED.timer
-            """,
-            (username, 0, 0, 0),
-        )
-        conn.commit()
-        return make_response({"ok": True})
+    exec_commit(
+        """
+        INSERT INTO highscores (username, high_score, stage, timer)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT (username) DO UPDATE
+        SET high_score = EXCLUDED.high_score,
+            stage = EXCLUDED.stage,
+            timer = EXCLUDED.timer
+        """,
+        (username, 0, 0, 0),
+    )
+    return make_response({"ok": True})
 
 
 @app.route("/api/admin/reset-sessions/<username>", methods=["POST"])
 @handle_db_errors
 @require_admin
 def reset_user_sessions(username: str) -> Response:
-    """Reset all game sessions for a specific user.
+    """Réinitialise toutes les sessions de jeu pour un utilisateur donné.
 
-    Returns JSON: {"ok": true} on success.
-    Requires being connected as 'admin' (basic check).
+    Renvoie JSON : {"ok": true} en cas de succès.
+    Nécessite d'être connecté en tant qu'admin (vérification basique).
     """
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "DELETE FROM game_sessions WHERE username = %s", (username,)
-        )
-        cur.execute("DELETE FROM highscores WHERE username = %s", (username,))
-        conn.commit()
-        return make_response({"ok": True})
+    exec_commit("DELETE FROM game_sessions WHERE username = %s", (username,))
+    exec_commit("DELETE FROM highscores WHERE username = %s", (username,))
+    return make_response({"ok": True})
 
 
 @app.route("/api/admin/delete-user/<username>", methods=["DELETE", "POST"])
 @handle_db_errors
 @require_admin
 def delete_user(username: str) -> Response:
-    """Delete a user and cascade-remove related records (highscores, sessions).
+    """Supprime un utilisateur et supprime en cascade les enregistrements liés
+    (meilleurs scores, sessions).
 
-    Returns JSON: {"ok": True} on success.
-    Requires admin header.
+    Renvoie JSON : {"ok": True} en cas de succès.
+    Nécessite l'en-tête admin.
     """
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        # Delete user - CASCADE will remove highscores and sessions
-        cur.execute("DELETE FROM users WHERE username = %s", (username,))
-        conn.commit()
-        return make_response({"ok": True})
+    exec_commit("DELETE FROM users WHERE username = %s", (username,))
+    return make_response({"ok": True})
 
 
 @app.route("/api/user/sessions/<username>", methods=["GET"])
@@ -721,25 +733,23 @@ def get_user_sessions(username: str) -> Response:
     "playedAt": str}, ...]
     """
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "SELECT id, score, stage, timer, played_at FROM game_sessions "
-            "WHERE username = %s ORDER BY score DESC",
-            (username,),
-        )
-        rows = cur.fetchall()
+    rows = query_fetchall(
+        "SELECT id, score, stage, timer, played_at FROM game_sessions WHERE "
+        "username = %s ORDER BY score DESC",
+        (username,),
+    )
 
-        result: List[UserSession] = [
-            {
-                "id": int(r[0]),
-                "score": int(r[1]),
-                "stage": int(r[2] or 0),
-                "timer": int(r[3] or 0),
-                "playedAt": str(r[4]),
-            }
-            for r in rows
-        ]
-        return make_response(result)
+    result: List[UserSession] = [
+        {
+            "id": int(r[0]),
+            "score": int(r[1]),
+            "stage": int(r[2] or 0),
+            "timer": int(r[3] or 0),
+            "playedAt": str(r[4]),
+        }
+        for r in rows
+    ]
+    return make_response(result)
 
 
 @app.route("/api/user/stats/<username>", methods=["GET"])
@@ -759,51 +769,49 @@ def get_user_stats(username: str) -> Response:
     }
     """
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            """
-            SELECT
-                COUNT(*) as total_games,
-                SUM(timer) as total_playtime,
-                SUM(score) as total_score,
-                AVG(score) as avg_score,
-                AVG(stage) as avg_stage,
-                MAX(score) as best_score,
-                MAX(stage) as highest_stage,
-                AVG(timer) as avg_playtime
-            FROM game_sessions
-            WHERE username = %s
-            """,
-            (username,),
-        )
-        row = cur.fetchone()
+    row = query_fetchone(
+        """
+        SELECT
+            COUNT(*) as total_games,
+            SUM(timer) as total_playtime,
+            SUM(score) as total_score,
+            AVG(score) as avg_score,
+            AVG(stage) as avg_stage,
+            MAX(score) as best_score,
+            MAX(stage) as highest_stage,
+            AVG(timer) as avg_playtime
+        FROM game_sessions
+        WHERE username = %s
+        """,
+        (username,),
+    )
 
-        if not row or row[0] == 0:
-            return make_response(
-                {
-                    "totalGames": 0,
-                    "totalPlayTime": 0,
-                    "totalScore": 0,
-                    "averageScore": 0,
-                    "averageStage": 0,
-                    "bestScore": 0,
-                    "highestStage": 0,
-                    "averagePlayTime": 0,
-                }
-            )
-
+    if not row or row[0] == 0:
         return make_response(
             {
-                "totalGames": int(row[0]),
-                "totalPlayTime": int(row[1] or 0),
-                "totalScore": int(row[2] or 0),
-                "averageScore": float(row[3] or 0),
-                "averageStage": float(row[4] or 0),
-                "bestScore": int(row[5] or 0),
-                "highestStage": int(row[6] or 0),
-                "averagePlayTime": float(row[7] or 0),
+                "totalGames": 0,
+                "totalPlayTime": 0,
+                "totalScore": 0,
+                "averageScore": 0,
+                "averageStage": 0,
+                "bestScore": 0,
+                "highestStage": 0,
+                "averagePlayTime": 0,
             }
         )
+
+    return make_response(
+        {
+            "totalGames": int(row[0]),
+            "totalPlayTime": int(row[1] or 0),
+            "totalScore": int(row[2] or 0),
+            "averageScore": float(row[3] or 0),
+            "averageStage": float(row[4] or 0),
+            "bestScore": int(row[5] or 0),
+            "highestStage": int(row[6] or 0),
+            "averagePlayTime": float(row[7] or 0),
+        }
+    )
 
 
 @app.route("/api/user/language/<username>", methods=["GET"])
@@ -811,12 +819,10 @@ def get_user_stats(username: str) -> Response:
 def get_user_language(username: str) -> Response:
     """Retourne la langue préférée d'un utilisateur."""
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "SELECT language FROM users WHERE username = %s", (username,)
-        )
-        row = cur.fetchone()
-        return make_response({"language": row[0] if row else "fr"})
+    row = query_fetchone(
+        "SELECT language FROM users WHERE username = %s", (username,)
+    )
+    return make_response({"language": row[0] if row else "fr"})
 
 
 @app.route("/api/user/xp/<username>", methods=["GET"])
@@ -824,17 +830,12 @@ def get_user_language(username: str) -> Response:
 def get_user_xp(username: str) -> Response:
     """Retourne le XP et le niveau pour `username`."""
     username = username.strip()
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "SELECT xp, level FROM user_profiles WHERE username = %s",
-            (username,),
-        )
-        row = cur.fetchone()
-        if not row:
-            return make_response({"xp": 0, "level": 1})
-        return make_response(
-            {"xp": int(row[0] or 0), "level": int(row[1] or 1)}
-        )
+    row = query_fetchone(
+        "SELECT xp, level FROM user_profiles WHERE username = %s", (username,)
+    )
+    if not row:
+        return make_response({"xp": 0, "level": 1})
+    return make_response({"xp": int(row[0] or 0), "level": int(row[1] or 1)})
 
 
 @app.route("/api/user/xp/history/<username>")
@@ -851,22 +852,20 @@ def get_user_xp_history(username: str) -> Response:
     except (ValueError, TypeError):
         limit = 50
 
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "SELECT xp, level, created_at FROM user_xp_history WHERE username "
-            "= %s ORDER BY created_at ASC LIMIT %s",
-            (username, limit),
-        )
-        rows = cur.fetchall()
-        result: List[XPHistoryEntry] = [
-            {
-                "xp": int(r[0] or 0),
-                "level": int(r[1] or 1),
-                "createdAt": str(r[2]),
-            }
-            for r in rows
-        ]
-        return make_response(result)
+    rows = query_fetchall(
+        "SELECT xp, level, created_at FROM user_xp_history WHERE username "
+        "= %s ORDER BY created_at ASC LIMIT %s",
+        (username, limit),
+    )
+    result: List[XPHistoryEntry] = [
+        {
+            "xp": int(r[0] or 0),
+            "level": int(r[1] or 1),
+            "createdAt": str(r[2]),
+        }
+        for r in rows
+    ]
+    return make_response(result)
 
 
 @app.route("/api/user/xp", methods=["POST"])
@@ -950,13 +949,11 @@ def set_user_language() -> Response:
     if not username:
         return make_response({"error": "username required"}, 400)
 
-    with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        cur.execute(
-            "UPDATE users SET language = %s WHERE username = %s",
-            (language, username),
-        )
-        conn.commit()
-        return make_response({"language": language})
+    exec_commit(
+        "UPDATE users SET language = %s WHERE username = %s",
+        (language, username),
+    )
+    return make_response({"language": language})
 
 
 @app.errorhandler(HTTPException)

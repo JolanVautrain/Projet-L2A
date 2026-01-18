@@ -50,7 +50,7 @@ function PageNotFound() {
         .map((eyeEl) => {
           const pupilEl = eyeEl.querySelector('.pupil');
           if (!pupilEl) return null;
-          // ensure initial centering
+          // assurer le centrage initial
           pupilEl.style.transform = 'translate3d(-50%, -50%, 0)';
           return { eyeEl, pupilEl, center: { x: 0, y: 0 } };
         })
@@ -79,7 +79,7 @@ function PageNotFound() {
      */
     function animate() {
       const max = 10; // max déplacement en pixels
-      // recompute centers each frame to be robust against layout changes
+      // recalculer les centres à chaque frame pour rester robuste face aux changements de layout
       eyesDataRef.current.forEach((entry) => {
         const el = entry.pupilEl;
         if (!el || !entry.eyeEl) return;
@@ -91,7 +91,7 @@ function PageNotFound() {
         const dist = Math.hypot(dx, dy) || 1;
         const nx = (dx / dist) * Math.min(max, dist / 6);
         const ny = (dy / dist) * Math.min(max, dist / 6);
-        // translate first by offset then keep centering transform
+        // translater d'abord par l'offset puis conserver la transformation de centrage
         el.style.transform = `translate3d(${nx}px, ${ny}px, 0) translate3d(-50%, -50%, 0)`;
       });
       rafId = requestAnimationFrame(animate);
@@ -148,7 +148,7 @@ function PageNotFound() {
       ut.rate = Math.max(0.1, Math.min(10, rate));
       globalThis.speechSynthesis.speak(ut);
     } else {
-      // fallback : simple alert
+      // solution de repli : simple alerte
       alert(text);
     }
   }

@@ -28,7 +28,7 @@ function Account({ user, setUser }) {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : '';
+  const apiBase = globalThis?.window ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000` : '';
 
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
@@ -59,7 +59,7 @@ function Account({ user, setUser }) {
                     bestScore: statsJson.bestScore || 0,
                     averageScore: statsJson.averageScore || 0,
                   };
-                } catch (e) {
+                } catch {
                   return { ...u, xp: 0, level: 1, totalGames: 0, totalScore: 0, bestScore: 0, averageScore: 0 };
                 }
               })
@@ -67,12 +67,12 @@ function Account({ user, setUser }) {
             setAllUsers(enriched);
             if (enriched.length > 0) setSelectedUser(enriched[0].username);
           }
-        } catch (e) {
-          console.warn("Failed to load users", e);
+        } catch (err) {
+          console.warn("Failed to load users", err);
         }
       })();
     }
-  }, [user]);
+  }, [user, apiBase]);
   // Gère la déconnexion de l'utilisateur
   const handleLogout = () => {
     setUser(null);
@@ -147,28 +147,28 @@ function Account({ user, setUser }) {
                       className="btn primary"
                       disabled={awardXpLoading}
                       onClick={() => {
-                        if (!selectedUser) return;
-                        if (!confirm(t("account.confirmAwardXp").replace("{username}", selectedUser))) return;
-                        setAwardXpLoading(true);
-                        fetch(`${apiBase}/api/user/xp`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
-                          body: JSON.stringify({ username: selectedUser, xp: 50 }),
-                        })
-                          .then((res) => {
-                            if (!res.ok) throw new Error('Erreur serveur');
-                            return res.json();
+                        if (selectedUser && confirm(t("account.confirmAwardXp").replace("{username}", selectedUser))) {
+                          setAwardXpLoading(true);
+                          fetch(`${apiBase}/api/user/xp`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
+                            body: JSON.stringify({ username: selectedUser, xp: 50 }),
                           })
-                          .then(() => {
-                            alert(t("account.awardXpSuccess").replace("{username}", selectedUser));
-                          })
-                          .catch((e) => alert(t('common.failedPrefix') + e.message))
-                          .finally(() => setAwardXpLoading(false));
+                            .then((res) => {
+                              if (!res.ok) throw new Error('Erreur serveur');
+                              return res.json();
+                            })
+                            .then(() => {
+                              alert(t("account.awardXpSuccess").replace("{username}", selectedUser));
+                            })
+                            .catch((e) => alert(t('common.failedPrefix') + e.message))
+                            .finally(() => setAwardXpLoading(false));
+                        }
                       }}
                     >
                       {awardXpLoading ? t('common.saving') : t('account.award50xp')}
                     </button>
-                    <p className="admin-action__desc">{t('account.awardXpDesc') || 'Ajouter 50 XP à l\'utilisateur sélectionné.'}</p>
+                    <p className="admin-action__desc">{t('account.awardXpDesc') || "Ajouter 50 XP à l'utilisateur sélectionné."}</p>
                     <hr />
                   </div>
 
@@ -177,28 +177,28 @@ function Account({ user, setUser }) {
                       className="btn ghost danger"
                       disabled={removeXpLoading}
                       onClick={() => {
-                        if (!selectedUser) return;
-                        if (!confirm((t("account.confirmRemoveXp") || `Retirer 50 XP à ${selectedUser}?` ).replace("{username}", selectedUser))) return;
-                        setRemoveXpLoading(true);
-                        fetch(`${apiBase}/api/user/xp`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
-                          body: JSON.stringify({ username: selectedUser, xp: -50 }),
-                        })
-                          .then((res) => {
-                            if (!res.ok) throw new Error('Erreur serveur');
-                            return res.json();
+                        if (selectedUser && confirm((t("account.confirmRemoveXp") || `Retirer 50 XP à ${selectedUser}?` ).replace("{username}", selectedUser))) {
+                          setRemoveXpLoading(true);
+                          fetch(`${apiBase}/api/user/xp`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
+                            body: JSON.stringify({ username: selectedUser, xp: -50 }),
                           })
-                          .then(() => {
-                            alert((t("account.removeXpSuccess") || `-50 XP retirés à ${selectedUser}` ).replace("{username}", selectedUser));
-                          })
-                          .catch((e) => alert(t('common.failedPrefix') + e.message))
-                          .finally(() => setRemoveXpLoading(false));
+                            .then((res) => {
+                              if (!res.ok) throw new Error('Erreur serveur');
+                              return res.json();
+                            })
+                            .then(() => {
+                              alert((t("account.removeXpSuccess") || `-50 XP retirés à ${selectedUser}` ).replace("{username}", selectedUser));
+                            })
+                            .catch((e) => alert(t('common.failedPrefix') + e.message))
+                            .finally(() => setRemoveXpLoading(false));
+                        }
                       }}
                     >
                       {removeXpLoading ? t('common.saving') : (t('account.remove50xp') || '-50 XP')}
                     </button>
-                    <p className="admin-action__desc">{t('account.removeXpDesc') || 'Retirer 50 XP à l\'utilisateur sélectionné.'}</p>
+                    <p className="admin-action__desc">{t('account.removeXpDesc') || "Retirer 50 XP à l'utilisateur sélectionné."}</p>
                     <hr />
                   </div>
 
@@ -207,8 +207,7 @@ function Account({ user, setUser }) {
                       className="btn danger"
                       disabled={resetSessionsLoading}
                       onClick={() => {
-                        if (selectedUser) {
-                          if (!confirm(t("account.confirmResetUserSessions").replace("{username}", selectedUser))) return;
+                        if (selectedUser && confirm(t("account.confirmResetUserSessions").replace("{username}", selectedUser))) {
                           setResetSessionsLoading(true);
                           fetch(`${apiBase}/api/admin/reset-sessions/${selectedUser}`, {
                             method: "POST",
@@ -227,7 +226,7 @@ function Account({ user, setUser }) {
                         ? t("account.resetting")
                         : t("account.resetUserSessions")}
                     </button>
-                    <p className="admin-action__desc">{t('account.resetSessionsDesc') || 'Supprime les parties et scores de l\'utilisateur.'}</p>
+                    <p className="admin-action__desc">{t('account.resetSessionsDesc') || "Supprime les parties et scores de l'utilisateur."}</p>
                     <hr />
                   </div>
 
@@ -236,27 +235,27 @@ function Account({ user, setUser }) {
                       className="btn ghost warning"
                       disabled={deleteHistoryLoading}
                       onClick={() => {
-                        if (!selectedUser) return;
-                        if (!confirm((t("account.confirmDeleteXpHistory") || `Supprimer l\'historique XP de ${selectedUser}?`).replace("{username}", selectedUser))) return;
-                        setDeleteHistoryLoading(true);
-                        fetch(`${apiBase}/api/admin/delete-xp-history/${selectedUser}`, {
-                          method: "POST",
-                          headers: { "X-Admin-User": "admin" },
-                        })
-                          .then((res) => {
-                            if (!res.ok) throw new Error("Erreur serveur");
-                            return res.json();
+                        if (selectedUser && confirm((t("account.confirmDeleteXpHistory") || `Supprimer l'historique XP de ${selectedUser}?`).replace("{username}", selectedUser))) {
+                          setDeleteHistoryLoading(true);
+                          fetch(`${apiBase}/api/admin/delete-xp-history/${selectedUser}`, {
+                            method: "POST",
+                            headers: { "X-Admin-User": "admin" },
                           })
-                          .then((data) => {
-                            alert(t("account.deleteXpHistorySuccess")?.replace("{username}", selectedUser) || `Historique XP supprimé pour ${selectedUser}`);
-                          })
-                          .catch((e) => alert(t("common.failedPrefix") + e.message))
-                          .finally(() => setDeleteHistoryLoading(false));
+                            .then((res) => {
+                              if (!res.ok) throw new Error("Erreur serveur");
+                              return res.json();
+                            })
+                            .then(() => {
+                              alert(t("account.deleteXpHistorySuccess")?.replace("{username}", selectedUser) || `Historique XP supprimé pour ${selectedUser}`);
+                            })
+                            .catch((e) => alert(t("common.failedPrefix") + e.message))
+                            .finally(() => setDeleteHistoryLoading(false));
+                        }
                       }}
                     >
                       {deleteHistoryLoading ? t('common.saving') : (t('account.deleteXpHistory') || 'Supprimer historique XP')}
                     </button>
-                    <p className="admin-action__desc">{t('account.deleteXpHistoryDesc') || 'Supprime toutes les entrées d\'historique XP.'}</p>
+                    <p className="admin-action__desc">{t('account.deleteXpHistoryDesc') || "Supprime toutes les entrées d'historique XP."}</p>
                     <hr />
                   </div>
 
@@ -264,26 +263,26 @@ function Account({ user, setUser }) {
                     <button
                       className="btn ghost danger admin-tools__delete"
                       onClick={() => {
-                        if (!selectedUser) return;
-                        if (!confirm(t("account.confirmDeleteUserFull").replace("{username}", selectedUser))) return;
-                        fetch(`${apiBase}/api/admin/delete-user/${selectedUser}`, {
-                          method: "DELETE",
-                          headers: { "X-Admin-User": "admin" },
-                        })
-                          .then((res) => {
-                            if (!res.ok) throw new Error("Erreur serveur");
-                            const remaining = allUsers.filter((u) => u.username !== selectedUser);
-                            setAllUsers(remaining);
-                            if (remaining.length > 0) setSelectedUser(remaining[0].username);
-                            else setSelectedUser("");
-                            alert(t("account.deleteUserSuccess").replace("{username}", selectedUser));
+                        if (selectedUser && confirm(t("account.confirmDeleteUserFull").replace("{username}", selectedUser))) {
+                          fetch(`${apiBase}/api/admin/delete-user/${selectedUser}`, {
+                            method: "DELETE",
+                            headers: { "X-Admin-User": "admin" },
                           })
-                          .catch((e) => alert(t("common.failedPrefix") + e.message));
+                            .then((res) => {
+                              if (!res.ok) throw new Error("Erreur serveur");
+                              const remaining = allUsers.filter((u) => u.username !== selectedUser);
+                              setAllUsers(remaining);
+                              if (remaining.length > 0) setSelectedUser(remaining[0].username);
+                              else setSelectedUser("");
+                              alert(t("account.deleteUserSuccess").replace("{username}", selectedUser));
+                            })
+                            .catch((e) => alert(t("common.failedPrefix") + e.message));
+                        }
                       }}
                     >
                       {t("account.deleteUser")}
                     </button>
-                    <p className="admin-action__desc">{t('account.deleteUserDesc') || 'Supprime l\'utilisateur et les données associées.'}</p>
+                    <p className="admin-action__desc">{t('account.deleteUserDesc') || "Supprime l'utilisateur et les données associées."}</p>
                   </div>
                 </div>
               </div>

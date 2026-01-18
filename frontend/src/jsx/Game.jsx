@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ModalGameOver from "./ModalGameOver";
+import ModalGameOver from "./ModalGameOver.jsx";
 import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Game.css";
 
-// Game state (module-level to persist across renders)
 // État du jeu (module global pour persister entre les rendus)
 let score = 0;
 let gameOver = false;
@@ -42,11 +41,11 @@ function preload() {
  */
 function create() {
   console.log('[Phaser] create() called');
-  // start the in-game timer and create a unique session ID
+  // démarrer le minuteur de la partie et créer un identifiant de session unique
   startTime = Date.now();
   currentSessionId = Math.random().toString(36).slice(2);
   sessionPosted = false; // Réinitialiser pour la nouvelle partie
-  // Expose a getter instead of assigning `this` to a variable
+  // Exposer un getter au lieu d'assigner `this` à une variable
   globalThis.getPhaserScene = () => this;
   this.add.image(400, 300, "sky");
   globalThis.platforms = this.physics.add.staticGroup();
@@ -85,7 +84,7 @@ function create() {
   globalThis.bombs = this.physics.add.group();
   // Initialise les contrôles du clavier au scope global
   globalThis.cursors = this.input.keyboard.createCursorKeys();
-  // Keyboard bindings: support AZERTY (ZQSD) and QWERTY (WASD) plus arrows and space
+  // Raccourcis clavier : prise en charge AZERTY (ZQSD) et QWERTY (WASD), ainsi que flèches et espace
   try {
     const defaultBindings = {
       up: ["Z", "W", "UP"],
@@ -166,7 +165,7 @@ function resetGameObjects() {
   } catch (e) {
     console.warn('spawnBomb unavailable during reset', e);
   }
-  // reset timer when objects reset
+  // réinitialiser le minuteur lorsque les objets sont réinitialisés
   startTime = Date.now();
   // NE PAS créer un nouvel ID ici - le même ID doit persister jusqu'à l'écran de fin
 }
@@ -251,7 +250,7 @@ function PhaserSafeBetween(min, max) {
   if (typeof globalThis?.Phaser?.Math?.Between === 'function') {
     return globalThis.Phaser.Math.Between(min, max);
   }
-  // Fallback simple
+  // solution de repli simple
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
@@ -290,7 +289,7 @@ function spawnBomb() {
 /**
  * Gère la collision avec une bombe (fin de partie).
  */
-function hitBomb(player, bomb) {
+function hitBomb(_player, _bomb) {
   // Empêcher les appels multiples à hitBomb pendant qu'on traite la mort
   if (processingDeath) return;
   processingDeath = true;
@@ -344,7 +343,7 @@ function hitBomb(player, bomb) {
 /**
  * Détecte si le joueur touche le sol.
  */
-function touchGround(player, ground) {
+function touchGround(_player, _ground) {
   touchingGround = true;
 }
 
@@ -427,11 +426,13 @@ function Game() {
   useEffect(() => {
     let destroyed = false;
     let gameInstance = null;
+    const container = gameContainer.current;
     // Crée l'instance du jeu Phaser
     const createGame = () => {
-      if (destroyed || !gameContainer.current || gameContainer.current._phaserGame) return;
-      console.log('Creating Phaser game instance...');
-      const config = {
+    if (destroyed || !container || container._phaserGame) {
+      return;
+    }
+    const config = {
         type: globalThis.Phaser.AUTO,
         width: 800,
         height: 600,
@@ -446,10 +447,10 @@ function Game() {
         parent: gameContainer.current,
       };
       gameInstance = new globalThis.Phaser.Game(config);
-      gameContainer.current._phaserGame = gameInstance;
+      if (container) container._phaserGame = gameInstance;
       // Affiche le canvas une fois prêt
       setTimeout(() => {
-        const canvas = gameContainer.current?.querySelector('canvas');
+        const canvas = container?.querySelector('canvas');
         if (canvas) {
           console.log('[Canvas] Dimensions:', canvas.width, 'x', canvas.height);
           canvas.style.display = 'block';
@@ -515,8 +516,8 @@ function Game() {
       if (gameInstance) {
         gameInstance.destroy(true);
       }
-      if (gameContainer.current) {
-        gameContainer.current._phaserGame = null;
+      if (container) {
+        container._phaserGame = null;
       }
     };
   }, []);

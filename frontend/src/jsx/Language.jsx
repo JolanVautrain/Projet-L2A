@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
@@ -17,7 +18,7 @@ export const LanguageProvider = ({ children }) => {
     const username = localStorage.getItem('user');
     if (!username) return;
     fetch(`/api/user/language/${username}`)
-      .then((r) => r.ok ? r.json() : { language: language })
+      .then((r) => r.ok ? r.json() : {})
       .then((data) => {
         if (data?.language) {
           setLanguage(data.language);
@@ -93,8 +94,6 @@ export function LanguageSelector() {
     </div>
   );
 }
-
-export default LanguageSelector;
 
 LanguageProvider.propTypes = {
   children: PropTypes.node.isRequired,

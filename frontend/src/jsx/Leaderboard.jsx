@@ -6,9 +6,64 @@ import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
 
+// Small helpers to build scale functions used by charts
+const makeXFor = (xMin, xMax, width, margin) => {
+  const innerW = width - margin.left - margin.right;
+  const denom = xMax - xMin || 1;
+  return (ts) => margin.left + ((ts - xMin) / denom) * innerW;
+};
+
+// Convert monotone cubic points to a smooth Bezier path (shared helper)
+const monotoneToBezier = (pts) => {
+  if (!pts || pts.length === 0) return '';
+  const n = pts.length;
+  if (n === 1) return `M ${pts[0].x},${pts[0].y}`;
+  const x = pts.map(p => p.x);
+  const y = pts.map(p => p.y);
+  const dx = new Array(n - 1);
+  const slope = new Array(n - 1);
+  for (let i = 0; i < n - 1; i++) {
+    dx[i] = x[i + 1] - x[i] || 1;
+    slope[i] = (y[i + 1] - y[i]) / dx[i];
+  }
+  const m = new Array(n);
+  m[0] = slope[0];
+  m[n - 1] = slope[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    if (slope[i - 1] === 0 || slope[i] === 0 || (slope[i - 1] > 0) !== (slope[i] > 0)) {
+      m[i] = 0;
+    } else {
+      m[i] = (slope[i - 1] + slope[i]) / 2;
+    }
+  }
+  // Fritsch-Carlson adjustment to avoid overshoot
+  for (let i = 0; i < n - 1; i++) {
+    if (slope[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    const a = m[i] / slope[i];
+    const b = m[i + 1] / slope[i];
+    const sq = a * a + b * b;
+    if (sq > 9) {
+      const t = 3 / Math.sqrt(sq);
+      m[i] = t * a * slope[i];
+      m[i + 1] = t * b * slope[i];
+    }
+  }
+  // Build cubic Bezier path
+  let d = `M ${x[0]},${y[0]}`;
+  for (let i = 0; i < n - 1; i++) {
+    const dxSeg = x[i + 1] - x[i];
+    const cp1x = x[i] + dxSeg / 3;
+    const cp1y = y[i] + m[i] * dxSeg / 3;
+    const cp2x = x[i + 1] - dxSeg / 3;
+    const cp2y = y[i + 1] - m[i + 1] * dxSeg / 3;
+    d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x[i + 1]},${y[i + 1]}`;
+  }
+  return d;
+};
+
 function Leaderboard({ user, setUser }) {
   // Runtime API base: prefer same host on port 5000 (backend), useful during dev
-  const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : '';
+  const apiBase = globalThis?.window ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000` : '';
   const [scores, setScores] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,19 +81,20 @@ function Leaderboard({ user, setUser }) {
 
   useEffect(() => {
     let mounted = true;
-    // Charger le classement global
     Promise.all([
       fetch("/api/score")
         .then((r) => {
-          if (!r.ok) throw new Error(t("leaderboard.fetchFailed"));
-          return r.json();
+          if (r.ok) {
+            return r.json();
+          }
+          throw new Error(t("leaderboard.fetchFailed"));
         }),
       // Charger les sessions du joueur connecté si disponible
       user
         ? fetch(`/api/user/sessions/${user}`)
             .then(async (r) => {
-              if (!r.ok) return [];
-              return r.json();
+              if (r.ok) return r.json();
+              return [];
             })
             .catch(() => [])
         : Promise.resolve([]),
@@ -59,8 +115,10 @@ function Leaderboard({ user, setUser }) {
     if (user) {
       fetch(`${apiBase}/api/user/xp/${user}`)
         .then((r) => {
-          if (!r.ok) throw new Error("failed to fetch xp");
-          return r.json();
+          if (r.ok) {
+            return r.json();
+          }
+          throw new Error("failed to fetch xp");
         })
         .then((d) => {
           if (mounted) {
@@ -78,11 +136,11 @@ function Leaderboard({ user, setUser }) {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, apiBase, t]);
   if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
   if (error) return <p>{t("common.error")}: {error}</p>;
   // Si pas connecté, afficher une bannière explicite et proposer d'ouvrir la modal
-  if (!user) {
+  if (user == null) {
     return (
       <div className="leaderboard leaderboard--centered">
         <h1>{t("leaderboard.title")}</h1>
@@ -215,7 +273,7 @@ function ProgressChart({ xp, level, t }) {
 
   useEffect(() => {
     // animate from full circle to targetOffset
-    // small timeout to ensure initial render with full circle
+    // petit timeout pour assurer le rendu initial avec le cercle complet
     const id = setTimeout(() => setDashOffset(targetOffset), 60);
     return () => clearTimeout(id);
   }, [targetOffset]);
@@ -263,24 +321,20 @@ function ProgressChart({ xp, level, t }) {
   );
 }
   function ScoreChart({ sessions, t }) {
-    if (!sessions || sessions.length === 0) return null;
     const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
     const tooltipRef = useRef(null);
-    const width = 860;
-    const height = 260;
-    const margin = { top: 18, right: 30, bottom: 36, left: 48 };
-    const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
+    if (sessions && sessions.length > 0) {
+      const width = 860;
+      const height = 260;
+      const margin = { top: 18, right: 30, bottom: 36, left: 48 };
+      const sorted = [...sessions].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
     const times = sorted.map((s) => new Date(s.playedAt).getTime());
     const xMin = Math.min(...times);
     const xMax = Math.max(...times);
     const values = sorted.map((s) => Number(s.highScore ?? s.score ?? 0));
     const sMin = Math.min(...values);
     const sMax = Math.max(...values);
-    const xFor = (ts) => {
-      const innerW = width - margin.left - margin.right;
-      const denom = xMax - xMin || 1;
-      return margin.left + ((ts - xMin) / denom) * innerW;
-    };
+    const xFor = makeXFor(xMin, xMax, width, margin);
     const yFor = (v) => {
       const innerH = height - margin.top - margin.bottom;
       const denom = sMax - sMin || 1;
@@ -308,7 +362,7 @@ function ProgressChart({ xp, level, t }) {
       }
     };
     const handlePointLeave = () => setTooltip({ visible: false, score: 0, date: '' });
-    return (
+      return (
       <div className="score-chart__inner">
         <h2 className="score-chart__title">{t('leaderboard.chart.title')}</h2>
         <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
@@ -319,63 +373,21 @@ function ProgressChart({ xp, level, t }) {
             </linearGradient>
           </defs>
           {/* Smooth monotone path + area */}
-          {points.length > 0 && (() => {
-            const pts = points;
-            const monotoneToBezier = (pts) => {
-              const n = pts.length;
-              if (n === 0) return '';
-              if (n === 1) return `M ${pts[0].x},${pts[0].y}`;
-              const x = pts.map(p => p.x);
-              const y = pts.map(p => p.y);
-              const dx = new Array(n - 1);
-              const slope = new Array(n - 1);
-              for (let i = 0; i < n - 1; i++) {
-                dx[i] = x[i + 1] - x[i] || 1;
-                slope[i] = (y[i + 1] - y[i]) / dx[i];
-              }
-              const m = new Array(n);
-              m[0] = slope[0];
-              m[n - 1] = slope[n - 2];
-              for (let i = 1; i < n - 1; i++) {
-                if (slope[i - 1] === 0 || slope[i] === 0 || (slope[i - 1] > 0) !== (slope[i] > 0)) {
-                  m[i] = 0;
-                } else {
-                  m[i] = (slope[i - 1] + slope[i]) / 2;
-                }
-              }
-              for (let i = 0; i < n - 1; i++) {
-                if (slope[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
-                const a = m[i] / slope[i];
-                const b = m[i + 1] / slope[i];
-                const sq = a * a + b * b;
-                if (sq > 9) {
-                  const t = 3 / Math.sqrt(sq);
-                  m[i] = t * a * slope[i];
-                  m[i + 1] = t * b * slope[i];
-                }
-              }
-              let d = `M ${x[0]},${y[0]}`;
-              for (let i = 0; i < n - 1; i++) {
-                const dxSeg = x[i + 1] - x[i];
-                const cp1x = x[i] + dxSeg / 3;
-                const cp1y = y[i] + m[i] * dxSeg / 3;
-                const cp2x = x[i + 1] - dxSeg / 3;
-                const cp2y = y[i + 1] - m[i + 1] * dxSeg / 3;
-                d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x[i + 1]},${y[i + 1]}`;
-              }
-              return d;
-            };
-            const lineD = monotoneToBezier(pts);
-            const areaD = lineD + ` L ${width - margin.right},${height - margin.bottom} L ${margin.left},${height - margin.bottom} Z`;
-            return (
-              <>
-                <path d={areaD} fill="url(#grad)" />
-                <path d={lineD} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-              </>
-            );
-          })()}
-          {points.map((p, i) => (
-            <g key={i}>
+          {points.length > 0 && (
+            (() => {
+              const pts = points;
+              const lineD = monotoneToBezier(pts);
+              const areaD = lineD + ` L ${width - margin.right},${height - margin.bottom} L ${margin.left},${height - margin.bottom} Z`;
+              return (
+                <>
+                  <path d={areaD} fill="url(#grad)" />
+                  <path d={lineD} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              );
+            })()
+          )}
+          {points.map((p) => (
+            <g key={p.raw?.id ?? p.raw?.playedAt ?? `${p.x}-${p.y}`}>
               <circle
                 cx={p.x}
                 cy={p.y}
@@ -395,12 +407,17 @@ function ProgressChart({ xp, level, t }) {
           <text x={width - margin.right - 120} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
           <text x={width / 2} y={height - 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle">{xLabel}</text>
           <text x={12} y={height / 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
-        </svg>
+          </svg>
+          <div ref={tooltipRef} className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}>
+            <div className="score-tooltip__main">{(t('common.score') || 'Score') + ': '}{tooltip.score}</div>
+            <div className="score-tooltip__date">{tooltip.date}</div>
+          </div>
       </div>
     );
+    }
+    return null;
   }
 
-export default Leaderboard;
 ProgressChart.propTypes = { xp: PropTypes.number, level: PropTypes.number, t: PropTypes.func };
 
 Leaderboard.propTypes = {
@@ -416,7 +433,7 @@ ScoreChart.propTypes = {
 function ProgressHistoryChart({ history, t }) {
   const [tooltip, setTooltip] = useState({ visible: false, xp: 0, date: '' });
   const tooltipRef = useRef(null);
-  if (!history || history.length === 0) return null;
+  if (history && history.length > 0) {
   const width = 800;
   const height = 180;
   const margin = { top: 12, right: 18, bottom: 28, left: 48 };
@@ -427,11 +444,7 @@ function ProgressHistoryChart({ history, t }) {
   const values = sorted.map((h) => Number(h.xp || 0));
   const vMin = Math.min(...values);
   const vMax = Math.max(...values);
-  const xFor = (ts) => {
-    const innerW = width - margin.left - margin.right;
-    const denom = xMax - xMin || 1;
-    return margin.left + ((ts - xMin) / denom) * innerW;
-  };
+  const xFor = makeXFor(xMin, xMax, width, margin);
   const yFor = (v) => {
     const innerH = height - margin.top - margin.bottom;
     const denom = vMax - vMin || 1;
@@ -471,54 +484,6 @@ function ProgressHistoryChart({ history, t }) {
         {/* Smooth path (monotone cubic → Bezier to avoid overshoot) */}
         {points.length > 0 && (() => {
           const pts = points;
-          const monotoneToBezier = (pts) => {
-            if (!pts || pts.length === 0) return '';
-            const n = pts.length;
-            if (n === 1) return `M ${pts[0].x},${pts[0].y}`;
-            const x = pts.map(p => p.x);
-            const y = pts.map(p => p.y);
-            const dx = new Array(n - 1);
-            const slope = new Array(n - 1);
-            for (let i = 0; i < n - 1; i++) {
-              dx[i] = x[i + 1] - x[i] || 1;
-              slope[i] = (y[i + 1] - y[i]) / dx[i];
-            }
-            const m = new Array(n);
-            m[0] = slope[0];
-            m[n - 1] = slope[n - 2];
-            for (let i = 1; i < n - 1; i++) {
-              if (slope[i - 1] === 0 || slope[i] === 0 || (slope[i - 1] > 0) !== (slope[i] > 0)) {
-                m[i] = 0;
-              } else {
-                m[i] = (slope[i - 1] + slope[i]) / 2;
-              }
-            }
-            // Fritsch-Carlson adjustment
-            for (let i = 0; i < n - 1; i++) {
-              if (slope[i] === 0) {
-                m[i] = 0; m[i + 1] = 0; continue;
-              }
-              const a = m[i] / slope[i];
-              const b = m[i + 1] / slope[i];
-              const sq = a * a + b * b;
-              if (sq > 9) {
-                const t = 3 / Math.sqrt(sq);
-                m[i] = t * a * slope[i];
-                m[i + 1] = t * b * slope[i];
-              }
-            }
-            // Build Bezier path from Hermite form
-            let d = `M ${x[0]},${y[0]}`;
-            for (let i = 0; i < n - 1; i++) {
-              const dxSeg = x[i + 1] - x[i];
-              const cp1x = x[i] + dxSeg / 3;
-              const cp1y = y[i] + m[i] * dxSeg / 3;
-              const cp2x = x[i + 1] - dxSeg / 3;
-              const cp2y = y[i + 1] - m[i + 1] * dxSeg / 3;
-              d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x[i + 1]},${y[i + 1]}`;
-            }
-            return d;
-          };
           const lineD = monotoneToBezier(pts);
           const areaD = lineD + ` L ${width - margin.right},${height - margin.bottom} L ${margin.left},${height - margin.bottom} Z`;
           return (
@@ -528,8 +493,8 @@ function ProgressHistoryChart({ history, t }) {
             </>
           );
         })()}
-        {points.map((p, i) => (
-          <g key={i}>
+        {points.map((p) => (
+          <g key={p.raw?.id ?? p.raw?.createdAt ?? `${p.x}-${p.y}`}>
             <circle cx={p.x} cy={p.y} r={3.5} fill="#0b1222" stroke="#00ff88" strokeWidth={1.8}
               onMouseMove={(e) => handlePoint(e, p.raw)} onMouseEnter={(e) => handlePoint(e, p.raw)} onMouseLeave={handleLeave} />
           </g>
@@ -549,7 +514,11 @@ function ProgressHistoryChart({ history, t }) {
         <div className="score-tooltip__date">{tooltip.date}</div>
       </div>
     </div>
-  );
+    );
+  }
+  return null;
 }
 
 ProgressHistoryChart.propTypes = { history: PropTypes.arrayOf(PropTypes.object), t: PropTypes.func };
+
+export default Leaderboard;
