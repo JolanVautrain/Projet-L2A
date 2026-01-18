@@ -19,10 +19,12 @@ d'environnement. Assurez-vous que la variable d'environnement
 POSTGRES_PASSWORD est définie sur le mot de passe souhaité.
 """
 
+import json
 import logging
 import os
 from contextlib import contextmanager
 from functools import wraps
+from pathlib import Path
 from typing import Any, Callable, Iterator, List, TypedDict
 
 import psycopg2  # type: ignore
@@ -119,6 +121,26 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
     return wrapper
 
 
+def load_default_users() -> List[tuple[str, str, str]]:
+    """Load default users from db_init.json if it exists, otherwise use hardcoded defaults."""
+    db_init_path = Path(__file__).parent / "db_init.json"
+
+    if db_init_path.exists():
+        try:
+            with open(db_init_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                users = data.get("users", [])
+                return [
+                    (u["username"], u["password"], u["language"])
+                    for u in users
+                ]
+        except (json.JSONDecodeError, KeyError, TypeError) as e:
+            app.logger.warning("Failed to load users from db_init.json: %s", e)
+
+    # Fallback to hardcoded defaults
+    return []
+
+
 def connect_to_database() -> Any:
     """Établir et retourner une nouvelle connexion à la base de données
     PostgreSQL.
@@ -158,12 +180,13 @@ try:
         language varchar(10) DEFAULT 'fr'
         );"""
     )
-    init_cur.execute(
-        """INSERT INTO users (username, password, language) VALUES
-        ('admin', '1234', 'fr'),
-        ('username', 'password', 'fr'),
-        ('azerty', 'qsdfgh', 'fr');"""
-    )
+    # Load default users from db_init.json
+    default_users = load_default_users()
+    for username, password, language in default_users:
+        init_cur.execute(
+            "INSERT INTO users (username, password, language) VALUES (%s, %s, %s)",
+            (username, password, language),
+        )
     # Table pour stocker le meilleur score par utilisateur
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS highscores (
