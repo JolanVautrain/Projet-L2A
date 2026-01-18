@@ -85,7 +85,7 @@ function App() {
       </header>
       <Routes>
         <Route path="/" element={<Accueil user={userState} setUser={setUserAndLoadLang} />} />
-        <Route path="/leaderboard" element={<Leaderboard user={userState} />} />
+        <Route path="/leaderboard" element={<Leaderboard user={userState} setUser={setUserAndLoadLang} />} />
         <Route path="/account" element={<Account user={userState} setUser={setUserAndLoadLang} />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/game" element={<RequireAuth user={userState}><Game /></RequireAuth>} />

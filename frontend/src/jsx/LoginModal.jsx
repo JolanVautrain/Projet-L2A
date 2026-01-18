@@ -9,7 +9,7 @@ import { useLanguage } from "./Language.jsx";
  * 
  * Permet de se connecter via une modal.
  */
-function LoginModal({ isOpen, onClose, action }) {
+function LoginModal({ isOpen, onClose, action, afterLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -58,10 +58,14 @@ function LoginModal({ isOpen, onClose, action }) {
           setError(t("loginModal.incorrectPassword"));
         } else {
           // renvoie le nom d'utilisateur au parent pour affichage dans le header
-          // transmet le nom d'utilisateur au parent pour affichage dans l'en-tête
           action(username);
+          // appeler un callback optionnel après connexion réussie (ex: redirection)
+          try {
+            if (typeof afterLogin === 'function') afterLogin(username);
+          } catch (err) {
+            console.error('afterLogin callback failed', err);
+          }
           // ferme la modal automatiquement après connexion réussie
-          // ferme la fenêtre modale automatiquement après connexion réussie
           if (typeof onClose === "function") onClose();
         }
       })
@@ -129,4 +133,5 @@ LoginModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   action: PropTypes.func.isRequired,
+  afterLogin: PropTypes.func,
 };

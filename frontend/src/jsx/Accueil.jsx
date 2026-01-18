@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoginModal from "./LoginModal.jsx";
 import { useLanguage } from "./Language.jsx";
 import "../css/Accueil.css";
@@ -50,6 +50,7 @@ function Accueil({ user, setUser }) {
 
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
+  const navigate = useNavigate();
   const location = useLocation();
 
   // Ouvre la modal de connexion si l'état de navigation le demande
@@ -158,7 +159,7 @@ function Accueil({ user, setUser }) {
           </div>
         )}
       </section>
-      <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} />
+      <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} />
     </div>
   );
 }

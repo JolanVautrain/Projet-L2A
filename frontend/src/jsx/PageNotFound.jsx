@@ -198,7 +198,6 @@ function PageNotFound() {
               <div className="speech-bubble" aria-live="assertive">{speeches.main}</div>
             )}
           </button>
-          {/* trois figures géométriques */}
           <button
             type="button"
             className={`mini-shape one size-sm c1 ${clickedId === "one" ? "clicked" : ""}`}

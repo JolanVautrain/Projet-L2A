@@ -45,7 +45,9 @@
       "title": "Évolution des scores"
     },
     "timerSeconds": "Timer (s)",
-    "loadingLeaderboard": "Chargement du classement..."
+    "loadingLeaderboard": "Chargement du classement...",
+    "loginRequired": "Vous devez être connecté pour voir votre classement.",
+    "openLogin": "Se connecter"
   },
   "account": {
     "title": "Compte",

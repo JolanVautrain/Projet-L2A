@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import LoginModal from "./LoginModal.jsx";
 import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
 
-function Leaderboard({ user }) {
+function Leaderboard({ user, setUser }) {
   const [scores, setScores] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
   const { t, language } = useLanguage();
+
+  const openLogin = () => setIsOpen(true);
+  const closeLogin = () => setIsOpen(false);
 
   useEffect(() => {
     let mounted = true;
@@ -48,6 +53,20 @@ function Leaderboard({ user }) {
   }, [user]);
   if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
   if (error) return <p>{t("common.error")}: {error}</p>;
+
+  // Si pas connecté, afficher une bannière explicite et proposer d'ouvrir la modal
+  if (!user) {
+    return (
+      <div className="leaderboard" style={{ textAlign: 'center', padding: 24 }}>
+        <h1>{t("leaderboard.title")}</h1>
+        <p style={{ marginTop: 12 }}>{t("leaderboard.loginRequired")}</p>
+        <button className="btn primary" onClick={openLogin} style={{ marginTop: 12 }}>
+          {t("leaderboard.openLogin")}
+        </button>
+        <LoginModal isOpen={isOpen} onClose={closeLogin} action={setUser || (() => {})} afterLogin={() => { /* no-op: setUser already updates leaderboard */ }} />
+      </div>
+    );
+  }
   const userBestScore = scores.find((s) => s.username === user);
   // Calculer le meilleur score depuis les sessions si pas trouvé dans highscores
   const bestScoreFromSessions = userSessions.length > 0
