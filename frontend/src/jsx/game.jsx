@@ -85,7 +85,35 @@ function create() {
   globalThis.bombs = this.physics.add.group();
   // Initialise les contrôles du clavier au scope global
   globalThis.cursors = this.input.keyboard.createCursorKeys();
-  // fait apparaitre des bombes initiales en fonction du stage
+  // Keyboard bindings: support AZERTY (ZQSD) and QWERTY (WASD) plus arrows and space
+  try {
+    const defaultBindings = {
+      up: ["Z", "W", "UP"],
+      left: ["Q", "A", "LEFT"],
+      down: ["S", "DOWN"],
+      right: ["D", "RIGHT"],
+      jump: ["SPACE"],
+    };
+    const saved = (() => {
+      try { return JSON.parse(localStorage.getItem('gameKeyBindings')); } catch (e) { return null; }
+    })();
+    const bindings = saved || defaultBindings;
+
+    const toCode = (k) => {
+      if (!globalThis.Phaser || !globalThis.Phaser.Input || !globalThis.Phaser.Input.Keyboard) return k;
+      const codes = globalThis.Phaser.Input.Keyboard.KeyCodes;
+      const upk = String(k).toUpperCase();
+      return codes && codes[upk] ? codes[upk] : k;
+    };
+
+    globalThis.keyMap = {};
+    Object.entries(bindings).forEach(([action, keysArr]) => {
+      globalThis.keyMap[action] = keysArr.map((k) => this.input.keyboard.addKey(toCode(k)));
+    });
+  } catch (e) {
+    console.warn('Failed to init custom key bindings', e);
+  }
+  // fait apparaitre des bombes initiales en fonction du stage actuel
   for (let i = 0; i < internalStage; i++) spawnBomb();
   this.physics.add.collider(globalThis.stars, globalThis.platforms);
   this.physics.add.collider(globalThis.bombs, globalThis.platforms);
@@ -143,17 +171,33 @@ function resetGameObjects() {
  */
 function handlePlayerMovement(player, cursors) {
   if (player && cursors) {
-    if (cursors.left?.isDown) {
+    const km = globalThis.keyMap || {};
+    const isDown = (action) => {
+      try {
+        const arr = km[action];
+        if (arr && arr.length) return arr.some((k) => k && k.isDown);
+      } catch (e) {
+        // ignore
+      }
+      return false;
+    };
+
+    const leftPressed = cursors.left?.isDown || isDown('left');
+    const rightPressed = cursors.right?.isDown || isDown('right');
+
+    if (leftPressed) {
       player.setVelocityX(-160);
       player.anims.play("left", true);
-    } else if (cursors.right?.isDown) {
+    } else if (rightPressed) {
       player.setVelocityX(160);
       player.anims.play("right", true);
     } else {
       player.setVelocityX(0);
       player.anims.play("turn");
     }
-    if (cursors.up?.isDown && player.body.touching.down && touchingGround) {
+
+    const upPressed = cursors.up?.isDown || isDown('up') || isDown('jump');
+    if (upPressed && player.body.touching.down && touchingGround) {
       player.setVelocityY(-650);
       touchingGround = false;
     }
