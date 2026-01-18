@@ -286,7 +286,11 @@ function ProgressChart({ xp, level, t }) {
       const denom = sMax - sMin || 1;
       return margin.top + (1 - (v - sMin) / denom) * innerH;
     };
-    const points = sorted.map((s) => `${xFor(new Date(s.playedAt).getTime())},${yFor(Number(s.highScore ?? s.score ?? 0))}`).join(' ');
+    const points = sorted.map((s) => ({
+      x: xFor(new Date(s.playedAt).getTime()),
+      y: yFor(Number(s.highScore ?? s.score ?? 0)),
+      raw: s,
+    }));
     const firstLabel = new Date(xMin).toLocaleString();
     const lastLabel = new Date(xMax).toLocaleString();
     const xLabel = t('leaderboard.date') || '';
@@ -314,27 +318,77 @@ function ProgressChart({ xp, level, t }) {
               <stop offset="100%" stopColor="rgba(0,212,255,0.02)" />
             </linearGradient>
           </defs>
-          <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#grad)" />
-          <polyline points={points} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-          {sorted.map((s, i) => {
-            const cx = xFor(new Date(s.playedAt).getTime());
-            const cy = yFor(Number(s.highScore ?? s.score ?? 0));
+          {/* Smooth monotone path + area */}
+          {points.length > 0 && (() => {
+            const pts = points;
+            const monotoneToBezier = (pts) => {
+              const n = pts.length;
+              if (n === 0) return '';
+              if (n === 1) return `M ${pts[0].x},${pts[0].y}`;
+              const x = pts.map(p => p.x);
+              const y = pts.map(p => p.y);
+              const dx = new Array(n - 1);
+              const slope = new Array(n - 1);
+              for (let i = 0; i < n - 1; i++) {
+                dx[i] = x[i + 1] - x[i] || 1;
+                slope[i] = (y[i + 1] - y[i]) / dx[i];
+              }
+              const m = new Array(n);
+              m[0] = slope[0];
+              m[n - 1] = slope[n - 2];
+              for (let i = 1; i < n - 1; i++) {
+                if (slope[i - 1] === 0 || slope[i] === 0 || (slope[i - 1] > 0) !== (slope[i] > 0)) {
+                  m[i] = 0;
+                } else {
+                  m[i] = (slope[i - 1] + slope[i]) / 2;
+                }
+              }
+              for (let i = 0; i < n - 1; i++) {
+                if (slope[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+                const a = m[i] / slope[i];
+                const b = m[i + 1] / slope[i];
+                const sq = a * a + b * b;
+                if (sq > 9) {
+                  const t = 3 / Math.sqrt(sq);
+                  m[i] = t * a * slope[i];
+                  m[i + 1] = t * b * slope[i];
+                }
+              }
+              let d = `M ${x[0]},${y[0]}`;
+              for (let i = 0; i < n - 1; i++) {
+                const dxSeg = x[i + 1] - x[i];
+                const cp1x = x[i] + dxSeg / 3;
+                const cp1y = y[i] + m[i] * dxSeg / 3;
+                const cp2x = x[i + 1] - dxSeg / 3;
+                const cp2y = y[i + 1] - m[i + 1] * dxSeg / 3;
+                d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x[i + 1]},${y[i + 1]}`;
+              }
+              return d;
+            };
+            const lineD = monotoneToBezier(pts);
+            const areaD = lineD + ` L ${width - margin.right},${height - margin.bottom} L ${margin.left},${height - margin.bottom} Z`;
             return (
-              <g key={s.id || i}>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={5}
-                  fill="#0b1222"
-                  stroke="#00d4ff"
-                  strokeWidth={2.5}
-                  onMouseMove={(e) => handlePointMove(e, s)}
-                  onMouseEnter={(e) => handlePointMove(e, s)}
-                  onMouseLeave={handlePointLeave}
-                />
-              </g>
+              <>
+                <path d={areaD} fill="url(#grad)" />
+                <path d={lineD} fill="none" stroke="#00d4ff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+              </>
             );
-          })}
+          })()}
+          {points.map((p, i) => (
+            <g key={i}>
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={4.5}
+                fill="#0b1222"
+                stroke="#00d4ff"
+                strokeWidth={2}
+                onMouseMove={(e) => handlePointMove(e, p.raw)}
+                onMouseEnter={(e) => handlePointMove(e, p.raw)}
+                onMouseLeave={handlePointLeave}
+              />
+            </g>
+          ))}
           <text x={8} y={yFor(sMax)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMax}</text>
           <text x={8} y={yFor(sMin)} fill="#e6eef8" fontSize={12} fontWeight="600">{sMin}</text>
           <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
@@ -342,25 +396,6 @@ function ProgressChart({ xp, level, t }) {
           <text x={width / 2} y={height - 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle">{xLabel}</text>
           <text x={12} y={height / 2} fill="#00d4ff" fontSize={12} fontWeight="700" textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{yLabel}</text>
         </svg>
-        <div
-          ref={tooltipRef}
-          className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}
-        >
-          <div className="score-tooltip__main">{t('common.score')}: {tooltip.score}</div>
-          <div className="score-tooltip__date">{tooltip.date}</div>
-        </div>
-        <div style={{marginTop: '12px', display: 'flex', gap: '20px', fontSize: '12px', color: '#9aa4b2'}}>
-          <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-            <div style={{width: '3px', height: '16px', background: '#00d4ff', borderRadius: '1px'}}></div>
-            <span>{t('leaderboard.chart.title') || 'Score'}</span>
-          </div>
-          <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-            <svg width="16" height="16" viewBox="0 0 16 16">
-              <text x="0" y="12" fontSize="11" fill="#00d4ff" fontWeight="700">●</text>
-            </svg>
-            <span>{t('common.score')}</span>
-          </div>
-        </div>
       </div>
     );
   }
@@ -402,7 +437,12 @@ function ProgressHistoryChart({ history, t }) {
     const denom = vMax - vMin || 1;
     return margin.top + (1 - (v - vMin) / denom) * innerH;
   };
-  const points = sorted.map((s) => `${xFor(new Date(s.createdAt).getTime())},${yFor(Number(s.xp||0))}`).join(' ');
+  const points = sorted.map((s) => ({
+    x: xFor(new Date(s.createdAt).getTime()),
+    y: yFor(Number(s.xp || 0)),
+    raw: s,
+  }));
+
   const handlePoint = (e, s) => {
     const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
     const clientX = e.clientX;
@@ -428,18 +468,72 @@ function ProgressHistoryChart({ history, t }) {
             <stop offset="100%" stopColor="rgba(0,255,136,0.03)" />
           </linearGradient>
         </defs>
-        <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#g2)" />
-        <polyline points={points} fill="none" stroke="#00ff88" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-        {sorted.map((s, i) => {
-          const cx = xFor(new Date(s.createdAt).getTime());
-          const cy = yFor(Number(s.xp||0));
+        {/* Smooth path (monotone cubic → Bezier to avoid overshoot) */}
+        {points.length > 0 && (() => {
+          const pts = points;
+          const monotoneToBezier = (pts) => {
+            if (!pts || pts.length === 0) return '';
+            const n = pts.length;
+            if (n === 1) return `M ${pts[0].x},${pts[0].y}`;
+            const x = pts.map(p => p.x);
+            const y = pts.map(p => p.y);
+            const dx = new Array(n - 1);
+            const slope = new Array(n - 1);
+            for (let i = 0; i < n - 1; i++) {
+              dx[i] = x[i + 1] - x[i] || 1;
+              slope[i] = (y[i + 1] - y[i]) / dx[i];
+            }
+            const m = new Array(n);
+            m[0] = slope[0];
+            m[n - 1] = slope[n - 2];
+            for (let i = 1; i < n - 1; i++) {
+              if (slope[i - 1] === 0 || slope[i] === 0 || (slope[i - 1] > 0) !== (slope[i] > 0)) {
+                m[i] = 0;
+              } else {
+                m[i] = (slope[i - 1] + slope[i]) / 2;
+              }
+            }
+            // Fritsch-Carlson adjustment
+            for (let i = 0; i < n - 1; i++) {
+              if (slope[i] === 0) {
+                m[i] = 0; m[i + 1] = 0; continue;
+              }
+              const a = m[i] / slope[i];
+              const b = m[i + 1] / slope[i];
+              const sq = a * a + b * b;
+              if (sq > 9) {
+                const t = 3 / Math.sqrt(sq);
+                m[i] = t * a * slope[i];
+                m[i + 1] = t * b * slope[i];
+              }
+            }
+            // Build Bezier path from Hermite form
+            let d = `M ${x[0]},${y[0]}`;
+            for (let i = 0; i < n - 1; i++) {
+              const dxSeg = x[i + 1] - x[i];
+              const cp1x = x[i] + dxSeg / 3;
+              const cp1y = y[i] + m[i] * dxSeg / 3;
+              const cp2x = x[i + 1] - dxSeg / 3;
+              const cp2y = y[i + 1] - m[i + 1] * dxSeg / 3;
+              d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x[i + 1]},${y[i + 1]}`;
+            }
+            return d;
+          };
+          const lineD = monotoneToBezier(pts);
+          const areaD = lineD + ` L ${width - margin.right},${height - margin.bottom} L ${margin.left},${height - margin.bottom} Z`;
           return (
-            <g key={i}>
-              <circle cx={cx} cy={cy} r={4} fill="#0b1222" stroke="#00ff88" strokeWidth={2}
-                onMouseMove={(e) => handlePoint(e, s)} onMouseEnter={(e) => handlePoint(e, s)} onMouseLeave={handleLeave} />
-            </g>
+            <>
+              <path d={areaD} fill="url(#g2)" />
+              <path d={lineD} fill="none" stroke="#00ff88" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            </>
           );
-        })}
+        })()}
+        {points.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r={3.5} fill="#0b1222" stroke="#00ff88" strokeWidth={1.8}
+              onMouseMove={(e) => handlePoint(e, p.raw)} onMouseEnter={(e) => handlePoint(e, p.raw)} onMouseLeave={handleLeave} />
+          </g>
+        ))}
         <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
         <text x={width - margin.right - 140} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
       </svg>
