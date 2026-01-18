@@ -121,7 +121,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
           </button>
           <div className="modal-register-link">
             <button type="button" className="btn ghost register-btn" onClick={() => { if (typeof openRegister === 'function') openRegister(); if (typeof onClose === 'function') onClose(); }}>
-              {t('loginModal.noAccount') || 'Pas de compte ?'}
+              {t('loginModal.noAccount')}
             </button>
           </div>
         </form>

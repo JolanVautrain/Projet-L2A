@@ -17,6 +17,7 @@
     "returnHome": "Retour à l'accueil",
     "loading": "Chargement...",
     "error": "Erreur",
+    "failedPrefix": "Échec : ",
     "noData": "Aucune donnée disponible",
     "close": "Fermer"
   },
@@ -46,6 +47,7 @@
     },
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Chargement du classement...",
+    "fetchFailed": "Échec du chargement du classement.",
     "loginRequired": "Vous devez être connecté pour voir votre classement.",
     "openLogin": "Se connecter"
   },
@@ -53,7 +55,7 @@
     "title": "Compte",
     "hello": "Bonjour",
     "yourAccountPage": "voici votre page de compte",
-    "adminTools": "⚙️ Outils Administrateur",
+    "adminTools": "Outils Administrateur",
     "resetYourRanking": "Réinitialiser votre classement",
     "reset": "Réinitialiser",
     "resetting": "Réinitialisation…",
@@ -67,8 +69,12 @@
     "confirmResetSelfSessions": "Réinitialiser vos autres parties ?",
     "confirmResetUserScore": "Réinitialiser le classement pour",
     "confirmResetUserSessions": "Réinitialiser les autres parties pour",
+    "confirmResetUserSessionsFull": "Réinitialiser les autres parties pour {username} ?",
+    "resetUserSessionsSuccess": "Les autres parties de {username} ont été réinitialisées.",
     "confirmDeleteUser": "Supprimer le compte de",
+    "confirmDeleteUserFull": "Supprimer le compte de {username} ?\nSupprimer ce compte est irréversible.",
     "deleteUser": "Supprimer l'utilisateur",
+    "deleteUserSuccess": "Utilisateur {username} supprimé.",
     "loginRequired": "Vous devez être connecté pour accéder à votre compte.",
     "openLogin": "Se connecter"
   },
@@ -83,6 +89,7 @@
     "highestStage": "Plus haut stage",
     "averagePlayTime": "Durée moyenne par partie",
     "loginToViewStats": "Connectez-vous pour voir vos statistiques"
+    ,"fetchFailed": "Échec du chargement des statistiques."
   },
   "accueil": {
     "readyToPlay": "Prêt à jouer ?",
@@ -120,6 +127,10 @@
     "connectToSave": "Connecte-toi pour sauvegarder tes coups",
     "oneClickConnect": "Un clic suffit pour ouvrir la modal et reprendre là où tu t'étais arrêté.",
     "openLogin": "Ouvrir la connexion"
+  },
+  "languageNames": {
+    "fr": "Français",
+    "en": "English"
   },
   "contacts": {
     "title": "Équipe — Contacts",
@@ -162,7 +173,10 @@
   },
   "registerModal": {
     "title": "Créer un compte",
-    "submit": "S'inscrire"
+    "submit": "S'inscrire",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "error": "Erreur lors de l'inscription."
+    ,"confirmPassword": "Confirmer le mot de passe"
   },
   "pageNotFound": {
     "title": "404 — Page introuvable",

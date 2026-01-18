@@ -26,7 +26,7 @@ function Leaderboard({ user, setUser }) {
     Promise.all([
       fetch("/api/score")
         .then((r) => {
-          if (!r.ok) throw new Error("Failed to fetch scores");
+          if (!r.ok) throw new Error(t("leaderboard.fetchFailed"));
           return r.json();
         }),
       // Charger les sessions du joueur connecté si disponible
@@ -225,7 +225,7 @@ function ScoreChart({ sessions, t }) {
   const handlePointLeave = () => setTooltip({ visible: false, x: 0, y: 0, score: 0, date: '' });
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
-      <h3 style={{ margin: '6px 0 8px', textAlign: 'center', color: '#e6eef8' }}>{t('leaderboard.chart.title')}</h3>
+      <h2 style={{ margin: '6px 0 8px', textAlign: 'center', color: '#e6eef8' }}>{t('leaderboard.chart.title')}</h2>
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">

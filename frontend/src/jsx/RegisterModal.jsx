@@ -27,7 +27,7 @@ function RegisterModal({ isOpen, onClose, afterRegister }) {
       return;
     }
     if (p !== confirm) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("registerModal.passwordMismatch"));
       return;
     }
     setLoading(true);
@@ -46,7 +46,7 @@ function RegisterModal({ isOpen, onClose, afterRegister }) {
           if (typeof afterRegister === "function") afterRegister(u);
           if (typeof onClose === "function") onClose();
         } else {
-          setError(data?.message || "Erreur d'inscription");
+          setError(data?.message || t("registerModal.error"));
         }
       })
       .catch((err) => {
@@ -60,7 +60,7 @@ function RegisterModal({ isOpen, onClose, afterRegister }) {
     <div className="login-modal styled-modal register-modal">
       <div className="modal-card">
         <header className="modal-header">
-          <h2>{t("registerModal.title") || "Inscription"}</h2>
+          <h2>{t("registerModal.title")}</h2>
         </header>
         <button className="modal-close" onClick={onClose} title={t("common.close")}>×</button>
         <form className="modal-form" onSubmit={handleSubmit}>
@@ -73,11 +73,11 @@ function RegisterModal({ isOpen, onClose, afterRegister }) {
             <input id="reg-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required className="modal-input" />
           </div>
           <div className="modal-field">
-            <label htmlFor="reg-confirm">Confirmer le mot de passe</label>
+            <label htmlFor="reg-confirm">{t("registerModal.confirmPassword")}</label>
             <input id="reg-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required className="modal-input" />
           </div>
           {error && <div className="modal-error">{error}</div>}
-          <button type="submit" className="btn primary" disabled={loading}>{loading ? t("loginModal.connecting") : (t("registerModal.submit") || "S'inscrire")}</button>
+          <button type="submit" className="btn primary" disabled={loading}>{loading ? t("loginModal.connecting") : t("registerModal.submit")}</button>
         </form>
       </div>
     </div>,

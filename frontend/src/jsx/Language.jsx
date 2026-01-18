@@ -89,9 +89,9 @@ export function LanguageSelector() {
         backgroundColor: "rgba(79,158,246,0.05)",
       }}
     >
-      <h3 style={{ marginTop: 0 }}>🌐 {t('account.language')}</h3>
-      <select 
-        value={language} 
+      <h3 style={{ marginTop: 0 }}>{t('account.language')}</h3>
+      <select
+        value={language}
         onChange={(e) => changeLanguage(e.target.value)}
         style={{
           padding: '8px 12px',
@@ -103,8 +103,8 @@ export function LanguageSelector() {
           cursor: 'pointer'
         }}
       >
-        <option value="fr">Français</option>
-        <option value="en">English</option>
+        <option value="fr">{t('languageNames.fr')}</option>
+        <option value="en">{t('languageNames.en')}</option>
       </select>
     </div>
   );

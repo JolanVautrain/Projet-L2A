@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
+import { useLanguage } from "./Language.jsx";
 
 function RequireAuth({ user, children }) {
   // Si l'utilisateur est authentifié, rendre les enfants
@@ -38,21 +39,23 @@ function App() {
     else localStorage.removeItem("user");
   };
 
+  const { t } = useLanguage();
+
   return (
     <>
       <header>
         <nav className="navbar">
-          <NavLink to="/">Accueil</NavLink>
-          <NavLink to="/leaderboard">Classements</NavLink>
+          <NavLink to="/">{t("common.home")}</NavLink>
+          <NavLink to="/leaderboard">{t("common.leaderboard")}</NavLink>
           {userState ? (
             <div className="nav-greeting" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-              <span>Bonjour {userState}</span>
-              <NavLink className="btn ghost no-border" to="/account">Profil</NavLink>
+              <span>{t("nav.hello")} {userState}</span>
+              <NavLink className="btn ghost no-border" to="/account">{t("nav.profile")}</NavLink>
             </div>
           ) : (
-            <NavLink to="/account">Compte</NavLink>
+            <NavLink to="/account">{t("common.account")}</NavLink>
           )}
-          <NavLink to="/contacts">Contacts</NavLink>
+          <NavLink to="/contacts">{t("common.contacts")}</NavLink>
         </nav>
       </header>
       <Routes>
