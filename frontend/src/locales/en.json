@@ -67,6 +67,8 @@
     "confirmResetSelfSessions": "Reset your other games?",
     "confirmResetUserScore": "Reset ranking for",
     "confirmResetUserSessions": "Reset other games for",
+    "confirmDeleteUser": "Delete account of",
+    "deleteUser": "Delete user",
     "loginRequired": "You must be logged in to access your account.",
     "openLogin": "Sign in"
   },

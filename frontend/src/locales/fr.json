@@ -67,6 +67,8 @@
     "confirmResetSelfSessions": "Réinitialiser vos autres parties ?",
     "confirmResetUserScore": "Réinitialiser le classement pour",
     "confirmResetUserSessions": "Réinitialiser les autres parties pour",
+    "confirmDeleteUser": "Supprimer le compte de",
+    "deleteUser": "Supprimer l'utilisateur",
     "loginRequired": "Vous devez être connecté pour accéder à votre compte.",
     "openLogin": "Se connecter"
   },

@@ -130,6 +130,32 @@ function Account({ user, setUser }) {
                       ? t("account.resetting")
                       : t("account.resetUserSessions")}
                   </button>
+
+                  {/* Delete user button (admin) */}
+                  <button
+                    className="btn ghost danger"
+                    style={{ marginLeft: 8 }}
+                    onClick={() => {
+                      if (!selectedUser) return;
+                      if (!confirm(`${t("account.confirmDeleteUser")} ${selectedUser} ?\nSupprimer ce compte est irréversible.`)) return;
+                      fetch(`http://127.0.0.1:5000/api/admin/delete-user/${selectedUser}`, {
+                        method: "DELETE",
+                        headers: { "X-Admin-User": "admin" },
+                      })
+                        .then((res) => {
+                          if (!res.ok) throw new Error("Erreur serveur");
+                          // remove from local list
+                          const remaining = allUsers.filter((u) => u.username !== selectedUser);
+                          setAllUsers(remaining);
+                          if (remaining.length > 0) setSelectedUser(remaining[0].username);
+                          else setSelectedUser("");
+                          alert(`Utilisateur ${selectedUser} supprimé.`);
+                        })
+                        .catch((e) => alert("Échec: " + e.message));
+                    }}
+                  >
+                    {t("account.deleteUser") || "Supprimer l'utilisateur"}
+                  </button>
                 </div>
               </div>
             </div>

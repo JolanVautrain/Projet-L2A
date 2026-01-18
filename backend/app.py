@@ -44,7 +44,7 @@ CORS(
                 "http://127.0.0.1:5173",
                 "http://localhost:3000",
             ],
-            "methods": ["GET", "POST", "OPTIONS"],
+            "methods": ["GET", "POST", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "X-Admin-User"],
             "supports_credentials": True,
         }
@@ -610,6 +610,23 @@ def reset_user_sessions(username: str) -> Response:
             "DELETE FROM game_sessions WHERE username = %s", (username,)
         )
         cur.execute("DELETE FROM highscores WHERE username = %s", (username,))
+        conn.commit()
+        return make_response({"ok": True})
+
+
+@app.route("/api/admin/delete-user/<username>", methods=["DELETE", "POST"])
+@handle_db_errors
+@require_admin
+def delete_user(username: str) -> Response:
+    """Delete a user and cascade-remove related records (highscores, sessions).
+
+    Returns JSON: {"ok": True} on success.
+    Requires admin header.
+    """
+    username = username.strip()
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        # Delete user - CASCADE will remove highscores and sessions
+        cur.execute("DELETE FROM users WHERE username = %s", (username,))
         conn.commit()
         return make_response({"ok": True})
 
