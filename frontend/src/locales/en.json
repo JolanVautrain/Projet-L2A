@@ -16,6 +16,7 @@
     "replay": "Replay",
     "returnHome": "Return Home",
     "loading": "Loading...",
+    "saving": "Saving...",
     "error": "Error",
     "failedPrefix": "Failed: ",
     "noData": "No data available",
@@ -48,6 +49,8 @@
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Loading leaderboard...",
     "fetchFailed": "Failed to load leaderboard.",
+    "progress": "Progress",
+    "level": "Level",
     "loginRequired": "You must be logged in to view the leaderboard.",
     "openLogin": "Sign in"
   },

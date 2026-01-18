@@ -158,4 +158,30 @@
   100% { transform: translate(0, -1em) rotate(-225deg); }
 }
 
+/* Compact progress-chart variant to reduce visual size */
+.progress-chart{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  max-width:260px;
+  padding:6px 8px;
+  background: transparent;
+}
+.progress-chart__svg{
+  width:96px;
+  height:96px;
+  display:block;
+}
+.progress-chart__svg circle{ transform-origin:50% 50%; }
+.progress-chart__meta{ display:flex; flex-direction:column; align-items:flex-start; min-width:80px }
+.progress-chart__meta .lvl{ font-weight:700; color:#e6eef8; font-size:14px }
+.progress-chart__meta .xp{ color:var(--muted); font-size:12px }
+
+@media (max-width:720px){
+  .progress-chart{ max-width:160px; gap:8px }
+  .progress-chart__svg{ width:72px; height:72px }
+  .progress-chart__meta .lvl{ font-size:13px }
+  .progress-chart__meta .xp{ font-size:11px }
+}
+
 

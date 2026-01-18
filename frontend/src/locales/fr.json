@@ -17,6 +17,7 @@
     "returnHome": "Retour à l'accueil",
     "loading": "Chargement...",
     "error": "Erreur",
+    "saving": "Enregistrement...",
     "failedPrefix": "Échec : ",
     "noData": "Aucune donnée disponible",
     "close": "Fermer"
@@ -48,6 +49,8 @@
     "timerSeconds": "Timer (s)",
     "loadingLeaderboard": "Chargement du classement...",
     "fetchFailed": "Échec du chargement du classement.",
+    "progress": "Progression",
+    "level": "Niveau",
     "loginRequired": "Vous devez être connecté pour voir votre classement.",
     "openLogin": "Se connecter"
   },

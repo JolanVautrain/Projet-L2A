@@ -314,6 +314,20 @@ function hitBomb(player, bomb) {
           .then((r) => r.json())
           .then((data) => {
             console.log("Score submitted:", data);
+            // Award XP based on the final score (persist XP automatically)
+            try {
+              const xpAmount = Math.max(0, Math.floor(finalScore / 10) + 10);
+              fetch('/api/user/xp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, xp: xpAmount }),
+              })
+                .then((r) => r.json())
+                .then((xpRes) => console.log('XP awarded:', xpRes))
+                .catch((err) => console.warn('Failed to award XP', err));
+            } catch (e) {
+              console.warn('Error while awarding XP', e);
+            }
           })
           .catch((err) => console.warn("Failed to submit score", err));
       }

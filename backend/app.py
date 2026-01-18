@@ -228,6 +228,26 @@ def initialize_database() -> None:
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
         )
+        # Table pour stocker le profil utilisateur (XP, niveau)
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS user_profiles (
+            username varchar(100) PRIMARY KEY,
+            xp integer DEFAULT 0,
+            level integer DEFAULT 1,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        );"""
+        )
+        # Table pour stocker l'historique des changements de XP
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS user_xp_history (
+            id SERIAL PRIMARY KEY,
+            username varchar(100) NOT NULL,
+            xp integer DEFAULT 0,
+            level integer DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        );"""
+        )
         # Table pour enregistrer toutes les sessions de jeu
         init_cur.execute(
             """CREATE TABLE IF NOT EXISTS game_sessions (
@@ -327,10 +347,8 @@ def register_user() -> Response:
             },
             400,
         )
-
     username = str(data["username"]).strip()
     password = str(data["password"])
-
     if not username or not password:
         return make_response(
             {
@@ -339,7 +357,6 @@ def register_user() -> Response:
             },
             400,
         )
-
     with get_db_connection() as conn, get_db_cursor(conn) as cur:
         # check if user exists
         cur.execute(
@@ -352,7 +369,6 @@ def register_user() -> Response:
             return make_response(
                 {"success": False, "message": "user already exists"}, 409
             )
-
         # insert new user (password stored as provided - no hashing to match
         # existing simple setup)
         cur.execute(
@@ -764,6 +780,116 @@ def get_user_language(username: str) -> Response:
         )
         row = cur.fetchone()
         return make_response({"language": row[0] if row else "fr"})
+
+
+@app.route("/api/user/xp/<username>", methods=["GET"])
+@handle_db_errors
+def get_user_xp(username: str) -> Response:
+    """Retourne le XP et le niveau pour `username`."""
+    username = username.strip()
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        cur.execute(
+            "SELECT xp, level FROM user_profiles WHERE username = %s",
+            (username,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return make_response({"xp": 0, "level": 1})
+        return make_response(
+            {"xp": int(row[0] or 0), "level": int(row[1] or 1)}
+        )
+
+    @app.route("/api/user/xp/history/<username>")
+    @handle_db_errors
+    def get_user_xp_history(username: str) -> Response:
+        """Retourne l'historique XP pour `username`.
+
+        Query param optional: `limit` (int)
+        """
+        username = username.strip()
+        limit = request.args.get("limit", "50")
+        try:
+            limit = int(limit)
+        except (ValueError, TypeError):
+            limit = 50
+
+        with get_db_connection() as conn, get_db_cursor(conn) as cur:
+            cur.execute(
+                "SELECT xp, level, created_at FROM user_xp_history WHERE username = %s ORDER BY created_at ASC LIMIT %s",
+                (username, limit),
+            )
+            rows = cur.fetchall()
+            result = [
+                {
+                    "xp": int(r[0] or 0),
+                    "level": int(r[1] or 1),
+                    "createdAt": str(r[2]),
+                }
+                for r in rows
+            ]
+            return make_response(result)
+
+
+@app.route("/api/user/xp", methods=["POST"])
+@handle_db_errors
+def add_user_xp() -> Response:
+    """Ajoute du XP à un utilisateur et retourne le nouveau XP/niveau.
+
+    Corps attendu: {"username": str, "xp": int} (xp peut être négatif pour retirer)
+    """
+    data = request.get_json()
+    if not data or "username" not in data or "xp" not in data:
+        return make_response(
+            {"error": BAD_REQUEST, "message": "username and xp required"}, 400
+        )
+
+    username = str(data["username"]).strip()
+    try:
+        delta = int(data["xp"])
+    except (ValueError, TypeError):
+        return make_response(
+            {"error": BAD_REQUEST, "message": "xp must be an integer"}, 400
+        )
+
+    if not username:
+        return make_response(
+            {"error": BAD_REQUEST, "message": "username required"}, 400
+        )
+
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        cur.execute(
+            "SELECT xp FROM user_profiles WHERE username = %s", (username,)
+        )
+        row = cur.fetchone()
+        if not row:
+            new_xp = max(0, delta)
+            level = new_xp // 100 + 1
+            cur.execute(
+                "INSERT INTO user_profiles (username, xp, level) VALUES (%s, %s, %s)",
+                (username, new_xp, level),
+            )
+            # Enregistrer snapshot dans l'historique
+            cur.execute(
+                "INSERT INTO user_xp_history (username, xp, level) VALUES (%s, %s, %s)",
+                (username, new_xp, level),
+            )
+        else:
+            current = int(row[0] or 0)
+            new_xp = max(0, current + delta)
+            level = new_xp // 100 + 1
+            cur.execute(
+                "UPDATE user_profiles SET xp = %s, level = %s WHERE username = %s",
+                (new_xp, level, username),
+            )
+            # Enregistrer snapshot dans l'historique
+            cur.execute(
+                "INSERT INTO user_xp_history (username, xp, level) VALUES (%s, %s, %s)",
+                (username, new_xp, level),
+            )
+        conn.commit()
+        return make_response(
+            {"username": username, "xp": new_xp, "level": level}
+        )
 
 
 @app.route("/api/user/language", methods=["POST"])

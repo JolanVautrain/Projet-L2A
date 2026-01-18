@@ -11,6 +11,9 @@ function Leaderboard({ user, setUser }) {
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [xpHistory, setXpHistory] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const { t, language } = useLanguage();
   const openLogin = () => setIsOpen(true);
@@ -50,6 +53,26 @@ function Leaderboard({ user, setUser }) {
       .finally(() => {
         if (mounted) setLoading(false);
       });
+    // Charger XP / niveau du user connecté
+    if (user) {
+      fetch(`/api/user/xp/${user}`)
+        .then((r) => {
+          if (!r.ok) throw new Error("failed to fetch xp");
+          return r.json();
+        })
+        .then((d) => {
+          if (mounted) {
+            setXp(d.xp || 0);
+            setLevel(d.level || 1);
+          }
+        })
+        .catch(() => {})
+      // Charger l'historique XP
+      fetch(`/api/user/xp/history/${user}?limit=100`)
+        .then((r) => r.ok ? r.json() : [])
+        .then((h) => { if (mounted) setXpHistory(h || []); })
+        .catch(() => {});
+    }
     return () => {
       mounted = false;
     };
@@ -101,9 +124,24 @@ function Leaderboard({ user, setUser }) {
   const sortedUserSessions = userSessions && userSessions.length > 0
     ? [...userSessions].sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt))
     : [];
+
+  
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
+      {/* XP / Niveau */}
+      {user && (
+        <div className="leaderboard__panel">
+          <h2>{t('leaderboard.progress') || 'Progression'}</h2>
+          {/* Inline compact progress bar and manual award button removed to simplify UI */}
+          <ProgressChart xp={xp} level={level} t={t} />
+          {xpHistory && xpHistory.length > 0 && (
+            <div style={{marginTop:14}} className="score-chart">
+              <ProgressHistoryChart history={xpHistory} t={t} />
+            </div>
+          )}
+        </div>
+      )}
       {/* Section : Meilleur temps du joueur connecté */}
       {user && (userBestScore || bestScoreFromSessions) && (
         <div className="leaderboard__panel">
@@ -165,6 +203,7 @@ function Leaderboard({ user, setUser }) {
     </div>
   );
 }
+// (rien à l'extérieur)
 function ScoreChart({ sessions, t }) {
   const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
   const tooltipRef = useRef(null);
@@ -267,6 +306,36 @@ function ScoreChart({ sessions, t }) {
 
 export default Leaderboard;
 
+function ProgressChart({ xp, level, t }) {
+  const pct = Math.max(0, Math.min(100, xp % 100));
+  const radius = 36;
+  const circ = 2 * Math.PI * radius;
+  const dash = (pct / 100) * circ;
+  return (
+    <div className="progress-chart">
+      <svg className="progress-chart__svg" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0%" stopColor="#6ee7b7" />
+            <stop offset="100%" stopColor="#4f9ef6" />
+          </linearGradient>
+        </defs>
+        <g transform="translate(50,50)">
+          <circle r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+          <circle r={radius} fill="none" stroke="url(#g1)" strokeWidth="8" strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round" transform="rotate(-90)" />
+          <text x="0" y="6" textAnchor="middle" fill="#e6eef8" fontSize="12" fontWeight="700">{pct}%</text>
+        </g>
+      </svg>
+      <div className="progress-chart__meta">
+        <div className="lvl">{t('leaderboard.level') || 'Niveau'} {level}</div>
+        <div className="xp">{xp} {t('common.score') ? '' : 'XP'}</div>
+      </div>
+    </div>
+  );
+}
+
+ProgressChart.propTypes = { xp: PropTypes.number, level: PropTypes.number, t: PropTypes.func };
+
 Leaderboard.propTypes = {
   user: PropTypes.string,
   setUser: PropTypes.func,
@@ -276,3 +345,78 @@ ScoreChart.propTypes = {
   sessions: PropTypes.arrayOf(PropTypes.object),
   t: PropTypes.func,
 };
+
+function ProgressHistoryChart({ history, t }) {
+  const [tooltip, setTooltip] = useState({ visible: false, xp: 0, date: '' });
+  const tooltipRef = useRef(null);
+  if (!history || history.length === 0) return null;
+  const width = 800;
+  const height = 180;
+  const margin = { top: 12, right: 18, bottom: 28, left: 48 };
+  const sorted = [...history].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const times = sorted.map((h) => new Date(h.createdAt).getTime());
+  const xMin = Math.min(...times);
+  const xMax = Math.max(...times);
+  const values = sorted.map((h) => Number(h.xp || 0));
+  const vMin = Math.min(...values);
+  const vMax = Math.max(...values);
+  const xFor = (ts) => {
+    const innerW = width - margin.left - margin.right;
+    const denom = xMax - xMin || 1;
+    return margin.left + ((ts - xMin) / denom) * innerW;
+  };
+  const yFor = (v) => {
+    const innerH = height - margin.top - margin.bottom;
+    const denom = vMax - vMin || 1;
+    return margin.top + (1 - (v - vMin) / denom) * innerH;
+  };
+  const points = sorted.map((s) => `${xFor(new Date(s.createdAt).getTime())},${yFor(Number(s.xp||0))}`).join(' ');
+  const handlePoint = (e, s) => {
+    const svgRect = e.currentTarget.ownerSVGElement.getBoundingClientRect();
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    const left = clientX - svgRect.left + 12;
+    const top = clientY - svgRect.top + 12;
+    setTooltip({ visible: true, xp: s.xp, date: new Date(s.createdAt).toLocaleString() });
+    if (tooltipRef.current) {
+      tooltipRef.current.style.left = `${left}px`;
+      tooltipRef.current.style.top = `${top}px`;
+    }
+  };
+  const handleLeave = () => setTooltip({ visible: false, xp: 0, date: '' });
+  const firstLabel = new Date(xMin).toLocaleString();
+  const lastLabel = new Date(xMax).toLocaleString();
+  return (
+    <div className="score-chart__inner">
+      <h3 className="score-chart__title">{t('leaderboard.progress') || 'Progression'}</h3>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="rgba(110,231,183,0.16)" />
+            <stop offset="100%" stopColor="rgba(79,158,246,0.04)" />
+          </linearGradient>
+        </defs>
+        <polygon points={`${margin.left},${height - margin.bottom} ${points} ${width - margin.right},${height - margin.bottom}`} fill="url(#g2)" />
+        <polyline points={points} fill="none" stroke="rgba(110,231,183,0.95)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        {sorted.map((s, i) => {
+          const cx = xFor(new Date(s.createdAt).getTime());
+          const cy = yFor(Number(s.xp||0));
+          return (
+            <g key={i}>
+              <circle cx={cx} cy={cy} r={4} fill="#0b1222" stroke="rgba(110,231,183,0.98)" strokeWidth={1.8}
+                onMouseMove={(e) => handlePoint(e, s)} onMouseEnter={(e) => handlePoint(e, s)} onMouseLeave={handleLeave} />
+            </g>
+          );
+        })}
+        <text x={margin.left} y={height - 8} fill="#9aa4b2" fontSize={11}>{firstLabel}</text>
+        <text x={width - margin.right - 140} y={height - 8} fill="#9aa4b2" fontSize={11}>{lastLabel}</text>
+      </svg>
+      <div ref={tooltipRef} className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}>
+        <div className="score-tooltip__main">XP: {tooltip.xp}</div>
+        <div className="score-tooltip__date">{tooltip.date}</div>
+      </div>
+    </div>
+  );
+}
+
+ProgressHistoryChart.propTypes = { history: PropTypes.arrayOf(PropTypes.object), t: PropTypes.func };
