@@ -9,7 +9,7 @@ import { useLanguage } from "./Language.jsx";
  * 
  * Permet de se connecter via une modal.
  */
-function LoginModal({ isOpen, onClose, action, afterLogin }) {
+function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -119,6 +119,11 @@ function LoginModal({ isOpen, onClose, action, afterLogin }) {
           <button type="submit" className="btn primary" disabled={loading}>
             {loading ? t("loginModal.connecting") : t("loginModal.login")}
           </button>
+          <div className="modal-register-link">
+            <button type="button" className="btn ghost register-btn" onClick={() => { if (typeof openRegister === 'function') openRegister(); if (typeof onClose === 'function') onClose(); }}>
+              {t('loginModal.noAccount') || 'Pas de compte ?'}
+            </button>
+          </div>
         </form>
       </div>
     </div>,
@@ -134,4 +139,5 @@ LoginModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   action: PropTypes.func.isRequired,
   afterLogin: PropTypes.func,
+  openRegister: PropTypes.func,
 };

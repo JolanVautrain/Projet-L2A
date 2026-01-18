@@ -6,6 +6,7 @@ import { LanguageSelector, useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Account.css";
 import LoginModal from "./LoginModal.jsx";
+import RegisterModal from "./RegisterModal.jsx";
 
 /**
  * Composant Account
@@ -17,6 +18,7 @@ import LoginModal from "./LoginModal.jsx";
  */
 function Account({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
@@ -155,9 +157,15 @@ function Account({ user, setUser }) {
         isOpen={isOpen}
         action={setUser}
         onClose={() => setIsOpen(false)}
+        openRegister={() => setIsRegisterOpen(true)}
         afterLogin={() => navigate('/account', { replace: true })}
       />
 
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }}
+      />
       {/* Scenic loop animation below the login button */}
       <div className="account-loop" aria-hidden>
         <div className="loop-wrapper">

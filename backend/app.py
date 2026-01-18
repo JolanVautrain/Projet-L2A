@@ -34,7 +34,22 @@ from psycopg2 import OperationalError  # type: ignore
 from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow cross-origin requests from frontend
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": [
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:3000",
+            ],
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization", "X-Admin-User"],
+            "supports_credentials": True,
+        }
+    },
+)
 logging.basicConfig(level=logging.INFO)
 
 BAD_REQUEST = "Bad Request"
@@ -267,6 +282,59 @@ def check_login() -> Response:
                 "username": stored_username,
             }
         )
+
+
+@app.route("/api/register", methods=["POST"])
+@handle_db_errors
+def register_user() -> Response:
+    """Handle POST /api/register: create a new user in the users table.
+
+    Expected JSON body: {"username": str, "password": str}
+    Returns JSON: {"success": True} on success or {"success": False, "message": str} on error
+    """
+    data = request.get_json()
+    if not data or "username" not in data or "password" not in data:
+        return make_response(
+            {
+                "error": BAD_REQUEST,
+                "message": "username and password required",
+            },
+            400,
+        )
+
+    username = str(data["username"]).strip()
+    password = str(data["password"])
+
+    if not username or not password:
+        return make_response(
+            {
+                "error": BAD_REQUEST,
+                "message": "username and password required",
+            },
+            400,
+        )
+
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        # check if user exists
+        cur.execute(
+            "SELECT username FROM users WHERE username = %s", (username,)
+        )
+        if cur.fetchone():
+            app.logger.info(
+                "Register attempt: user '%s' already exists", username
+            )
+            return make_response(
+                {"success": False, "message": "user already exists"}, 409
+            )
+
+        # insert new user (password stored as provided - no hashing to match existing simple setup)
+        cur.execute(
+            "INSERT INTO users (username, password) VALUES (%s, %s)",
+            (username, password),
+        )
+        conn.commit()
+        app.logger.info("User '%s' registered", username)
+        return make_response({"success": True})
 
 
 def _parse_optional_int(data: dict[str, Any], key: str) -> int | None:

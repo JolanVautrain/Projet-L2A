@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoginModal from "./LoginModal.jsx";
+import RegisterModal from "./RegisterModal.jsx";
 import { useLanguage } from "./Language.jsx";
 import "../css/Accueil.css";
 
@@ -15,6 +16,7 @@ import "../css/Accueil.css";
  */
 function Accueil({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const { t } = useLanguage();
 
   // Données pour les sections mises en avant
@@ -50,6 +52,8 @@ function Accueil({ user, setUser }) {
 
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
+  const openRegister = () => setIsRegisterOpen(true);
+  const closeRegister = () => setIsRegisterOpen(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -159,7 +163,8 @@ function Accueil({ user, setUser }) {
           </div>
         )}
       </section>
-      <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} />
+      <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} openRegister={openRegister} />
+      <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }} />
     </div>
   );
 }

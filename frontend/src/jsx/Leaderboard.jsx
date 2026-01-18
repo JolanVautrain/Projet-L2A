@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import LoginModal from "./LoginModal.jsx";
+import RegisterModal from "./RegisterModal.jsx";
 import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
@@ -15,6 +16,9 @@ function Leaderboard({ user, setUser }) {
 
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const openRegister = () => setIsRegisterOpen(true);
+  const closeRegister = () => setIsRegisterOpen(false);
 
   useEffect(() => {
     let mounted = true;
@@ -63,7 +67,8 @@ function Leaderboard({ user, setUser }) {
         <button className="btn primary" onClick={openLogin} style={{ marginTop: 12 }}>
           {t("leaderboard.openLogin")}
         </button>
-        <LoginModal isOpen={isOpen} onClose={closeLogin} action={setUser || (() => {})} afterLogin={() => { /* no-op: setUser already updates leaderboard */ }} />
+        <LoginModal isOpen={isOpen} onClose={closeLogin} action={setUser || (() => {})} afterLogin={() => { /* no-op: setUser already updates leaderboard */ }} openRegister={openRegister} />
+        <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { if (setUser) setUser(u); closeRegister(); }} />
         <div className="leaderboard-loader" aria-hidden>
           <div className="lb-loader">
             <div className="lb-box"></div>

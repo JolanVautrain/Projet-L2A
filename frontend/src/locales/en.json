@@ -155,7 +155,12 @@
     "usernamePasswordRequired": "Username and password required.",
     "incorrectUsername": "Incorrect username.",
     "incorrectPassword": "Incorrect password.",
-    "connectionError": "Connection error. Please try again."
+    "connectionError": "Connection error. Please try again.",
+    "noAccount": "No account? Register"
+  },
+  "registerModal": {
+    "title": "Create an account",
+    "submit": "Register"
   },
   "pageNotFound": {
     "title": "404 — Page not found",

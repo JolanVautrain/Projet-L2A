@@ -155,7 +155,12 @@
     "usernamePasswordRequired": "Nom d'utilisateur et mot de passe requis.",
     "incorrectUsername": "Nom d'utilisateur incorrect.",
     "incorrectPassword": "Mot de passe incorrect.",
-    "connectionError": "Erreur de connexion. Réessayez."
+    "connectionError": "Erreur de connexion. Réessayez.",
+    "noAccount": "Pas de compte ? S'inscrire"
+  },
+  "registerModal": {
+    "title": "Créer un compte",
+    "submit": "S'inscrire"
   },
   "pageNotFound": {
     "title": "404 — Page introuvable",

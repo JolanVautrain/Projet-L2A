@@ -2,12 +2,6 @@ import PropTypes from "prop-types";
 import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
 
-/**
- * Rend une route protégée qui nécessite une authentification.
- * 
- * @param {*} param0 Props contenant l'utilisateur et les enfants à rendre
- * @returns Les enfants si l'utilisateur est authentifié, sinon redirige vers l'accueil avec ouverture de la modal de connexion
- */
 function RequireAuth({ user, children }) {
   // Si l'utilisateur est authentifié, rendre les enfants
   return user ? children : <Navigate to="/" replace state={{ openLogin: true }} />;
