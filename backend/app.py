@@ -185,9 +185,7 @@ def connect_to_database() -> Any:
 try:
     init_conn = connect_to_database()
     init_cur = init_conn.cursor()
-    # Drop tables with CASCADE to handle foreign key dependencies
-    init_cur.execute("DROP TABLE IF EXISTS highscores CASCADE;")
-    init_cur.execute("DROP TABLE IF EXISTS users CASCADE;")
+    # Ensure users table exists (do NOT drop existing tables to preserve data)
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS users (
         username varchar(100) PRIMARY KEY,
@@ -195,13 +193,19 @@ try:
         language varchar(10) DEFAULT 'fr'
         );"""
     )
-    # Load default users from db_init.json
-    default_users = load_default_users()
-    for username, password, language in default_users:
-        init_cur.execute(
-            "INSERT INTO users (username, password, language) VALUES (%s, %s, %s)",
-            (username, password, language),
-        )
+    # Insert default users only if the users table is empty
+    init_cur.execute("SELECT COUNT(*) FROM users")
+    try:
+        users_count = int(init_cur.fetchone()[0] or 0)
+    except Exception:
+        users_count = 0
+    if users_count == 0:
+        default_users = load_default_users()
+        for username, password, language in default_users:
+            init_cur.execute(
+                "INSERT INTO users (username, password, language) VALUES (%s, %s, %s)",
+                (username, password, language),
+            )
     # Table pour stocker le meilleur score par utilisateur
     init_cur.execute(
         """CREATE TABLE IF NOT EXISTS highscores (
