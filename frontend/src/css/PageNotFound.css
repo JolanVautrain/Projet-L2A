@@ -12,6 +12,7 @@
   display: flex;
   gap: 28px;
   align-items: center;
+  position: relative;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
@@ -73,11 +74,11 @@
 /* follow-geom: shape that follows cursor with eyes */
 .follow-geom {
   position: absolute;
-  top: -150px; /* sit higher above the card */
+  top: -150px; /* 150px above the top of the card */
   left: 50%;
   transform: translateX(-50%);
   pointer-events: auto; /* allow clicking on the shape */
-  z-index: 6;
+  z-index: 60;
 }
 
 .shape {
@@ -186,7 +187,7 @@
   transform: translate3d(-50%, -50%, 0);
   will-change: transform;
   transition: transform 0.06s linear;
-  position: relative;
+  position: absolute;
   left: 50%;
   top: 50%;
 }
