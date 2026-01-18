@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
+import { Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { useState } from "react";
 
 /**
@@ -21,21 +21,19 @@ RequireAuth.propTypes = {
 
 // Importation des composants de l'application
 import Accueil from "./Accueil";
-import Rules from "./Rules";
+import Leaderboard from "./Leaderboard";
 import Account from "./Account";
 import Contacts from "./Contacts";
 import PageNotFound from "./PageNotFound";
-import Game from "./game";
+import Game from "./Game";
 
 /**
  * Composant principal de l'application.
  * Gère l'état utilisateur et le routage global.
  */
 function App() {
-
   // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => localStorage.getItem("user") || null);
-
   /**
    * Met à jour l'utilisateur et le stocke dans le localStorage.
    * @param {string|null} value
@@ -47,13 +45,13 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
+    <>
       <header>
         <nav className="navbar">
           <NavLink to="/">Accueil</NavLink>
-          <NavLink to="/rules">Règles</NavLink>
+          <NavLink to="/leaderboard">Classements</NavLink>
           {userState ? (
-            <div className="nav-greeting" style={{display: 'inline-flex', gap: 8, alignItems: 'center'}}>
+            <div className="nav-greeting" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
               <span>Bonjour {userState}</span>
               <NavLink className="btn ghost no-border" to="/account">Profil</NavLink>
             </div>
@@ -65,13 +63,13 @@ function App() {
       </header>
       <Routes>
         <Route path="/" element={<Accueil user={userState} setUser={setUser} />} />
-        <Route path="/rules" element={<Rules />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/account" element={<Account user={userState} setUser={setUser} />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/game" element={<RequireAuth user={userState}><Game /></RequireAuth>} />
-        <Route path="/*" element={<PageNotFound />}/>
+        <Route path="/*" element={<PageNotFound />} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
 

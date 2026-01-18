@@ -1,7 +1,8 @@
-import "../css/index.css";
+import "../css/Index.css";
 import "../css/PageNotFound.css";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "./Language.jsx";
 
 /**
  * Composant PageNotFound
@@ -19,12 +20,14 @@ function PageNotFound() {
   const [rate] = useState(1);
   const [speakingId, setSpeakingId] = useState(null);
   const [clickedId, setClickedId] = useState(null);
+  const { t, language } = useLanguage();
+
   // Textes parlés par les différentes figures
   const speeches = {
-    main: "Halte qui va là",
-    one: "Qui va là ? Montrez-vous !",
-    two: "Attention — accès réservé !",
-    three: "Énoncez votre identité immédiatement !",
+    main: t("pageNotFound.speechMain"),
+    one: t("pageNotFound.speechOne"),
+    two: t("pageNotFound.speechTwo"),
+    three: t("pageNotFound.speechThree"),
   };
 
   // Animation des yeux qui suivent le curseur
@@ -32,7 +35,6 @@ function PageNotFound() {
     let targetX = window.innerWidth / 2;
     let targetY = window.innerHeight / 2;
     let rafId = null;
-
     // mise à jour des coordonnées cibles au mouvement de la souris
     function onMove(e) {
       targetX = e.clientX;
@@ -93,7 +95,6 @@ function PageNotFound() {
     globalThis.addEventListener("scroll", updateEyeCenters, { passive: true });
     // démarrage de l'animation
     rafId = globalThis.requestAnimationFrame(animate);
-
     return () => { // nettoyage des écouteurs et de l'animation
       globalThis.removeEventListener("mousemove", onMove);
       globalThis.removeEventListener("resize", updateEyeCenters);
@@ -129,7 +130,7 @@ function PageNotFound() {
     if (typeof globalThis !== "undefined" && "speechSynthesis" in globalThis) {
       globalThis.speechSynthesis.cancel();
       const ut = new globalThis.SpeechSynthesisUtterance(text);
-      ut.lang = "fr-FR";
+      ut.lang = language === 'en' ? "en-US" : "fr-FR";
       // configuration de la voix
       const v = voices.find((x) => x.name === selectedVoice);
       if (v) ut.voice = v;
@@ -168,7 +169,6 @@ function PageNotFound() {
       handleClickGeom(id);
     }
   }
-
   // Rendu du composant PageNotFound
   return (
     <main className="pnf-wrap">
@@ -178,7 +178,7 @@ function PageNotFound() {
             type="button"
             className={`shape ${clickedId === "main" ? "clicked" : ""}`}
             aria-pressed={clickedId === "main"}
-            aria-label="Personnage interactif — appuyez pour entendre un message"
+            aria-label={t("pageNotFound.interactiveCharacter")}
             onClick={() => handleClickGeom("main")}
             onKeyDown={(e) => handleKeyGeom(e, "main")}
           >
@@ -193,7 +193,7 @@ function PageNotFound() {
             type="button"
             className={`mini-shape one size-sm c1 ${clickedId === "one" ? "clicked" : ""}`}
             aria-pressed={clickedId === "one"}
-            aria-label="Figure secondaire — appuyez pour entendre un message"
+            aria-label={t("pageNotFound.secondaryFigure")}
             onClick={() => handleClickGeom("one")}
             onKeyDown={(e) => handleKeyGeom(e, "one")}
           >
@@ -207,7 +207,7 @@ function PageNotFound() {
             type="button"
             className={`mini-shape two size-xs c2 ${clickedId === "two" ? "clicked" : ""}`}
             aria-pressed={clickedId === "two"}
-            aria-label="Figure secondaire — appuyez pour entendre un message"
+            aria-label={t("pageNotFound.secondaryFigure")}
             onClick={() => handleClickGeom("two")}
             onKeyDown={(e) => handleKeyGeom(e, "two")}
           >
@@ -221,7 +221,7 @@ function PageNotFound() {
             type="button"
             className={`mini-shape three size-md c3 ${clickedId === "three" ? "clicked" : ""}`}
             aria-pressed={clickedId === "three"}
-            aria-label="Figure secondaire — appuyez pour entendre un message"
+            aria-label={t("pageNotFound.secondaryFigure")}
             onClick={() => handleClickGeom("three")}
             onKeyDown={(e) => handleKeyGeom(e, "three")}
           >
@@ -232,7 +232,6 @@ function PageNotFound() {
             )}
           </button>
         </div>
-
         <div className="pnf-illus" aria-hidden>
           <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="6" width="208" height="148" rx="12" fill="#071227" stroke="#18304a"/>
@@ -246,16 +245,13 @@ function PageNotFound() {
           </svg>
         </div>
         <div className="pnf-content">
-          <h1 className="pnf-title">404 — Page introuvable</h1>
-          <p className="pnf-sub">Oups — cette page a pris un raccourci vers l'inconnu.
-            Revenons sur des terres connues.</p>
-
+          <h1 className="pnf-title">{t("pageNotFound.title")}</h1>
+          <p className="pnf-sub">{t("pageNotFound.subtitle")}</p>
           <div className="pnf-actions">
-            <Link to="/" className="btn primary">Retour à l'accueil</Link>
-            <Link to="/accueil" className="btn ghost">Voir l'accueil</Link>
+            <Link to="/" className="btn primary">{t("pageNotFound.returnHome")}</Link>
+            <Link to="/accueil" className="btn ghost">{t("pageNotFound.seeHome")}</Link>
           </div>
-
-          <p className="pnf-hint">Astuce : essayez de vérifier l'URL ou revenez en arrière.</p>
+          <p className="pnf-hint">{t("pageNotFound.hint")}</p>
         </div>
       </section>
     </main>

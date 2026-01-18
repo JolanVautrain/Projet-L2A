@@ -79,15 +79,17 @@ header {
   gap: 8px;
   align-items: center;
   padding: 6px 8px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 0;
+  background: transparent;
+  border: none;
 }
 
 .nav-greeting span {
   padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0;
+  border: none;
+  background: transparent;
   font-weight: 700;
 }
 a {
@@ -111,4 +113,18 @@ p {
 
 button {
   font-family: inherit;
+}
+
+/* Ensure buttons align and animate consistently (including ghost/no-border) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.btn.no-border:hover,
+.btn.ghost:hover,
+.btn:hover {
+  transform: translateY(-2px);
 }

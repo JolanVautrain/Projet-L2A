@@ -26,3 +26,6 @@ dist-ssr
 # Ignorer les fichiers compilés Python
 *.pyc
 backend/__pycache__/
+
+# Ignorer les données de la base de données PostgreSQL
+backend/db_data/

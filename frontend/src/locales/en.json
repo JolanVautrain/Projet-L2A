@@ -1,0 +1,178 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "login": "Login",
+    "logout": "Logout",
+    "account": "Account",
+    "leaderboard": "Leaderboard",
+    "rules": "Rules",
+    "home": "Home",
+    "contacts": "Contacts",
+    "play": "Play",
+    "score": "Score",
+    "stage": "Stage",
+    "timer": "Time",
+    "gameOver": "Game Over",
+    "replay": "Replay",
+    "returnHome": "Return Home",
+    "loading": "Loading...",
+    "error": "Error",
+    "noData": "No data available",
+    "close": "Close"
+  },
+  "nav": {
+    "hello": "Hello",
+    "profile": "Profile"
+  },
+  "game": {
+    "reloadGame": "Reload Game",
+    "youReachedScore": "You reached a score of",
+    "atStage": "at stage",
+    "time": "Time"
+  },
+  "leaderboard": {
+    "title": "Player Leaderboard",
+    "yourBestScore": "Your Best Score",
+    "yourOtherGames": "Your Other Games",
+    "globalRanking": "Global Ranking",
+    "rank": "Rank",
+    "player": "Player",
+    "noScoresRecorded": "No scores recorded.",
+    "date": "Date/Time",
+    "chart": {
+      "xLabel": "Date/Time",
+      "yLabel": "Score",
+      "title": "Score over time"
+    },
+    "timerSeconds": "Timer (s)",
+    "loadingLeaderboard": "Loading leaderboard..."
+  },
+  "account": {
+    "title": "Account",
+    "hello": "Hello",
+    "yourAccountPage": "here is your account page",
+    "adminTools": "⚙️ Administrator Tools",
+    "resetYourRanking": "Reset Your Ranking",
+    "reset": "Reset",
+    "resetting": "Resetting…",
+    "resetOtherGames": "Reset Your Other Games",
+    "manageUsers": "Reset another player's ranking",
+    "selectUser": "Select a user",
+    "resetUserScores": "Reset",
+    "resetUserSessions": "Reset another player's other games",
+    "language": "Language",
+    "confirmResetSelfScore": "Reset your own ranking?",
+    "confirmResetSelfSessions": "Reset your other games?",
+    "confirmResetUserScore": "Reset ranking for",
+    "confirmResetUserSessions": "Reset other games for"
+  },
+  "statistics": {
+    "title": "Your Statistics",
+    "totalGames": "Total Games",
+    "totalPlayTime": "Total Play Time",
+    "totalScore": "Total Score",
+    "averageScore": "Average Score",
+    "bestScore": "Best Score",
+    "averageStage": "Average Stage",
+    "highestStage": "Highest Stage",
+    "averagePlayTime": "Average Play Time",
+    "loginToViewStats": "Login to view your statistics"
+  },
+  "accueil": {
+    "readyToPlay": "Ready to play?",
+    "tagline": "Align, anticipate,",
+    "taglineHighlight": "win",
+    "welcomeText": "Welcome to the ultimate alignment game where every move counts.",
+    "startGame": "Start a game",
+    "seeRules": "See the rules",
+    "connectButton": "Sign in",
+    "gamesInProgress": "Games in progress",
+    "stableServers": "Stable and synchronized servers",
+    "averageTime": "Average time",
+    "fastGames": "Fast and intense games",
+    "activePlayers": "Active players",
+    "communityReady": "Community ready to play",
+    "atmosphere": "Atmosphere",
+    "animatedInterface": "Animated interface",
+    "atmosphereDesc": "Dynamic gradients, floating cards, and a guided journey so that each visit to the home page is an invitation to start a game.",
+    "instantGames": "Instant games",
+    "instantGamesDesc": "Start a game in seconds and pick up where you left off.",
+    "breathtakingVision": "Breathtaking vision",
+    "breathtakingVisionDesc": "Smooth animations and readable grid to follow each move effortlessly.",
+    "extraordinaryChallenge": "An extraordinary challenge",
+    "extraordinaryChallengeDesc": "A tension with bombs ready to explode at the slightest touch.",
+    "howItWorks": "How it works",
+    "clearPath": "A clear path, animated step by step",
+    "clearPathDesc": "Each block appears with a slight movement to keep the rhythm and naturally lead you to the \"Play\" button.",
+    "chooseYourSide": "Choose your side",
+    "chooseYourSideDesc": "Select your role and check the configuration at a glance.",
+    "observeTerrain": "Observe the terrain",
+    "observeTerrainDesc": "The oversized grid and colored markers guide you in real time.",
+    "alignAndWin": "Align and win",
+    "alignAndWinDesc": "Chain moves with feedback animations, then share the victory.",
+    "joinTheGame": "Join the game",
+    "connectToSave": "Sign in to save your moves",
+    "oneClickConnect": "One click is enough to open the modal and pick up where you left off.",
+    "openLogin": "Open login"
+  },
+  "contacts": {
+    "title": "Team — Contacts",
+    "intro": "Our brave developers — faithful companions of long nights, coffees, and heroic commits.",
+    "clickForAnecdote": "Click for an anecdote...",
+    "hideAnecdote": "Hide anecdote for",
+    "showAnecdote": "Show anecdote for",
+    "footer": "Work is beautiful",
+    "jolan": {
+      "role": "Project setup lead",
+      "egg": "Secret mastery of project setup (docker)."
+    },
+    "gabriel": {
+      "role": "Efficient work buddy",
+      "egg": "Holds a personal record: 42 pull requests in one day."
+    },
+    "ethan": {
+      "role": "The disgruntled worker",
+      "egg": "Complains but delivers; specialist in 11 PM fixes."
+    },
+    "lalo": {
+      "role": "Happy in life",
+      "egg": "Distributes smiles and sometimes (virtual) cookies."
+    }
+  },
+  "loginModal": {
+    "title": "Login",
+    "username": "Username",
+    "password": "Password",
+    "login": "Sign in",
+    "close": "Close",
+    "connecting": "Connecting...",
+    "usernamePlaceholder": "Your username",
+    "passwordPlaceholder": "••••••••",
+    "usernamePasswordRequired": "Username and password required.",
+    "incorrectUsername": "Incorrect username.",
+    "incorrectPassword": "Incorrect password.",
+    "connectionError": "Connection error. Please try again."
+  },
+  "pageNotFound": {
+    "title": "404 — Page not found",
+    "subtitle": "Oops — this page took a shortcut to the unknown. Let's go back to known territory.",
+    "returnHome": "Return home",
+    "seeHome": "See home",
+    "hint": "Tip: try checking the URL or go back.",
+    "interactiveCharacter": "Interactive character — press to hear a message",
+    "secondaryFigure": "Secondary figure — press to hear a message",
+    "speechMain": "Halt, who goes there",
+    "speechOne": "Who goes there? Show yourself!",
+    "speechTwo": "Warning — restricted access!",
+    "speechThree": "State your identity immediately!"
+  },
+  "rules": {
+    "title": "Game Rules",
+    "objective": "Objective",
+    "objectiveDesc": "Collect stars and avoid bombs to accumulate the maximum points.",
+    "controls": "Controls",
+    "controlsDesc": "Use arrow keys or WASD to move. Collect stars to increase your score.",
+    "stages": "Stages",
+    "stagesDesc": "At each stage, more bombs appear. Reaching a certain score automatically increases the stage."
+  }
+}

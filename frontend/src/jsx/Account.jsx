@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import "../css/index.css";
+import Statistics from "./Statistics.jsx";
+import { LanguageSelector, useLanguage } from "./Language.jsx";
+import "../css/Index.css";
 import "../css/Account.css";
 import LoginModal from "./LoginModal.jsx";
 
@@ -15,21 +17,127 @@ import LoginModal from "./LoginModal.jsx";
  */
 function Account({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState("");
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
+  // Charger la liste des utilisateurs si admin
+  useEffect(() => {
+    if (user === "admin") {
+      (async () => {
+        try {
+          const res = await fetch("/api/admin/users", {
+            headers: { "X-Admin-User": "admin" },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setAllUsers(data);
+            if (data.length > 0) setSelectedUser(data[0].username);
+          }
+        } catch (e) {
+          console.warn("Failed to load users", e);
+        }
+      })();
+    }
+  }, [user]);
   // Gère la déconnexion de l'utilisateur
   const handleLogout = () => {
     setUser(null);
     navigate("/");
   };
-  if (user) { // Utilisateur connecté : afficher les informations de compte
+  if (user) {
+    // Utilisateur connecté : afficher les informations de compte
     return (
       <>
-        <h1>Compte</h1>
+        <h1>{t("account.title")}</h1>
         <div className="account-actions">
-          <p>Bonjour {user}, voici votre page de compte.</p>
-          <button className="btn ghost no-border" onClick={handleLogout}>
-            Déconnexion
+          <p>
+            {t("account.hello")} {user}, {t("account.yourAccountPage")}.
+          </p>
+          <Statistics user={user} />
+          <LanguageSelector />
+          {user === "admin" && (
+            <div
+              style={{
+                marginTop: 24,
+                padding: 16,
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 8,
+                backgroundColor: "rgba(79,158,246,0.05)",
+              }}
+            >
+              <h3 style={{ marginTop: 0 }}>{t("account.adminTools")}</h3>
+              <div>
+                <h4>{t("account.manageUsers")}</h4>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <select
+                    value={selectedUser}
+                    onChange={(e) => setSelectedUser(e.target.value)}
+                    style={{
+                      padding: 8,
+                      borderRadius: 4,
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      backgroundColor: "#0b1222",
+                      color: "#e6eef8",
+                      minWidth: 120,
+                    }}
+                  >
+                    {allUsers.map((u) => (
+                      <option key={u.username} value={u.username}>
+                        {u.username}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="btn ghost"
+                    disabled={resetSessionsLoading}
+                    onClick={() => {
+                      if (selectedUser) {
+                        if (
+                          !confirm(
+                            `${t("account.confirmResetUserSessions")} ${selectedUser} ?`,
+                          )
+                        )
+                          return;
+                        setResetSessionsLoading(true);
+                        fetch(`/api/admin/reset-sessions/${selectedUser}`, {
+                          method: "POST",
+                          headers: { "X-Admin-User": "admin" },
+                        })
+                          .then((res) => {
+                            if (!res.ok) throw new Error("Erreur serveur");
+                            alert(
+                              `${t("account.resetUserSessions")} ${selectedUser} réinitialisées.`,
+                            );
+                          })
+                          .catch((e) => alert("Échec: " + e.message))
+                          .finally(() => setResetSessionsLoading(false));
+                      }
+                    }}
+                  >
+                    {resetSessionsLoading
+                      ? t("account.resetting")
+                      : t("account.resetUserSessions")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          <button
+            className="btn ghost no-border"
+            onClick={handleLogout}
+            style={{ marginTop: 16 }}
+          >
+            {t("common.logout")}
           </button>
         </div>
       </>
@@ -38,9 +146,13 @@ function Account({ user, setUser }) {
   // Utilisateur non connecté : afficher le bouton de connexion
   return (
     <>
-      <h1>Compte</h1>
-      <button onClick={() => setIsOpen(true)}>Login</button>
-      <LoginModal isOpen={isOpen} action={setUser} onClose={() => setIsOpen(false)} />
+      <h1>{t("account.title")}</h1>
+      <button onClick={() => setIsOpen(true)}>{t("common.login")}</button>
+      <LoginModal
+        isOpen={isOpen}
+        action={setUser}
+        onClose={() => setIsOpen(false)}
+      />
     </>
   );
 }

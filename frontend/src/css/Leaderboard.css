@@ -1,0 +1,80 @@
+:root{
+  --bg:#0f1720;
+  --card:#0b1220;
+  --muted:#9aa4b2;
+  --accent:#6ee7b7;
+  --panel:#0f1726;
+}
+
+/* Container */
+.leaderboard{
+  max-width:1100px;
+  margin:28px auto;
+  padding:20px;
+  color:#e6eef6;
+}
+
+.leaderboard__card{
+  background: rgba(11,18,34,0.75);
+  border-radius:12px;
+  padding:18px;
+  box-shadow: 0 12px 40px rgba(2,6,23,0.8), inset 0 1px 0 rgba(255,255,255,0.02);
+  border:1px solid rgba(110,231,183,0.06);
+}
+
+.leaderboard h1{margin:0 0 12px 0;font-size:1.5rem;text-align:center}
+
+.table-wrapper{overflow:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.02);backdrop-filter:blur(6px)}
+
+.scores-table{width:100%;border-collapse:separate;border-spacing:0;background:transparent}
+.scores-table thead th{position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));color:var(--accent);font-weight:700;padding:14px 18px;text-align:center;font-size:0.95rem;letter-spacing:0.4px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.scores-table tbody td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.02);color:#e8f5ff}
+
+.scores-table tbody tr:nth-child(odd){background:rgba(255,255,255,0.01)}
+.scores-table tbody tr:nth-child(even){background:rgba(255,255,255,0.008)}
+.scores-table tbody tr:hover{background:rgba(110,231,183,0.06);transform:translateZ(0)}
+
+.scores-table td.rank{width:72px;font-weight:800;color:var(--accent);text-align:center}
+.scores-table td.player{min-width:160px}
+.scores-table td.score{width:120px;text-align:right;font-weight:700;color:#ffffff}
+
+.empty-message{padding:20px;color:var(--muted);text-align:center}
+
+/* Responsive */
+@media (max-width:720px){
+  .leaderboard{padding:12px}
+  .scores-table thead th{display:none}
+  .scores-table tbody td{display:block;padding:10px 12px}
+  .scores-table tbody tr{margin-bottom:8px;border-radius:8px;display:block;background:rgba(255,255,255,0.01)}
+  .scores-table td.player{font-weight:600}
+  .scores-table td.score{text-align:left}
+}
+
+  /* Score chart styling (match "Votre meilleur score") */
+  .score-chart{
+    margin-top:22px;
+    padding:16px;
+    border-radius:8px;
+    background-color: rgba(79,158,246,0.1);
+    border:1px solid rgba(79,158,246,0.3);
+    box-shadow: none;
+  }
+  .score-chart svg{display:block; border-radius:6px; background: transparent; padding:8px}
+  .score-chart text{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+
+  .score-tooltip{
+    position: absolute;
+    pointer-events: none;
+    background: rgba(11,18,34,0.95);
+    border: 1px solid rgba(79,158,246,0.12);
+    padding: 8px 10px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    transform: none;
+    white-space: nowrap;
+    transition: opacity 0.08s ease;
+    opacity: 0.98;
+  }
+
+  .score-tooltip div{line-height:1}
+
