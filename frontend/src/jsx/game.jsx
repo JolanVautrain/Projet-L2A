@@ -95,7 +95,12 @@ function create() {
       jump: ["SPACE"],
     };
     const saved = (() => {
-      try { return JSON.parse(localStorage.getItem('gameKeyBindings')); } catch (e) { return null; }
+      try {
+        return JSON.parse(localStorage.getItem('gameKeyBindings'));
+      } catch (e) {
+        console.warn('Failed to parse gameKeyBindings from localStorage', e);
+        return null;
+      }
     })();
     const bindings = saved || defaultBindings;
 
@@ -173,11 +178,14 @@ function handlePlayerMovement(player, cursors) {
   if (player && cursors) {
     const km = globalThis.keyMap || {};
     const isDown = (action) => {
-      try {
-        const arr = km[action];
-        if (arr && arr.length) return arr.some((k) => k && k.isDown);
-      } catch (e) {
-        // ignore
+      const arr = km[action];
+      if (Array.isArray(arr) && arr.length) {
+        try {
+          return arr.some((k) => k && k.isDown);
+        } catch (e) {
+          console.warn('Error while checking keyMap state for action', action, e);
+          return false;
+        }
       }
       return false;
     };

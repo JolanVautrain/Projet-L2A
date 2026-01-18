@@ -76,10 +76,8 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
       })
       .finally(() => setLoading(false));
   };
-
   // Ne rien rendre si la modal n'est pas ouverte
   if (!isOpen) return null;
-
   // Rendu de la modal de connexion
   return createPortal(
     <div className="login-modal styled-modal">
@@ -120,7 +118,18 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
             {loading ? t("loginModal.connecting") : t("loginModal.login")}
           </button>
           <div className="modal-register-link">
-            <button type="button" className="btn ghost register-btn" onClick={() => { if (typeof openRegister === 'function') openRegister(); if (typeof onClose === 'function') onClose(); }}>
+            <button
+              type="button"
+              className="btn ghost register-btn"
+              onClick={() => {
+                if (typeof openRegister === 'function') {
+                  openRegister();
+                }
+                if (typeof onClose === 'function') {
+                  onClose();
+                }
+              }}
+            >
               {t('loginModal.noAccount')}
             </button>
           </div>

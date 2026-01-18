@@ -13,7 +13,6 @@ function Leaderboard({ user, setUser }) {
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const { t, language } = useLanguage();
-
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -57,7 +56,6 @@ function Leaderboard({ user, setUser }) {
   }, [user]);
   if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
   if (error) return <p>{t("common.error")}: {error}</p>;
-
   // Si pas connecté, afficher une bannière explicite et proposer d'ouvrir la modal
   if (!user) {
     return (
@@ -68,7 +66,7 @@ function Leaderboard({ user, setUser }) {
           {t("leaderboard.openLogin")}
         </button>
         <LoginModal isOpen={isOpen} onClose={closeLogin} action={setUser || (() => {})} afterLogin={() => { /* no-op: setUser already updates leaderboard */ }} openRegister={openRegister} />
-        <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { if (setUser) setUser(u); closeRegister(); }} />
+        <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { if (setUser) { setUser(u); } closeRegister(); }} />
         <div className="leaderboard-loader" aria-hidden>
           <div className="lb-loader">
             <div className="lb-box"></div>
@@ -167,7 +165,6 @@ function Leaderboard({ user, setUser }) {
     </div>
   );
 }
-
 function ScoreChart({ sessions, t }) {
   const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
   const tooltipRef = useRef(null);
@@ -272,6 +269,7 @@ export default Leaderboard;
 
 Leaderboard.propTypes = {
   user: PropTypes.string,
+  setUser: PropTypes.func,
 };
 
 ScoreChart.propTypes = {

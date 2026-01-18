@@ -152,6 +152,7 @@
   border-radius: 20px;
   position: absolute;
   background: #ddd;
+  animation: account-rock 4s   -0.530s linear infinite;
 }
 .account-loop .truck, .account-loop .wheels {
   transition: all ease;
@@ -166,6 +167,7 @@
   background: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/130015/truck.svg) no-repeat;
   background-size: contain;
   height: 60px;
+  animation: account-truck 4s   0.080s ease infinite;
 }
 .account-loop .truck:before {
   content: " ";
@@ -174,35 +176,30 @@
   box-shadow:
     -30px 28px 0 1.5px #fff,
      -35px 18px 0 1.5px #fff;
+  animation: account-wind 1.5s   0.000s ease infinite;
 }
 .account-loop .wheels {
   background: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/130015/wheels.svg) no-repeat;
   height: 15px;
   margin-bottom: 0;
+  animation: account-truck 4s   0.001s ease infinite;
 }
 
 .account-loop .tree  { animation: account-tree 3s 0.000s linear infinite; }
 .account-loop .tree:nth-child(2)  { animation: account-tree2 2s 0.150s linear infinite; }
 .account-loop .tree:nth-child(3)  { animation: account-tree3 8s 0.050s linear infinite; }
-.account-loop .rock  { animation: account-rock 4s   -0.530s linear infinite; }
-.account-loop .truck  { animation: account-truck 4s   0.080s ease infinite; }
-.account-loop .wheels  { animation: account-truck 4s   0.001s ease infinite; }
-.account-loop .truck:before { animation: account-wind 1.5s   0.000s ease infinite; }
 
 
 @keyframes account-tree {
   0%   { transform: translate(1350px); }
-  50% {}
   100% { transform: translate(-50px); }
 }
 @keyframes account-tree2 {
   0%   { transform: translate(650px); }
-  50% {}
   100% { transform: translate(-50px); }
 }
 @keyframes account-tree3 {
   0%   { transform: translate(2750px); }
-  50% {}
   100% { transform: translate(-50px); }
 }
 
@@ -211,18 +208,14 @@
   100% { right: 2000px; }
 }
 @keyframes account-truck {
-  0%   { }
   6%   { transform: translateY(0px); }
   7%   { transform: translateY(-6px); }
   9%   { transform: translateY(0px); }
   10%   { transform: translateY(-1px); }
   11%   { transform: translateY(0px); }
-  100%   { }
 }
 @keyframes account-wind {
-  0%   {  }
   50%   { transform: translateY(3px) }
-  100%   { }
 }
 @keyframes account-mtn {
   100% {
