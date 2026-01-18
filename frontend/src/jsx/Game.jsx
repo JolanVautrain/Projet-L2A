@@ -22,7 +22,6 @@ let showGameOverModalCallback = null; // Callback pour afficher la modal Game Ov
  * @return {void}
  */
 function preload() {
-  console.log('[Phaser] preload() called');
   this.load.image("sky", "src/assets/sky.png");
   this.load.image("ground", "src/assets/platform.png");
   this.load.image("star", "src/assets/star.png");
@@ -31,7 +30,6 @@ function preload() {
     frameWidth: 32,
     frameHeight: 48,
   });
-  console.log('[Phaser] preload() finished');
 }
 
 /**
@@ -40,7 +38,6 @@ function preload() {
  * @return {void}
  */
 function create() {
-  console.log('[Phaser] create() called');
   // démarrer le minuteur de la partie et créer un identifiant de session unique
   startTime = Date.now();
   currentSessionId = Math.random().toString(36).slice(2);
@@ -124,7 +121,6 @@ function create() {
   this.physics.add.overlap(globalThis.player, globalThis.stars, collectStar, null, this);
   this.physics.add.collider(globalThis.player, globalThis.bombs, hitBomb, null, this);
   this.physics.add.collider(globalThis.player, globalThis.platforms, touchGround, null, this);
-  console.log('[Phaser] create() finished');
 }
 
 /**
@@ -215,7 +211,6 @@ function handlePlayerMovement(player, cursors) {
  * Gère la collecte d'une étoile par le joueur.
  */
 function collectStar(player, star) {
-  console.log('[Phaser] Star collected! Stage:', internalStage);
   star.disableBody(true, true);
   // met à jour le score
   score += 10;
@@ -223,13 +218,11 @@ function collectStar(player, star) {
   const stars = globalThis.stars;
   if (stars && stars.countActive(true) === 0) {
     internalStage += 1;
-    console.log('[Phaser] Stage completed! New stage:', internalStage);
     globalThis.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
     stars.children.iterate(function (child) {
       child.enableBody(true, child.x, 0, true, true);
     });
     // ajoute une bombe supplémentaire pour le nouveau stage
-    console.log('[Phaser] Adding 1 bomb for new stage');
     try {
       spawnBomb();
     } catch (e) {
@@ -312,7 +305,6 @@ function hitBomb(_player, _bomb) {
         })
           .then((r) => r.json())
           .then((data) => {
-            console.log("Score submitted:", data);
             // Award XP based on the final score (persist XP automatically)
             try {
               const xpAmount = Math.max(0, Math.floor(finalScore / 10) + 10);
@@ -322,7 +314,7 @@ function hitBomb(_player, _bomb) {
                 body: JSON.stringify({ username, xp: xpAmount }),
               })
                 .then((r) => r.json())
-                .then((xpRes) => console.log('XP awarded:', xpRes))
+                .then(() => {})
                 .catch((err) => console.warn('Failed to award XP', err));
             } catch (e) {
               console.warn('Error while awarding XP', e);
@@ -452,47 +444,39 @@ function Game() {
       setTimeout(() => {
         const canvas = container?.querySelector('canvas');
         if (canvas) {
-          console.log('[Canvas] Dimensions:', canvas.width, 'x', canvas.height);
           canvas.style.display = 'block';
           canvas.style.visibility = 'visible';
           canvas.style.opacity = '1';
         } else {
-          console.log('[Canvas] No canvas found');
         }
       }, 100);
     };
     // Initialise Phaser en chargeant le script si nécessaire
     const initPhaser = () => {
-      console.log('[initPhaser] Called. destroyed=', destroyed, 'Phaser=', !!globalThis.Phaser);
       if (destroyed) return;
-      
-      if (globalThis.Phaser) {
-        console.log('[initPhaser] Phaser available, calling createGame');
-        createGame();
-        return;
-      }
+
+        if (globalThis.Phaser) {
+          createGame();
+          return;
+        }
       // charge le script Phaser depuis le CDN
       let script = document.querySelector('script[data-phaser-dynamic]');
       if (script) {
-        console.log('Phaser script exists but not ready, polling...');
         const checkPhaser = setInterval(() => {
           if (destroyed) {
             clearInterval(checkPhaser);
             return;
           }
           if (globalThis.Phaser) {
-                console.log('Phaser ready from polling');
                 clearInterval(checkPhaser);
                 createGame();
               }
         }, 100);
       } else { // charge le script
-        console.log('Loading Phaser script from CDN...');
         script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js';
         script.dataset.phaserDynamic = '1';
         script.onload = () => {
-          console.log('Phaser script loaded');
           if (!destroyed) {
             createGame();
           }
@@ -504,9 +488,7 @@ function Game() {
       }
     };
     // utilise un timeout pour différer l'initialisation
-    console.log('[Game] Setting timeout for initPhaser');
     const timer = setTimeout(() => {
-      console.log('[Game] Timeout fired, calling initPhaser');
       if (!destroyed) initPhaser();
     }, 50);
     // Nettoyage à la destruction du composant
