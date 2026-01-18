@@ -27,7 +27,6 @@ function ContactCard({ person, t }) {
       onClick={() => setOpen((s) => !s)}
       aria-expanded={open}
       aria-label={open ? `${t("contacts.hideAnecdote")} ${person.name}` : `${t("contacts.showAnecdote")} ${person.name}`}
-      style={{ border: 'none', background: 'none', padding: 0, textAlign: 'inherit' }}
     >
       <img className="avatar" src={person.img} alt={person.name} />
       <div className="card-body">

@@ -9,7 +9,7 @@ import { useLanguage } from "./Language.jsx";
  * 
  * Permet de se connecter via une modal.
  */
-function LoginModal({ isOpen, onClose, action }) {
+function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -58,10 +58,14 @@ function LoginModal({ isOpen, onClose, action }) {
           setError(t("loginModal.incorrectPassword"));
         } else {
           // renvoie le nom d'utilisateur au parent pour affichage dans le header
-          // transmet le nom d'utilisateur au parent pour affichage dans l'en-tête
           action(username);
+          // appeler un callback optionnel après connexion réussie (ex: redirection)
+          try {
+            if (typeof afterLogin === 'function') afterLogin(username);
+          } catch (err) {
+            console.error('afterLogin callback failed', err);
+          }
           // ferme la modal automatiquement après connexion réussie
-          // ferme la fenêtre modale automatiquement après connexion réussie
           if (typeof onClose === "function") onClose();
         }
       })
@@ -72,10 +76,8 @@ function LoginModal({ isOpen, onClose, action }) {
       })
       .finally(() => setLoading(false));
   };
-
   // Ne rien rendre si la modal n'est pas ouverte
   if (!isOpen) return null;
-
   // Rendu de la modal de connexion
   return createPortal(
     <div className="login-modal styled-modal">
@@ -115,6 +117,22 @@ function LoginModal({ isOpen, onClose, action }) {
           <button type="submit" className="btn primary" disabled={loading}>
             {loading ? t("loginModal.connecting") : t("loginModal.login")}
           </button>
+          <div className="modal-register-link">
+            <button
+              type="button"
+              className="btn ghost register-btn"
+              onClick={() => {
+                if (typeof openRegister === 'function') {
+                  openRegister();
+                }
+                if (typeof onClose === 'function') {
+                  onClose();
+                }
+              }}
+            >
+              {t('loginModal.noAccount')}
+            </button>
+          </div>
         </form>
       </div>
     </div>,
@@ -129,4 +147,6 @@ LoginModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   action: PropTypes.func.isRequired,
+  afterLogin: PropTypes.func,
+  openRegister: PropTypes.func,
 };

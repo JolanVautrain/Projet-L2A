@@ -6,6 +6,7 @@ import { LanguageSelector, useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Account.css";
 import LoginModal from "./LoginModal.jsx";
+import RegisterModal from "./RegisterModal.jsx";
 
 /**
  * Composant Account
@@ -17,6 +18,7 @@ import LoginModal from "./LoginModal.jsx";
  */
 function Account({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
@@ -59,37 +61,15 @@ function Account({ user, setUser }) {
           <Statistics user={user} />
           <LanguageSelector />
           {user === "admin" && (
-            <div
-              style={{
-                marginTop: 24,
-                padding: 16,
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 8,
-                backgroundColor: "rgba(79,158,246,0.05)",
-              }}
-            >
-              <h3 style={{ marginTop: 0 }}>{t("account.adminTools")}</h3>
+            <div className="admin-tools">
+              <h3 className="admin-tools__title">{t("account.adminTools")}</h3>
               <div>
                 <h4>{t("account.manageUsers")}</h4>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 8,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div className="admin-tools__controls">
                   <select
                     value={selectedUser}
                     onChange={(e) => setSelectedUser(e.target.value)}
-                    style={{
-                      padding: 8,
-                      borderRadius: 4,
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      backgroundColor: "#0b1222",
-                      color: "#e6eef8",
-                      minWidth: 120,
-                    }}
+                    className="admin-tools__select"
                   >
                     {allUsers.map((u) => (
                       <option key={u.username} value={u.username}>
@@ -102,12 +82,7 @@ function Account({ user, setUser }) {
                     disabled={resetSessionsLoading}
                     onClick={() => {
                       if (selectedUser) {
-                        if (
-                          !confirm(
-                            `${t("account.confirmResetUserSessions")} ${selectedUser} ?`,
-                          )
-                        )
-                          return;
+                        if (!confirm(t("account.confirmResetUserSessions").replace("{username}", selectedUser))) return;
                         setResetSessionsLoading(true);
                         fetch(`/api/admin/reset-sessions/${selectedUser}`, {
                           method: "POST",
@@ -115,11 +90,9 @@ function Account({ user, setUser }) {
                         })
                           .then((res) => {
                             if (!res.ok) throw new Error("Erreur serveur");
-                            alert(
-                              `${t("account.resetUserSessions")} ${selectedUser} réinitialisées.`,
-                            );
+                            alert(t("account.resetUserSessionsSuccess").replace("{username}", selectedUser));
                           })
-                          .catch((e) => alert("Échec: " + e.message))
+                          .catch((e) => alert(t("common.failedPrefix") + e.message))
                           .finally(() => setResetSessionsLoading(false));
                       }
                     }}
@@ -128,14 +101,35 @@ function Account({ user, setUser }) {
                       ? t("account.resetting")
                       : t("account.resetUserSessions")}
                   </button>
+                  <button
+                    className="btn ghost danger admin-tools__delete"
+                    onClick={() => {
+                      if (!selectedUser) return;
+                      if (!confirm(t("account.confirmDeleteUserFull").replace("{username}", selectedUser))) return;
+                      fetch(`http://127.0.0.1:5000/api/admin/delete-user/${selectedUser}`, {
+                        method: "DELETE",
+                        headers: { "X-Admin-User": "admin" },
+                      })
+                        .then((res) => {
+                          if (!res.ok) throw new Error("Erreur serveur");
+                          const remaining = allUsers.filter((u) => u.username !== selectedUser);
+                          setAllUsers(remaining);
+                          if (remaining.length > 0) setSelectedUser(remaining[0].username);
+                          else setSelectedUser("");
+                          alert(t("account.deleteUserSuccess").replace("{username}", selectedUser));
+                        })
+                        .catch((e) => alert(t("common.failedPrefix") + e.message));
+                    }}
+                  >
+                    {t("account.deleteUser")}
+                  </button>
                 </div>
               </div>
             </div>
           )}
           <button
-            className="btn ghost no-border"
+            className="btn ghost no-border account__logout"
             onClick={handleLogout}
-            style={{ marginTop: 16 }}
           >
             {t("common.logout")}
           </button>
@@ -143,17 +137,39 @@ function Account({ user, setUser }) {
       </>
     );
   }
-  // Utilisateur non connecté : afficher le bouton de connexion
+  // Utilisateur non connecté : afficher une bannière invitant à se connecter
   return (
-    <>
+    <div className="account account--centered">
       <h1>{t("account.title")}</h1>
-      <button onClick={() => setIsOpen(true)}>{t("common.login")}</button>
+      <p className="account__notice">{t("account.loginRequired")}</p>
+      <button className="btn primary account__login-btn" onClick={() => setIsOpen(true)}>
+        {t("account.openLogin")}
+      </button>
       <LoginModal
         isOpen={isOpen}
         action={setUser}
         onClose={() => setIsOpen(false)}
+        openRegister={() => setIsRegisterOpen(true)}
+        afterLogin={() => navigate('/account', { replace: true })}
       />
-    </>
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }}
+      />
+      <div className="account-loop" aria-hidden>
+        <div className="loop-wrapper">
+          <div className="mountain"></div>
+          <div className="hill"></div>
+          <div className="tree"></div>
+          <div className="tree"></div>
+          <div className="tree"></div>
+          <div className="rock"></div>
+          <div className="truck"></div>
+          <div className="wheels"></div>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "1234",
+      "language": "fr"
+    },
+    {
+      "username": "username",
+      "password": "password",
+      "language": "fr"
+    },
+    {
+      "username": "azerty",
+      "password": "qsdfgh",
+      "language": "fr"
+    }
+  ]
+}

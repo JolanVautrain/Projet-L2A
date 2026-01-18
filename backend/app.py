@@ -19,10 +19,12 @@ d'environnement. Assurez-vous que la variable d'environnement
 POSTGRES_PASSWORD est définie sur le mot de passe souhaité.
 """
 
+import json
 import logging
 import os
 from contextlib import contextmanager
 from functools import wraps
+from pathlib import Path
 from typing import Any, Callable, Iterator, List, TypedDict
 
 import psycopg2  # type: ignore
@@ -32,7 +34,22 @@ from psycopg2 import OperationalError  # type: ignore
 from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow cross-origin requests from frontend
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": [
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:3000",
+            ],
+            "methods": ["GET", "POST", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization", "X-Admin-User"],
+            "supports_credentials": True,
+        }
+    },
+)
 logging.basicConfig(level=logging.INFO)
 
 BAD_REQUEST = "Bad Request"
@@ -119,6 +136,27 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
     return wrapper
 
 
+def load_default_users() -> List[tuple[str, str, str]]:
+    """Load default users from db_init.json if it exists, otherwise use
+    hardcoded defaults."""
+    db_init_path = Path(__file__).parent / "db_init.json"
+
+    if db_init_path.exists():
+        try:
+            with open(db_init_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                users = data.get("users", [])
+                return [
+                    (u["username"], u["password"], u["language"])
+                    for u in users
+                ]
+        except (json.JSONDecodeError, KeyError, TypeError) as e:
+            app.logger.warning("Failed to load users from db_init.json: %s", e)
+
+    # Fallback to hardcoded defaults
+    return []
+
+
 def connect_to_database() -> Any:
     """Établir et retourner une nouvelle connexion à la base de données
     PostgreSQL.
@@ -145,52 +183,82 @@ def connect_to_database() -> Any:
         raise
 
 
-try:
-    init_conn = connect_to_database()
-    init_cur = init_conn.cursor()
-    # Drop tables with CASCADE to handle foreign key dependencies
-    init_cur.execute("DROP TABLE IF EXISTS highscores CASCADE;")
-    init_cur.execute("DROP TABLE IF EXISTS users CASCADE;")
-    init_cur.execute(
-        """CREATE TABLE IF NOT EXISTS users (
-        username varchar(100) PRIMARY KEY,
-        password varchar(100) NOT NULL,
-        language varchar(10) DEFAULT 'fr'
+def initialize_database() -> None:
+    """Initialise la base de données : crée les tables et charge les users par
+    défaut.
+
+    Encapsulé dans une fonction pour éviter les variables au niveau module.
+    """
+    init_conn = None
+    init_cur = None
+    try:
+        init_conn = connect_to_database()
+        init_cur = init_conn.cursor()
+        # Ensure users table exists (do NOT drop existing tables to preserve
+        # data)
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS users (
+            username varchar(100) PRIMARY KEY,
+            password varchar(100) NOT NULL,
+            language varchar(10) DEFAULT 'fr'
+            );"""
+        )
+        # Insert default users only if the users table is empty
+        init_cur.execute("SELECT COUNT(*) FROM users")
+        try:
+            users_count = int(init_cur.fetchone()[0] or 0)
+        except (TypeError, ValueError, IndexError) as e:
+            app.logger.warning("Failed to read users count: %s", e)
+            users_count = 0
+        if users_count == 0:
+            default_users = load_default_users()
+            for init_username, init_password, init_language in default_users:
+                init_cur.execute(
+                    "INSERT INTO users (username, password, language) VALUES "
+                    "(%s, %s, %s)",
+                    (init_username, init_password, init_language),
+                )
+        # Table pour stocker le meilleur score par utilisateur
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS highscores (
+            username varchar(100) PRIMARY KEY,
+            high_score integer NOT NULL,
+            stage integer DEFAULT 0,
+            timer integer DEFAULT 0,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
-    )
-    init_cur.execute(
-        """INSERT INTO users (username, password, language) VALUES
-        ('admin', '1234', 'fr'),
-        ('username', 'password', 'fr'),
-        ('azerty', 'qsdfgh', 'fr');"""
-    )
-    # Table pour stocker le meilleur score par utilisateur
-    init_cur.execute(
-        """CREATE TABLE IF NOT EXISTS highscores (
-        username varchar(100) PRIMARY KEY,
-        high_score integer NOT NULL,
-        stage integer DEFAULT 0,
-        timer integer DEFAULT 0,
-        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
-    );"""
-    )
-    # Table pour enregistrer toutes les sessions de jeu
-    init_cur.execute(
-        """CREATE TABLE IF NOT EXISTS game_sessions (
-        id SERIAL PRIMARY KEY,
-        username varchar(100) NOT NULL,
-        score integer NOT NULL,
-        stage integer DEFAULT 0,
-        timer integer DEFAULT 0,
-        played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
-    );"""
-    )
-    init_conn.commit()
-    init_cur.close()
-    init_conn.close()
-except psycopg2.Error as err:
-    app.logger.exception("Failed to initialize database: %s", err)
+        )
+        # Table pour enregistrer toutes les sessions de jeu
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS game_sessions (
+            id SERIAL PRIMARY KEY,
+            username varchar(100) NOT NULL,
+            score integer NOT NULL,
+            stage integer DEFAULT 0,
+            timer integer DEFAULT 0,
+            played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        );"""
+        )
+        init_conn.commit()
+    except psycopg2.Error as err:
+        app.logger.exception("Failed to initialize database: %s", err)
+    finally:
+        if init_cur:
+            try:
+                init_cur.close()
+            except (psycopg2.Error, AttributeError, OSError) as e:
+                app.logger.debug("Failed to close init cursor: %s", e)
+        if init_conn:
+            try:
+                init_conn.close()
+            except (psycopg2.Error, AttributeError, OSError) as e:
+                app.logger.debug("Failed to close init connection: %s", e)
+
+
+# Appel immédiat pour conserver le comportement précédent (initialisation à
+# l'import)
+initialize_database()
 
 
 @app.route("/api/login", methods=["POST"])
@@ -210,23 +278,19 @@ def check_login() -> Response:
             },
             400,
         )
-
     username = data["username"].strip()
     password = data["password"].strip()
-
     with get_db_connection() as conn, get_db_cursor(conn) as cur:
         cur.execute(
             "SELECT username, password FROM users WHERE username = %s",
             (username,),
         )
         row = cur.fetchone()
-
         if not row:
             app.logger.info("Login attempt: user '%s' not found", username)
             return make_response(
                 {"userExist": False, "passwordIsCorrect": False}
             )
-
         stored_username, stored_password = row
         if stored_password != password:
             app.logger.info(
@@ -235,7 +299,6 @@ def check_login() -> Response:
             return make_response(
                 {"userExist": True, "passwordIsCorrect": False}
             )
-
         app.logger.info("User '%s' authenticated", stored_username)
         return make_response(
             {
@@ -244,6 +307,61 @@ def check_login() -> Response:
                 "username": stored_username,
             }
         )
+
+
+@app.route("/api/register", methods=["POST"])
+@handle_db_errors
+def register_user() -> Response:
+    """Handle POST /api/register: create a new user in the users table.
+
+    Expected JSON body: {"username": str, "password": str}
+    Returns JSON: {"success": True} on success or {"success": False,
+    "message": str} on error
+    """
+    data = request.get_json()
+    if not data or "username" not in data or "password" not in data:
+        return make_response(
+            {
+                "error": BAD_REQUEST,
+                "message": "username and password required",
+            },
+            400,
+        )
+
+    username = str(data["username"]).strip()
+    password = str(data["password"])
+
+    if not username or not password:
+        return make_response(
+            {
+                "error": BAD_REQUEST,
+                "message": "username and password required",
+            },
+            400,
+        )
+
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        # check if user exists
+        cur.execute(
+            "SELECT username FROM users WHERE username = %s", (username,)
+        )
+        if cur.fetchone():
+            app.logger.info(
+                "Register attempt: user '%s' already exists", username
+            )
+            return make_response(
+                {"success": False, "message": "user already exists"}, 409
+            )
+
+        # insert new user (password stored as provided - no hashing to match
+        # existing simple setup)
+        cur.execute(
+            "INSERT INTO users (username, password) VALUES (%s, %s)",
+            (username, password),
+        )
+        conn.commit()
+        app.logger.info("User '%s' registered", username)
+        return make_response({"success": True})
 
 
 def _parse_optional_int(data: dict[str, Any], key: str) -> int | None:
@@ -519,6 +637,23 @@ def reset_user_sessions(username: str) -> Response:
             "DELETE FROM game_sessions WHERE username = %s", (username,)
         )
         cur.execute("DELETE FROM highscores WHERE username = %s", (username,))
+        conn.commit()
+        return make_response({"ok": True})
+
+
+@app.route("/api/admin/delete-user/<username>", methods=["DELETE", "POST"])
+@handle_db_errors
+@require_admin
+def delete_user(username: str) -> Response:
+    """Delete a user and cascade-remove related records (highscores, sessions).
+
+    Returns JSON: {"ok": True} on success.
+    Requires admin header.
+    """
+    username = username.strip()
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+        # Delete user - CASCADE will remove highscores and sessions
+        cur.execute("DELETE FROM users WHERE username = %s", (username,))
         conn.commit()
         return make_response({"ok": True})
 

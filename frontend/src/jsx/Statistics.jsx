@@ -16,7 +16,7 @@ function Statistics({ user }) {
     let mounted = true;
     fetch(`/api/user/stats/${user}`)
       .then((r) => {
-        if (!r.ok) throw new Error("Failed to fetch stats");
+        if (!r.ok) throw new Error(t("statistics.fetchFailed"));
         return r.json();
       })
       .then((data) => {

@@ -1,15 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import PropTypes from "prop-types";
+import LoginModal from "./LoginModal.jsx";
+import RegisterModal from "./RegisterModal.jsx";
 import { useLanguage } from "./Language.jsx";
 import "../css/Index.css";
 import "../css/Leaderboard.css";
 
-function Leaderboard({ user }) {
+function Leaderboard({ user, setUser }) {
   const [scores, setScores] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
   const { t, language } = useLanguage();
+  const openLogin = () => setIsOpen(true);
+  const closeLogin = () => setIsOpen(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const openRegister = () => setIsRegisterOpen(true);
+  const closeRegister = () => setIsRegisterOpen(false);
 
   useEffect(() => {
     let mounted = true;
@@ -17,7 +25,7 @@ function Leaderboard({ user }) {
     Promise.all([
       fetch("/api/score")
         .then((r) => {
-          if (!r.ok) throw new Error("Failed to fetch scores");
+          if (!r.ok) throw new Error(t("leaderboard.fetchFailed"));
           return r.json();
         }),
       // Charger les sessions du joueur connecté si disponible
@@ -48,6 +56,26 @@ function Leaderboard({ user }) {
   }, [user]);
   if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
   if (error) return <p>{t("common.error")}: {error}</p>;
+  // Si pas connecté, afficher une bannière explicite et proposer d'ouvrir la modal
+  if (!user) {
+    return (
+      <div className="leaderboard leaderboard--centered">
+        <h1>{t("leaderboard.title")}</h1>
+        <p className="leaderboard__notice">{t("leaderboard.loginRequired")}</p>
+        <button className="btn primary leaderboard__login-btn" onClick={openLogin}>
+          {t("leaderboard.openLogin")}
+        </button>
+        <LoginModal isOpen={isOpen} onClose={closeLogin} action={setUser || (() => {})} afterLogin={() => { /* no-op: setUser already updates leaderboard */ }} openRegister={openRegister} />
+        <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { if (setUser) { setUser(u); } closeRegister(); }} />
+        <div className="leaderboard-loader" aria-hidden>
+          <div className="lb-loader">
+            <div className="lb-box"></div>
+            <div className="lb-hill"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const userBestScore = scores.find((s) => s.username === user);
   // Calculer le meilleur score depuis les sessions si pas trouvé dans highscores
   const bestScoreFromSessions = userSessions.length > 0
@@ -78,17 +106,9 @@ function Leaderboard({ user }) {
       <h1>{t("leaderboard.title")}</h1>
       {/* Section : Meilleur temps du joueur connecté */}
       {user && (userBestScore || bestScoreFromSessions) && (
-        <div
-          style={{
-            marginBottom: 24,
-            padding: 16,
-            backgroundColor: "rgba(79, 158, 246, 0.1)",
-            borderRadius: 8,
-            border: "1px solid rgba(79, 158, 246, 0.3)",
-          }}
-        >
-          <h2 style={{ marginTop: 0 }}>{t("leaderboard.yourBestScore")}</h2>
-          <table className="scores-table" style={{ marginBottom: 0 }}>
+        <div className="leaderboard__panel">
+          <h2>{t("leaderboard.yourBestScore")}</h2>
+          <table className="scores-table">
             <thead>
               <tr>
                 <th>{t("leaderboard.player")}</th>
@@ -98,7 +118,7 @@ function Leaderboard({ user }) {
               </tr>
             </thead>
             <tbody>
-              <tr style={{ backgroundColor: "rgba(79, 158, 246, 0.2)" }}>
+              <tr className="highlight-row">
                 <td>
                   <strong>{user}</strong>
                 </td>
@@ -112,15 +132,7 @@ function Leaderboard({ user }) {
       )}
       {/* Section : Tous les temps du joueur connecté */}
       {user && sortedUserSessions.length > 0 && (
-        <div
-          style={{
-            marginBottom: 24,
-            padding: 16,
-            backgroundColor: "rgba(79, 158, 246, 0.1)",
-            borderRadius: 8,
-            border: "1px solid rgba(79, 158, 246, 0.3)",
-          }}
-        >
+        <div className="leaderboard__panel">
           <h2>{t("leaderboard.yourOtherGames")}</h2>
           <table className="scores-table">
             <thead>
@@ -153,9 +165,9 @@ function Leaderboard({ user }) {
     </div>
   );
 }
-
 function ScoreChart({ sessions, t }) {
-  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, score: 0, date: '' });
+  const [tooltip, setTooltip] = useState({ visible: false, score: 0, date: '' });
+  const tooltipRef = useRef(null);
   if (!sessions || sessions.length === 0) return null;
   const width = 800;
   const height = 220;
@@ -190,12 +202,16 @@ function ScoreChart({ sessions, t }) {
     // Positionner le tooltip légèrement en dessous et à droite du curseur
     const left = clientX - svgRect.left + 12;
     const top = clientY - svgRect.top + 12;
-    setTooltip({ visible: true, x: left, y: top, score: s.score, date: new Date(s.playedAt).toLocaleString() });
+    setTooltip({ visible: true, score: s.score, date: new Date(s.playedAt).toLocaleString() });
+    if (tooltipRef.current) {
+      tooltipRef.current.style.left = `${left}px`;
+      tooltipRef.current.style.top = `${top}px`;
+    }
   };
   const handlePointLeave = () => setTooltip({ visible: false, x: 0, y: 0, score: 0, date: '' });
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
-      <h3 style={{ margin: '6px 0 8px', textAlign: 'center', color: '#e6eef8' }}>{t('leaderboard.chart.title')}</h3>
+    <div className="score-chart__inner">
+      <h2 className="score-chart__title">{t('leaderboard.chart.title')}</h2>
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height={height} preserveAspectRatio="xMidYMid meet">
         <defs>
           <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
@@ -239,15 +255,11 @@ function ScoreChart({ sessions, t }) {
       </svg>
       {/* Infobulle */}
       <div
-        className="score-tooltip"
-        style={{
-          display: tooltip.visible ? 'block' : 'none',
-          left: tooltip.x,
-          top: tooltip.y,
-        }}
+        ref={tooltipRef}
+        className={`score-tooltip ${tooltip.visible ? 'score-tooltip--visible' : ''}`}
       >
-        <div style={{ fontSize: 12, color: '#e6eef8', fontWeight: 600 }}>{t('common.score')}: {tooltip.score}</div>
-        <div style={{ fontSize: 11, color: '#9aa4b2' }}>{tooltip.date}</div>
+        <div className="score-tooltip__main">{t('common.score')}: {tooltip.score}</div>
+        <div className="score-tooltip__date">{tooltip.date}</div>
       </div>
     </div>
   );
@@ -257,6 +269,7 @@ export default Leaderboard;
 
 Leaderboard.propTypes = {
   user: PropTypes.string,
+  setUser: PropTypes.func,
 };
 
 ScoreChart.propTypes = {

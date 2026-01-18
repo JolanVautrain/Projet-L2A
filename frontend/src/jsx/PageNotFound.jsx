@@ -46,10 +46,15 @@ function PageNotFound() {
       const container = document.querySelector(".follow-geom");
       if (!container) return;
       const eyeEls = container.querySelectorAll(".eye");
-      eyesDataRef.current = Array.from(eyeEls).map((eyeEl) => {
-        const pupilEl = eyeEl.querySelector('.pupil');
-        return { eyeEl, pupilEl, center: { x: 0, y: 0 } };
-      });
+      eyesDataRef.current = Array.from(eyeEls)
+        .map((eyeEl) => {
+          const pupilEl = eyeEl.querySelector('.pupil');
+          if (!pupilEl) return null;
+          // ensure initial centering
+          pupilEl.style.transform = 'translate3d(-50%, -50%, 0)';
+          return { eyeEl, pupilEl, center: { x: 0, y: 0 } };
+        })
+        .filter(Boolean);
     }
 
     /**
@@ -74,14 +79,19 @@ function PageNotFound() {
      */
     function animate() {
       const max = 10; // max déplacement en pixels
-      eyesDataRef.current.forEach(({ pupilEl: el, center }) => {
-        if (!el || !center) return;
-        const dx = targetX - center.x;
-        const dy = targetY - center.y;
+      // recompute centers each frame to be robust against layout changes
+      eyesDataRef.current.forEach((entry) => {
+        const el = entry.pupilEl;
+        if (!el || !entry.eyeEl) return;
+        const rect = entry.eyeEl.getBoundingClientRect();
+        entry.center.x = rect.left + rect.width / 2;
+        entry.center.y = rect.top + rect.height / 2;
+        const dx = targetX - entry.center.x;
+        const dy = targetY - entry.center.y;
         const dist = Math.hypot(dx, dy) || 1;
         const nx = (dx / dist) * Math.min(max, dist / 6);
         const ny = (dy / dist) * Math.min(max, dist / 6);
-        // utilisation de translate3d pour de meilleures performances
+        // translate first by offset then keep centering transform
         el.style.transform = `translate3d(${nx}px, ${ny}px, 0) translate3d(-50%, -50%, 0)`;
       });
       rafId = requestAnimationFrame(animate);
@@ -188,7 +198,6 @@ function PageNotFound() {
               <div className="speech-bubble" aria-live="assertive">{speeches.main}</div>
             )}
           </button>
-          {/* trois figures géométriques */}
           <button
             type="button"
             className={`mini-shape one size-sm c1 ${clickedId === "one" ? "clicked" : ""}`}
@@ -249,7 +258,6 @@ function PageNotFound() {
           <p className="pnf-sub">{t("pageNotFound.subtitle")}</p>
           <div className="pnf-actions">
             <Link to="/" className="btn primary">{t("pageNotFound.returnHome")}</Link>
-            <Link to="/accueil" className="btn ghost">{t("pageNotFound.seeHome")}</Link>
           </div>
           <p className="pnf-hint">{t("pageNotFound.hint")}</p>
         </div>

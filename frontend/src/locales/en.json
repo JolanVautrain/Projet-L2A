@@ -17,6 +17,7 @@
     "returnHome": "Return Home",
     "loading": "Loading...",
     "error": "Error",
+    "failedPrefix": "Failed: ",
     "noData": "No data available",
     "close": "Close"
   },
@@ -45,13 +46,16 @@
       "title": "Score over time"
     },
     "timerSeconds": "Timer (s)",
-    "loadingLeaderboard": "Loading leaderboard..."
+    "loadingLeaderboard": "Loading leaderboard...",
+    "fetchFailed": "Failed to load leaderboard.",
+    "loginRequired": "You must be logged in to view the leaderboard.",
+    "openLogin": "Sign in"
   },
   "account": {
     "title": "Account",
     "hello": "Hello",
     "yourAccountPage": "here is your account page",
-    "adminTools": "⚙️ Administrator Tools",
+    "adminTools": "Administrator Tools",
     "resetYourRanking": "Reset Your Ranking",
     "reset": "Reset",
     "resetting": "Resetting…",
@@ -64,7 +68,15 @@
     "confirmResetSelfScore": "Reset your own ranking?",
     "confirmResetSelfSessions": "Reset your other games?",
     "confirmResetUserScore": "Reset ranking for",
-    "confirmResetUserSessions": "Reset other games for"
+    "confirmResetUserSessions": "Reset other games for",
+    "confirmResetUserSessionsFull": "Reset other games for {username}?",
+    "resetUserSessionsSuccess": "Other games for {username} have been reset.",
+    "confirmDeleteUser": "Delete account of",
+    "confirmDeleteUserFull": "Delete account of {username}?\nDeleting this account is irreversible.",
+    "deleteUser": "Delete user",
+    "deleteUserSuccess": "User {username} deleted.",
+    "loginRequired": "You must be logged in to access your account.",
+    "openLogin": "Sign in"
   },
   "statistics": {
     "title": "Your Statistics",
@@ -77,6 +89,7 @@
     "highestStage": "Highest Stage",
     "averagePlayTime": "Average Play Time",
     "loginToViewStats": "Login to view your statistics"
+    ,"fetchFailed": "Failed to load statistics."
   },
   "accueil": {
     "readyToPlay": "Ready to play?",
@@ -115,6 +128,10 @@
     "oneClickConnect": "One click is enough to open the modal and pick up where you left off.",
     "openLogin": "Open login"
   },
+  "languageNames": {
+    "fr": "Français",
+    "en": "English"
+  },
   "contacts": {
     "title": "Team — Contacts",
     "intro": "Our brave developers — faithful companions of long nights, coffees, and heroic commits.",
@@ -151,7 +168,15 @@
     "usernamePasswordRequired": "Username and password required.",
     "incorrectUsername": "Incorrect username.",
     "incorrectPassword": "Incorrect password.",
-    "connectionError": "Connection error. Please try again."
+    "connectionError": "Connection error. Please try again.",
+    "noAccount": "No account? Register"
+  },
+  "registerModal": {
+    "title": "Create an account",
+    "submit": "Register",
+    "passwordMismatch": "Passwords do not match.",
+    "error": "Registration failed."
+    ,"confirmPassword": "Confirm password"
   },
   "pageNotFound": {
     "title": "404 — Page not found",

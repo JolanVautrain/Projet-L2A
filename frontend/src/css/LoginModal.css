@@ -103,12 +103,13 @@
 }
 
 .modal-error {
-  color: #ff6b6b;
-  background: #232e48;
+  color: #ffffff;
+  background: #dc3545;
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 0.98rem;
   text-align: center;
+  font-weight: 600;
 }
 
 .btn.primary {
@@ -117,9 +118,37 @@
   font-size: 1.08rem;
 }
 
+/* Wider modal for registration so the title stays on one line */
+.register-modal .modal-card {
+  min-width: 480px;
+  max-width: 720px;
+  padding: 36px 36px 28px;
+}
+
+/* Center the register link/button below the login form */
+.modal-register-link {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+.modal-register-link .register-btn {
+  width: auto;
+  padding: 8px 14px;
+}
+
 @media (max-width: 500px) {
   .modal-card {
     padding: 18px 8px 14px;
     min-width: 0;
   }
+}
+
+/* Add 50px spacing between the login title and the first field, only for login modal */
+.login-modal.styled-modal:not(.register-modal) .modal-header {
+  margin-bottom: 50px;
+}
+
+/* Same spacing for the register modal */
+.login-modal.styled-modal.register-modal .modal-header {
+  margin-bottom: 50px;
 }
