@@ -26,6 +26,7 @@ from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Iterator, List, TypedDict
+from werkzeug.security import generate_password_hash,check_password_hash
 
 import psycopg2  # type: ignore
 from flask import Flask, Response, jsonify, request
@@ -191,7 +192,7 @@ def load_default_users() -> List[tuple[str, str, str]]:
                 data = json.load(f)
                 users = data.get("users", [])
                 return [
-                    (u["username"], u["password"], u["language"])
+                    (u["username"], generate_password_hash(u["password"]), u["language"])
                     for u in users
                 ]
         except (json.JSONDecodeError, KeyError, TypeError) as e:
@@ -242,7 +243,7 @@ def initialize_database() -> None:
         init_cur.execute(
             """CREATE TABLE IF NOT EXISTS users (
             username varchar(100) PRIMARY KEY,
-            password varchar(100) NOT NULL,
+            password varchar(1000) NOT NULL,
             language varchar(10) DEFAULT 'fr'
             );"""
         )
@@ -355,7 +356,7 @@ def check_login() -> Response:
                 {"userExist": False, "passwordIsCorrect": False}
             )
         stored_username, stored_password = row
-        if stored_password != password:
+        if not check_password_hash(stored_password, password):
             app.logger.info(
                 "Login attempt: incorrect password for user '%s'", username
             )
@@ -392,7 +393,7 @@ def register_user() -> Response:
             400,
         )
     username = str(data["username"]).strip()
-    password = str(data["password"])
+    password = generate_password_hash(str(data["password"]))
     if not username or not password:
         return make_response(
             {
