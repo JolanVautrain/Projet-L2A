@@ -6,10 +6,11 @@ features :
 - [ ] classements general
 - [ ] supprimer un compte/reset
 - [ ] 2FA
-- [ ] hashage des mots de passe
+- [X] hashage des mots de passe
 - [ ] ajouter adresse mail a la creation de compte / confirmation par mail
 - [ ] ajouter une option mot de passe oublier
 - [ ] ajouter des regles
 - [ ] boutique / lootboxes
 - [ ] badges / inventaire
 - [ ] mettre au propre les textes / descriptions
+- [ ] fix les bugs de privilèges admin
