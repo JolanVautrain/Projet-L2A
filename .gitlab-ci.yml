@@ -42,8 +42,8 @@ tests-backend:
     paths:
       - reports/junit/backend.xml
       - reports/logs/backend_pytest.log
-  reports:
-    junit: reports/junit/backend.xml
+    reports:
+      junit: reports/junit/backend.xml
 
 coverage-backend:
   image: python:3.11
@@ -72,10 +72,10 @@ coverage-backend:
     paths:
       - reports/coverage/coverage.xml
       - reports/logs/backend_coverage.log
-  reports:
-    coverage_report:
-      coverage_format: cobertura
-      path: reports/coverage/coverage.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: reports/coverage/coverage.xml
   only:
     - main
 
