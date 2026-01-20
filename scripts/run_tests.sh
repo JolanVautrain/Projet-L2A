@@ -127,4 +127,30 @@ if [ "$PG_STARTED" -eq 1 ]; then
 fi
 
 echo "Tests finished. Logs: $REPORTS/pytest.log"
-exit $TEST_EXIT
+
+# Run additional quality tests individually and append output to the same log
+QUALITY_TESTS=(
+  "backend/tests/test_pylint.py"
+  "backend/tests/test_isort.py"
+  "backend/tests/test_mypy.py"
+  "backend/tests/test_eslint.py"
+)
+OVERALL_FAILED=0
+for t in "${QUALITY_TESTS[@]}"; do
+  echo "Running quality test: $t"
+  $PYTHON -m pytest "$t" 2>&1 | tee -a "$REPORTS/pytest.log"
+  EXIT_CODE=${PIPESTATUS[0]}
+  if [ "$EXIT_CODE" -ne 0 ]; then
+    echo "Quality test failed: $t"
+    OVERALL_FAILED=1
+  fi
+done
+
+echo "Tests finished. Logs: $REPORTS/pytest.log"
+
+# Determine final exit code: non-zero if main pytest or any quality test failed
+if [ "$TEST_EXIT" -ne 0 ] || [ "$OVERALL_FAILED" -ne 0 ]; then
+  exit 1
+else
+  exit 0
+fi
