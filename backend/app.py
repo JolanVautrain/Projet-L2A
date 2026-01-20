@@ -325,9 +325,67 @@ def initialize_database() -> None:
                 app.logger.debug("Failed to close init connection: %s", e)
 
 
-# Appel immédiat pour conserver le comportement précédent (initialisation à
-# l'import)
-initialize_database()
+def check_and_recreate_schema() -> None:
+    """Vérifie que les tables essentielles existent et recrée le schéma si
+    nécessaire.
+
+    Comportement contrôlé par la variable d'environnement
+    `RECREATE_DB_ON_MISSING` :
+      - unset / false / 0 : crée uniquement les tables manquantes (appel
+        `initialize_database()` qui utilise CREATE TABLE IF NOT EXISTS)
+      - "drop" : supprime les tables connues (DROP TABLE IF EXISTS ... CASCADE)
+        puis ré-exécute l'initialisation pour recréer un schéma propre.
+    """
+    required_tables = [
+        "users",
+        "highscores",
+        "user_profiles",
+        "user_xp_history",
+        "game_sessions",
+    ]
+    try:
+        with get_db_connection() as conn, get_db_cursor(conn) as cur:
+            cur.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name = ANY(%s)",
+                (required_tables,),
+            )
+            present = {r[0] for r in cur.fetchall()}
+
+        missing = [t for t in required_tables if t not in present]
+        if not missing:
+            app.logger.info(
+                "All required tables present: %s", ", ".join(required_tables)
+            )
+            return
+
+        app.logger.warning("Missing tables detected: %s", ", ".join(missing))
+        mode = os.environ.get("RECREATE_DB_ON_MISSING", "").lower()
+        if mode == "drop":
+            app.logger.info(
+                "Dropping known tables and recreating schema (RECREATE_DB_ON_MISSING=drop)"
+            )
+            with get_db_connection() as conn, get_db_cursor(conn) as cur:
+                # Drop in safe order to avoid FK issues
+                cur.execute("DROP TABLE IF EXISTS user_xp_history CASCADE")
+                cur.execute("DROP TABLE IF EXISTS game_sessions CASCADE")
+                cur.execute("DROP TABLE IF EXISTS highscores CASCADE")
+                cur.execute("DROP TABLE IF EXISTS user_profiles CASCADE")
+                cur.execute("DROP TABLE IF EXISTS users CASCADE")
+                conn.commit()
+            initialize_database()
+            app.logger.info("Schema recreated (drop -> init)")
+        else:
+            app.logger.info(
+                "Creating missing tables using safe initialization"
+            )
+            initialize_database()
+            app.logger.info("Missing tables created")
+    except Exception:
+        app.logger.exception("Failed while checking or recreating schema")
+
+
+# Vérification au démarrage
+check_and_recreate_schema()
 
 
 @app.route("/api/login", methods=["POST"])
