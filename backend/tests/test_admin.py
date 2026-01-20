@@ -4,6 +4,8 @@ from typing import Any, cast
 
 from flask.testing import FlaskClient
 
+from backend.tests.conftest import TEST_PASSWORD
+
 
 def test_reset_test_account(client: FlaskClient):
     """Test de réinitialisation des scores du compte de test administrateur."""
@@ -27,7 +29,7 @@ def test_admin_list_users(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer un utilisateur de test
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Lister les utilisateurs avec l'en-tête admin
@@ -64,7 +66,7 @@ def test_admin_reset_user_scores(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer et soumettre un score
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post("/api/score", json={"username": username, "score": 300})
 
@@ -89,7 +91,7 @@ def test_admin_reset_user_sessions(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer et soumettre des scores (créé des sessions)
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post("/api/score", json={"username": username, "score": 100})
     client.post("/api/score", json={"username": username, "score": 200})
@@ -112,7 +114,7 @@ def test_admin_delete_user(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Delete user
@@ -124,7 +126,7 @@ def test_admin_delete_user(client: FlaskClient, cleanup_user: str):
 
     # Vérifier que l'utilisateur est supprimé (la connexion doit échouer)
     rv = client.post(
-        "/api/login", json={"username": username, "password": "secret"}
+        "/api/login", json={"username": username, "password": TEST_PASSWORD}
     )
     assert rv.get_json().get("userExist") is False
 
@@ -135,7 +137,7 @@ def test_admin_delete_xp_history(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer et ajouter des XP
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post("/api/user/xp", json={"username": username, "xp": 50})
     client.post("/api/user/xp", json={"username": username, "xp": 30})
@@ -157,7 +159,7 @@ def test_admin_unauthorized_operations(client: FlaskClient, cleanup_user: str):
     endpoints admin."""
     username = cleanup_user
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     endpoints = [

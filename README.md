@@ -71,4 +71,5 @@ curl.exe -v -X POST "http://localhost:5000/api/admin/delete-xp-history/admin" -H
 
 npm run lint
 npx eslint . --fix
+pylint backend
 détecter code inutiliser

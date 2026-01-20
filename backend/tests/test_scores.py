@@ -5,6 +5,8 @@ from typing import Any, cast
 
 from flask.testing import FlaskClient
 
+from backend.tests.conftest import TEST_PASSWORD
+
 
 def test_submit_score(client: FlaskClient, cleanup_user: str):
     """Test de soumission d'un score pour un utilisateur."""
@@ -12,7 +14,7 @@ def test_submit_score(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Soumettre un score
@@ -32,7 +34,7 @@ def test_submit_score_update_highscore(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Soumettre le score initial
@@ -52,7 +54,7 @@ def test_submit_score_no_update_lower(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Soumettre le score initial
@@ -71,7 +73,7 @@ def test_get_high_score(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer et soumettre un score
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post(
         "/api/score",
@@ -95,15 +97,13 @@ def test_get_high_score_not_found(client: FlaskClient):
     assert rv.status_code == 404
 
 
-def test_list_high_scores(
-    client: FlaskClient, cleanup_user: str, db_conn: Any
-):
+def test_list_high_scores(client: FlaskClient, cleanup_user: str):
     """Test de listing de tous les meilleurs scores."""
     username = cleanup_user
 
     # Enregistrer et soumettre un score
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post("/api/score", json={"username": username, "score": 200})
 
@@ -135,7 +135,7 @@ def test_submit_score_invalid_score_type(
     """Test de soumission de score avec un type de score invalide."""
     username = cleanup_user
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     rv = client.post(
@@ -151,7 +151,7 @@ def test_game_session_recorded(
     d'un score."""
     username = cleanup_user
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     rv = client.post(
         "/api/score",
@@ -175,7 +175,7 @@ def test_stage_timer_persistence_on_update(
     mise à jour,"""
     username = cleanup_user
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # soumettre avec stage/timer
@@ -197,7 +197,7 @@ def test_stage_timer_persistence_on_update(
     # maintenant l'inverse : d'abord sans stage/timer puis mettre à jour AVEC
     user2 = f"{username}_u2"
     client.post(
-        "/api/register", json={"username": user2, "password": "secret"}
+        "/api/register", json={"username": user2, "password": TEST_PASSWORD}
     )
     client.post("/api/score", json={"username": user2, "score": 50})
     client.post(

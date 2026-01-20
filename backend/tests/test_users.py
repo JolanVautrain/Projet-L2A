@@ -5,6 +5,8 @@ from typing import Any, cast
 
 from flask.testing import FlaskClient
 
+from backend.tests.conftest import TEST_PASSWORD
+
 
 def test_get_user_xp_new_user(client: FlaskClient, cleanup_user: str):
     """Test de récupération des XP pour un nouvel utilisateur (doit être 0 XP,
@@ -13,7 +15,7 @@ def test_get_user_xp_new_user(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Récupérer les XP
@@ -30,7 +32,7 @@ def test_add_user_xp(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Ajouter des XP
@@ -51,7 +53,7 @@ def test_add_user_xp_level_up(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Ajouter 100 XP (devrait monter de niveau)
@@ -73,7 +75,7 @@ def test_remove_user_xp(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer et ajouter des XP
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post("/api/user/xp", json={"username": username, "xp": 100})
 
@@ -89,7 +91,7 @@ def test_xp_cannot_go_negative(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Essayer de retirer plus d'XP que disponible
@@ -103,7 +105,7 @@ def test_get_user_language(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # La langue par défaut devrait être 'fr'
@@ -118,7 +120,7 @@ def test_set_user_language(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Définir la langue sur l'anglais
@@ -141,7 +143,7 @@ def test_get_user_sessions(client: FlaskClient, cleanup_user: str):
     # Enregistrer l'utilisateur et soumettre des scores (qui créent des
     # sessions)
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post("/api/score", json={"username": username, "score": 100})
     client.post("/api/score", json={"username": username, "score": 200})
@@ -164,7 +166,7 @@ def test_get_user_sessions_empty(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur (sans soumettre de scores)
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Récupérer les sessions
@@ -179,7 +181,7 @@ def test_get_user_stats(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer et soumettre des scores
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post(
         "/api/score",
@@ -209,7 +211,7 @@ def test_get_user_stats_no_sessions(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer uniquement l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Récupérer les statistiques
@@ -228,7 +230,7 @@ def test_get_user_xp_history(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer et ajouter des XP plusieurs fois
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     client.post("/api/user/xp", json={"username": username, "xp": 50})
     client.post("/api/user/xp", json={"username": username, "xp": 30})

@@ -83,7 +83,29 @@ if ($env:TEST_PARALLEL -eq '1') { $pytestArgs += '-n'; $pytestArgs += 'auto' }
 
 & $PythonExe -m pytest @pytestArgs 2>&1 | Tee-Object -FilePath $logPath
 
+# Capture main pytest exit
+$mainExit = $LASTEXITCODE
+
+# Run additional quality tests individually and append output to the same log
+$qualityTests = @(
+    'backend/tests/test_pylint.py',
+    'backend/tests/test_isort.py',
+    'backend/tests/test_mypy.py',
+    'backend/tests/test_eslint.py'
+)
+$overallFailed = $false
+foreach ($t in $qualityTests) {
+    Write-Host ('Running quality test: ' + $t)
+    & $PythonExe -m pytest $t 2>&1 | Tee-Object -FilePath $logPath -Append
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ('Quality test failed: ' + $t)
+        $overallFailed = $true
+    }
+}
+
 if ($pgStarted) { Write-Host ('Stopping and removing temporary Postgres container ' + $tempPgContainer); docker rm -f $tempPgContainer | Out-Null }
 
 Write-Host ('Tests finished. Logs: ' + $logPath)
-exit $LASTEXITCODE
+
+# Determine final exit code: non-zero if main pytest or any quality test failed
+if ($mainExit -ne 0 -or $overallFailed) { exit 1 } else { exit 0 }

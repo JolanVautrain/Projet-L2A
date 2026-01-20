@@ -5,26 +5,26 @@ from typing import Any, cast
 
 from flask.testing import FlaskClient
 
+from backend.tests.conftest import TEST_PASSWORD
+
 
 def test_register_new_user(client: FlaskClient, cleanup_user: str):
     """Test d'enregistrement d'un nouvel utilisateur."""
     username = cleanup_user
     rv = client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     assert rv.status_code == 200
     assert rv.get_json().get("success") is True
 
 
-def test_register_duplicate_user(
-    client: FlaskClient, db_conn: Any, cleanup_user: str
-):
+def test_register_duplicate_user(client: FlaskClient, cleanup_user: str):
     """Test d'enregistrement d'un utilisateur déjà existant."""
     username = cleanup_user
 
     # Enregistrer une fois
     rv = client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     assert rv.status_code == 200
     assert rv.get_json().get("success") is True
@@ -49,12 +49,12 @@ def test_login_correct_password(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Connexion avec le mot de passe correct
     rv = client.post(
-        "/api/login", json={"username": username, "password": "secret"}
+        "/api/login", json={"username": username, "password": TEST_PASSWORD}
     )
     assert rv.status_code == 200
     data = rv.get_json()
@@ -68,7 +68,7 @@ def test_login_incorrect_password(client: FlaskClient, cleanup_user: str):
 
     # Enregistrer l'utilisateur
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Connexion avec un mot de passe incorrect
@@ -84,7 +84,8 @@ def test_login_incorrect_password(client: FlaskClient, cleanup_user: str):
 def test_login_nonexistent_user(client: FlaskClient):
     """Test de connexion pour un utilisateur inexistant."""
     rv = client.post(
-        "/api/login", json={"username": "nonexistent", "password": "anypass"}
+        "/api/login",
+        json={"username": "nonexistent", "password": TEST_PASSWORD},
     )
     assert rv.status_code == 200
     data = rv.get_json()
@@ -105,7 +106,7 @@ def test_register_password_not_returned(
     passe."""
     username = cleanup_user
     rv = client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
     assert rv.status_code == 200
     data = cast(dict[str, Any], rv.get_json() or {})
@@ -153,7 +154,7 @@ def test_login_after_admin_delete(client: FlaskClient, cleanup_user: str):
     l'utilisateur n'existe plus."""
     username = cleanup_user
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     # Supprimer via endpoint admin
@@ -164,7 +165,7 @@ def test_login_after_admin_delete(client: FlaskClient, cleanup_user: str):
 
     # Tentative de connexion -> utilisateur introuvable
     login = client.post(
-        "/api/login", json={"username": username, "password": "secret"}
+        "/api/login", json={"username": username, "password": TEST_PASSWORD}
     )
     assert login.status_code == 200
     assert login.get_json().get("userExist") is False

@@ -6,6 +6,7 @@ from flask.testing import FlaskClient
 from werkzeug.security import check_password_hash
 
 from backend.api import utils
+from backend.tests.conftest import TEST_PASSWORD
 
 
 def test_parse_optional_int():
@@ -28,7 +29,7 @@ def test_register_stores_hashed_password(
     """S'assurer que le mot de passe est stocké haché, non en clair."""
     username = cleanup_user
     client.post(
-        "/api/register", json={"username": username, "password": "secret"}
+        "/api/register", json={"username": username, "password": TEST_PASSWORD}
     )
 
     cur = db_conn.cursor()
@@ -37,7 +38,7 @@ def test_register_stores_hashed_password(
     assert row is not None
     stored = row[0]
     # pas stocké en clair
-    assert stored != "secret"
+    assert stored != TEST_PASSWORD
     # check_password_hash doit valider le mot de passe
-    assert check_password_hash(stored, "secret")
+    assert check_password_hash(stored, TEST_PASSWORD)
     cur.close()

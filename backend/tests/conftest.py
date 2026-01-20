@@ -10,6 +10,9 @@ from flask.testing import FlaskClient
 
 from backend.app import app as flask_app
 
+# Mot de passe de test centralisé (généré si non fourni via l'environnement)
+TEST_PASSWORD = os.environ.get("TEST_PASSWORD") or f"pw_{uuid.uuid4().hex[:8]}"
+
 # Force using the project's Postgres on localhost:5432 (unless overridden)
 os.environ.setdefault("POSTGRES_HOST", "127.0.0.1")
 os.environ.setdefault("POSTGRES_PORT", "5432")
@@ -34,35 +37,40 @@ def client() -> Generator[FlaskClient, None, None]:
         yield test_client
 
 
-@pytest.fixture
-def db_conn() -> Generator[Any, None, None]:
-    """Fournit une connexion à la base de données."""
+@pytest.fixture(name="db_conn")
+def _db_conn() -> Generator[Any, None, None]:
+    """Fournit une connexion à la base de données.
+
+    La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+    fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+    du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+    """
     conn = get_db_connection()
-    yield conn
-    conn.close()
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
-@pytest.fixture
-def test_user_username():
+@pytest.fixture(name="username")
+def _username():
     """Génère un nom d'utilisateur de test unique."""
     return f"ci_test_user_{uuid.uuid4().hex[:8]}"
 
 
 @pytest.fixture
-def cleanup_user(
-    db_conn: Any, test_user_username: str
-) -> Generator[str, None, None]:
+def cleanup_user(db_conn: Any, username: str) -> Generator[str, None, None]:
     """Helper de nettoyage : supprime l'utilisateur de test avant et après le
     test."""
     cur = db_conn.cursor()
-    cur.execute("DELETE FROM users WHERE username = %s", (test_user_username,))
+    cur.execute("DELETE FROM users WHERE username = %s", (username,))
     db_conn.commit()
     cur.close()
 
-    yield test_user_username
+    yield username
 
     # Nettoyage après le test
     cur = db_conn.cursor()
-    cur.execute("DELETE FROM users WHERE username = %s", (test_user_username,))
+    cur.execute("DELETE FROM users WHERE username = %s", (username,))
     db_conn.commit()
     cur.close()
