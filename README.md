@@ -1,29 +1,12 @@
 # Projet L2A — Jeu en ligne (Groupe G34)
 
-
-
-
-
 ## Structure du dépôt
 
 - `frontend/` : code client (Vite, React). Sources en `frontend/src/`.
 - `backend/` : API serveur (Flask). Point d'entrée : `backend/app.py`.
 - `docker/` : Dockerfiles, scripts et `docker-compose.yml` pour orchestrer les services.
 
-
-
-
-
-
-
-
-
-
-
-
-## Lancer les tests localement (RECOMMANDÉ : utiliser les scripts)
-
-Utilisez les scripts fournis pour initialiser l'environnement et exécuter les tests — c'est la méthode recommandée :
+## Lancer le projet
 
 - PowerShell (Windows) :
 
@@ -34,8 +17,6 @@ Utilisez les scripts fournis pour initialiser l'environnement et exécuter les t
 . .venv\Scripts\Activate.ps1
 # recharger la page vscode
 CTRL + MAJ + P => Recharger la page/Reload the page
-# lancer les tests (génère rapports dans backend/tests/reports)
-.\scripts\run_tests.ps1
 ```
 
 - Bash (Linux / macOS) :
@@ -47,11 +28,25 @@ CTRL + MAJ + P => Recharger la page/Reload the page
 source .venv/bin/activate
 # recharger la page vscode
 CTRL + MAJ + P => Recharger la page/Reload the page
+```
+
+## Lancer les tests localement (RECOMMANDÉ : utiliser les scripts)
+
+Utilisez les scripts fournis pour initialiser l'environnement et exécuter les tests — c'est la méthode recommandée :
+
+- PowerShell (Windows) :
+
+```powershell
+# lancer les tests (génère rapports dans backend/tests/reports)
+.\scripts\run_tests.ps1
+```
+
+- Bash (Linux / macOS) :
+
+```bash
 # lancer les tests (génère rapports dans backend/tests/reports)
 ./scripts/run_tests.sh
 ```
-
-
 
 Les rapports et logs de tests sont écrits dans `backend/tests/reports/` :
 
