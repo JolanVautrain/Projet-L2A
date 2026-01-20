@@ -19,6 +19,7 @@ d'environnement. Assurez-vous que la variable d'environnement
 POSTGRES_PASSWORD est définie sur le mot de passe souhaité.
 """
 
+import datetime
 import json
 import logging
 import os
@@ -300,7 +301,7 @@ def initialize_database() -> None:
             score integer NOT NULL,
             stage integer DEFAULT 0,
             timer integer DEFAULT 0,
-            played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            playedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
         )
@@ -436,19 +437,22 @@ def _parse_optional_int(data: dict[str, Any], key: str) -> int | None:
 
 
 def _insert_game_session(
-    cur: Any, username: str, score: int, stage: int | None, timer: int | None
+    conn: Any, cur: Any, username: str, score: int, stage: int | None, timer: int | None
 ) -> None:
     """Insert a game session record."""
     cur.execute(
-        "INSERT INTO game_sessions (username, score, stage, timer) VALUES "
-        "(%s, %s, %s, %s)",
+        "INSERT INTO game_sessions (username, score, stage, timer, playedAt) VALUES "
+        "(%s, %s, %s, %s, %s)",
         (
             username,
             score,
             stage if stage is not None else 0,
             timer if timer is not None else 0,
+            str(datetime.datetime.now())
         ),
     )
+    conn.commit()
+    return 
 
 
 def _handle_new_highscore(
@@ -535,7 +539,7 @@ def submit_score() -> Response:
     timer = _parse_optional_int(data, "timer")
 
     with get_db_connection() as conn, get_db_cursor(conn) as cur:
-        _insert_game_session(cur, username, score, stage, timer)
+        _insert_game_session(conn, cur, username, score, stage, timer)
 
         cur.execute(
             "SELECT high_score FROM highscores WHERE username = %s",
@@ -735,7 +739,7 @@ def get_user_sessions(username: str) -> Response:
     """
     username = username.strip()
     rows = query_fetchall(
-        "SELECT id, score, stage, timer, played_at FROM game_sessions WHERE "
+        "SELECT id, score, stage, timer, playedAt FROM game_sessions WHERE "
         "username = %s ORDER BY score DESC",
         (username,),
     )
