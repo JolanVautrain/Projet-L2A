@@ -1,15 +1,8 @@
 # Projet L2A — Jeu en ligne (Groupe G34)
 
-## Description
 
-Application web de jeu développée dans le cadre du projet L2A. Le dépôt sépare le frontend (React + Vite) et le backend (Flask). Le projet vise une mise en place simple, un développement local fluide et un déploiement via Docker.
 
-## Fonctionnalités principales
 
-- Lancer et rejoindre des parties
-- Interface réactive (Vite + React)
-- Gestion basique d'identité côté client (persistance locale)
-- Conteneurisation avec Docker pour déploiement et tests
 
 ## Structure du dépôt
 
@@ -17,38 +10,63 @@ Application web de jeu développée dans le cadre du projet L2A. Le dépôt sép
 - `backend/` : API serveur (Flask). Point d'entrée : `backend/app.py`.
 - `docker/` : Dockerfiles, scripts et `docker-compose.yml` pour orchestrer les services.
 
-## Prérequis
-
-- Node.js 16+ (frontend)
-- Python 3.8+ (backend)
-- Docker & Docker Compose (recommandés pour déploiement)
 
 
-## Exécution via Docker
 
-Pour construire et lancer l'ensemble avec Docker Compose :
 
-```bash
-cd docker
-docker-compose up --build
+
+
+
+
+
+
+
+## Lancer les tests localement (RECOMMANDÉ : utiliser les scripts)
+
+Utilisez les scripts fournis pour initialiser l'environnement et exécuter les tests — c'est la méthode recommandée :
+
+- PowerShell (Windows) :
+
+```powershell
+# crée et installe deps
+.\scripts\init_env.ps1
+# activer la venv
+. .venv\Scripts\Activate.ps1
+# recharger la page vscode
+CTRL + MAJ + P => Recharger la page/Reload the page
+# lancer les tests (génère rapports dans backend/tests/reports)
+.\scripts\run_tests.ps1
 ```
 
-## Notes techniques
+- Bash (Linux / macOS) :
 
-- Le frontend stocke actuellement le nom d'utilisateur dans `localStorage` pour conserver la session après rafraîchissement. Pour un usage en production, remplacer par une authentification tokenisée (JWT) et gestion côté serveur.
-- Les styles se trouvent dans `frontend/src/css/` et les composants React dans `frontend/src/jsx/`.
+```bash
+# crée et installe deps
+./scripts/init_env.sh
+# activer la venv
+source .venv/bin/activate
+# lancer les tests (génère rapports dans backend/tests/reports)
+./scripts/run_tests.sh
+```
 
-## Propositions d'amélioration
 
-- Ajouter une API d'authentification sécurisée (tokens, rafraîchissement)
-- Ajouter une suite de tests (Jest + React Testing Library pour le frontend, pytest pour le backend)
-- Documenter les variables d'environnement nécessaires pour la production
 
-## Contact
+Les rapports et logs de tests sont écrits dans `backend/tests/reports/` :
 
-Ouvrez une issue pour signaler un bug ou demander une fonctionnalité.
+- `backend/tests/reports/junit.xml` (JUnit)
+- `backend/tests/reports/coverage.xml` (coverage, format Cobertura)
+- `backend/tests/reports/pytest.log` (log console)
 
+Vous pouvez lancer manuellement `pytest` comme suit :
+
+```powershell
+pytest backend --junitxml=backend/tests/reports/junit.xml --cov=backend --cov-report=xml:backend/tests/reports/coverage.xml
+```
+
+Docker / debug :
+```
 docker compose logs backend --tail 200
+```
 
 curl.exe -v -X OPTIONS "http://localhost:5000/api/admin/delete-xp-history/admin" -H "Origin: http://localhost:5173" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: X-Admin-User"
 

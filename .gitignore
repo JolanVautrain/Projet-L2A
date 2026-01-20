@@ -23,9 +23,19 @@ dist-ssr
 *.sln
 *.sw?
 
+.mypy_cache/
+.pytest_cache/
+.venv/
+.vscode/
+
 # Ignorer les fichiers compilés Python
 *.pyc
 backend/__pycache__/
 
 # Ignorer les données de la base de données PostgreSQL
 backend/db_data/
+
+# TEST
+.coverage
+backend/tests/reports/
+backend/tests/__pycache__/

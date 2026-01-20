@@ -27,13 +27,13 @@ from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Iterator, List, TypedDict
-from werkzeug.security import generate_password_hash,check_password_hash
 
 import psycopg2  # type: ignore
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS  # type: ignore
 from psycopg2 import OperationalError  # type: ignore
 from werkzeug.exceptions import HTTPException
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 # Configure CORS to allow cross-origin requests from frontend
@@ -193,7 +193,11 @@ def load_default_users() -> List[tuple[str, str, str]]:
                 data = json.load(f)
                 users = data.get("users", [])
                 return [
-                    (u["username"], generate_password_hash(u["password"]), u["language"])
+                    (
+                        u["username"],
+                        generate_password_hash(u["password"]),
+                        u["language"],
+                    )
                     for u in users
                 ]
         except (json.JSONDecodeError, KeyError, TypeError) as e:
@@ -395,6 +399,14 @@ def register_user() -> Response:
         )
     username = str(data["username"]).strip()
     password = generate_password_hash(str(data["password"]))
+    # Validation: limiter la longueur du username pour éviter des erreurs DB
+    if len(username) > 100:
+        app.logger.info(
+            "Register attempt: username too long (%d chars)", len(username)
+        )
+        return make_response(
+            {"success": False, "message": "username too long"}, 400
+        )
     if not username or not password:
         return make_response(
             {
@@ -437,7 +449,12 @@ def _parse_optional_int(data: dict[str, Any], key: str) -> int | None:
 
 
 def _insert_game_session(
-    conn: Any, cur: Any, username: str, score: int, stage: int | None, timer: int | None
+    conn: Any,
+    cur: Any,
+    username: str,
+    score: int,
+    stage: int | None,
+    timer: int | None,
 ) -> None:
     """Insert a game session record."""
     cur.execute(
@@ -448,11 +465,11 @@ def _insert_game_session(
             score,
             stage if stage is not None else 0,
             timer if timer is not None else 0,
-            str(datetime.datetime.now())
+            str(datetime.datetime.now()),
         ),
     )
     conn.commit()
-    return 
+    return
 
 
 def _handle_new_highscore(
