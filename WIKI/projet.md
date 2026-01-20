@@ -14,3 +14,4 @@ features :
 - [ ] badges / inventaire
 - [ ] mettre au propre les textes / descriptions
 - [ ] fix les bugs de privilèges admin
+- [ ] fix bug d'affichage des parties dans le classement
