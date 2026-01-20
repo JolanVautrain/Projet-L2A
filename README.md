@@ -45,6 +45,8 @@ CTRL + MAJ + P => Recharger la page/Reload the page
 ./scripts/init_env.sh
 # activer la venv
 source .venv/bin/activate
+# recharger la page vscode
+CTRL + MAJ + P => Recharger la page/Reload the page
 # lancer les tests (génère rapports dans backend/tests/reports)
 ./scripts/run_tests.sh
 ```

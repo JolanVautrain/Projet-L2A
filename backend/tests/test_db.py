@@ -4,12 +4,11 @@ import uuid
 import psycopg2
 from flask.testing import FlaskClient
 
+from backend.app import app as flask_app
+
 # Force using the project's Postgres on localhost:5432 (unless overridden)
 os.environ.setdefault("POSTGRES_HOST", "127.0.0.1")
 os.environ.setdefault("POSTGRES_PORT", "5432")
-
-# Import the app after ensuring host/port env vars
-from backend.app import app as flask_app
 
 
 def get_conn():

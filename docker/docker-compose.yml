@@ -64,18 +64,6 @@ services:
     depends_on:
       - backend
 
-  # GitLab Runner local (optionnel) — permet d'exécuter les pipelines CI localement
-  gitlab-runner:
-    image: gitlab/gitlab-runner:latest
-    restart: always
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./gitlab-runner-config:/etc/gitlab-runner
-    environment:
-      - TZ=Europe/Paris
-    # Ne pas dépendre des autres services — peut démarrer indépendamment
-
 volumes:
   frontend_node_modules:  # Important pour les perfs !
   yarn_cache:  # Accélère les rebuild !
