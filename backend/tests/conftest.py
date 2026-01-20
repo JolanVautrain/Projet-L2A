@@ -1,4 +1,4 @@
-"""Pytest configuration and shared fixtures for backend tests."""
+"""Configuration pytest et fixtures partagés pour les tests backend."""
 
 import os
 import uuid
@@ -16,7 +16,7 @@ os.environ.setdefault("POSTGRES_PORT", "5432")
 
 
 def get_db_connection():
-    """Create and return a PostgreSQL connection."""
+    """Créer et retourner une connexion PostgreSQL."""
     return psycopg2.connect(
         database=os.environ.get("POSTGRES_DB", "ma_db"),
         user=os.environ.get("POSTGRES_USER", "mon_user"),
@@ -28,7 +28,7 @@ def get_db_connection():
 
 @pytest.fixture
 def client() -> Generator[FlaskClient, None, None]:
-    """Provide a Flask test client."""
+    """Fournit un client de test Flask."""
     flask_app.config["TESTING"] = True
     with flask_app.test_client() as test_client:
         yield test_client
@@ -36,7 +36,7 @@ def client() -> Generator[FlaskClient, None, None]:
 
 @pytest.fixture
 def db_conn() -> Generator[Any, None, None]:
-    """Provide a database connection."""
+    """Fournit une connexion à la base de données."""
     conn = get_db_connection()
     yield conn
     conn.close()
@@ -44,7 +44,7 @@ def db_conn() -> Generator[Any, None, None]:
 
 @pytest.fixture
 def test_user_username():
-    """Generate a unique test username."""
+    """Génère un nom d'utilisateur de test unique."""
     return f"ci_test_user_{uuid.uuid4().hex[:8]}"
 
 
@@ -52,7 +52,8 @@ def test_user_username():
 def cleanup_user(
     db_conn: Any, test_user_username: str
 ) -> Generator[str, None, None]:
-    """Cleanup helper: delete test user before and after test."""
+    """Helper de nettoyage : supprime l'utilisateur de test avant et après le
+    test."""
     cur = db_conn.cursor()
     cur.execute("DELETE FROM users WHERE username = %s", (test_user_username,))
     db_conn.commit()
@@ -60,7 +61,7 @@ def cleanup_user(
 
     yield test_user_username
 
-    # Cleanup after test
+    # Nettoyage après le test
     cur = db_conn.cursor()
     cur.execute("DELETE FROM users WHERE username = %s", (test_user_username,))
     db_conn.commit()

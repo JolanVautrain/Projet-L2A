@@ -32,7 +32,7 @@ def reset_test_account():
 
 
 @bp.route("/api/admin/delete-xp-history/<username>", methods=["OPTIONS"])
-def delete_user_xp_history_options(_username: str):
+def delete_user_xp_history_options(username: str):
     return utils.make_response({}, 200)
 
 

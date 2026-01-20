@@ -1,34 +1,36 @@
-"""Tests for admin-only endpoints."""
+"""Tests pour les endpoints réservés à l'administrateur."""
+
+from typing import Any, cast
 
 from flask.testing import FlaskClient
 
 
 def test_reset_test_account(client: FlaskClient):
-    """Test resetting the admin test account scores."""
-    # First submit a score for admin
+    """Test de réinitialisation des scores du compte de test administrateur."""
+    # Soumettre d'abord un score pour l'administrateur
     client.post("/api/score", json={"username": "admin", "score": 500})
 
-    # Reset it
+    # Le réinitialiser
     rv = client.post("/api/admin/reset-test")
     assert rv.status_code == 200
     assert rv.get_json().get("ok") is True
 
-    # Verify score is reset
+    # Vérifier que le score est réinitialisé
     rv = client.get("/api/score/admin")
     assert rv.status_code == 200
     assert rv.get_json().get("highScore") == 0
 
 
 def test_admin_list_users(client: FlaskClient, cleanup_user: str):
-    """Test listing all users (admin endpoint)."""
+    """Test d'énumération de tous les utilisateurs (endpoint admin)."""
     username = cleanup_user
 
-    # Register a test user
+    # Enregistrer un utilisateur de test
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
 
-    # List users with admin header
+    # Lister les utilisateurs avec l'en-tête admin
     rv = client.get(
         "/api/admin/users",
         headers={"X-Admin-User": "admin"},
@@ -37,12 +39,17 @@ def test_admin_list_users(client: FlaskClient, cleanup_user: str):
     data = rv.get_json()
     assert isinstance(data, list)
 
-    usernames = [u.get("username") for u in data]
+    usernames: list[str] = []
+    for u in cast(list[dict[str, Any]], data):
+        maybe = u.get("username")
+        if isinstance(maybe, str):
+            usernames.append(maybe)
+
     assert username in usernames
 
 
 def test_admin_list_users_unauthorized(client: FlaskClient):
-    """Test that non-admin cannot list users."""
+    """Test qu'un non-admin ne peut pas lister les utilisateurs."""
     rv = client.get(
         "/api/admin/users",
         headers={"X-Admin-User": "nonadmin"},
@@ -51,16 +58,17 @@ def test_admin_list_users_unauthorized(client: FlaskClient):
 
 
 def test_admin_reset_user_scores(client: FlaskClient, cleanup_user: str):
-    """Test resetting a specific user's high scores."""
+    """Test de réinitialisation des meilleurs scores d'un utilisateur
+    spécifique."""
     username = cleanup_user
 
-    # Register and submit score
+    # Enregistrer et soumettre un score
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
     client.post("/api/score", json={"username": username, "score": 300})
 
-    # Reset scores
+    # Réinitialiser les scores
     rv = client.post(
         f"/api/admin/reset-user/{username}",
         headers={"X-Admin-User": "admin"},
@@ -68,40 +76,41 @@ def test_admin_reset_user_scores(client: FlaskClient, cleanup_user: str):
     assert rv.status_code == 200
     assert rv.get_json().get("ok") is True
 
-    # Verify score is reset
+    # Vérifier que le score est réinitialisé
     rv = client.get(f"/api/score/{username}")
     assert rv.status_code == 200
     assert rv.get_json().get("highScore") == 0
 
 
 def test_admin_reset_user_sessions(client: FlaskClient, cleanup_user: str):
-    """Test deleting all sessions for a specific user."""
+    """Test de suppression de toutes les sessions pour un utilisateur
+    spécifique."""
     username = cleanup_user
 
-    # Register and submit scores (creates sessions)
+    # Enregistrer et soumettre des scores (créé des sessions)
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
     client.post("/api/score", json={"username": username, "score": 100})
     client.post("/api/score", json={"username": username, "score": 200})
 
-    # Reset sessions
+    # Réinitialiser les sessions
     rv = client.post(
         f"/api/admin/reset-sessions/{username}",
         headers={"X-Admin-User": "admin"},
     )
     assert rv.status_code == 200
 
-    # Verify sessions are cleared
+    # Vérifier que les sessions sont effacées
     rv = client.get(f"/api/user/sessions/{username}")
     assert rv.get_json() == []
 
 
 def test_admin_delete_user(client: FlaskClient, cleanup_user: str):
-    """Test deleting a user entirely."""
+    """Test de suppression complète d'un utilisateur."""
     username = cleanup_user
 
-    # Register user
+    # Enregistrer l'utilisateur
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
@@ -113,7 +122,7 @@ def test_admin_delete_user(client: FlaskClient, cleanup_user: str):
     )
     assert rv.status_code == 200
 
-    # Verify user is deleted (login should fail)
+    # Vérifier que l'utilisateur est supprimé (la connexion doit échouer)
     rv = client.post(
         "/api/login", json={"username": username, "password": "secret"}
     )
@@ -121,30 +130,31 @@ def test_admin_delete_user(client: FlaskClient, cleanup_user: str):
 
 
 def test_admin_delete_xp_history(client: FlaskClient, cleanup_user: str):
-    """Test deleting XP history for a user."""
+    """Test de suppression de l'historique XP pour un utilisateur."""
     username = cleanup_user
 
-    # Register and add XP
+    # Enregistrer et ajouter des XP
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
     client.post("/api/user/xp", json={"username": username, "xp": 50})
     client.post("/api/user/xp", json={"username": username, "xp": 30})
 
-    # Delete XP history
+    # Supprimer l'historique XP
     rv = client.post(
         f"/api/admin/delete-xp-history/{username}",
         headers={"X-Admin-User": "admin"},
     )
     assert rv.status_code == 200
 
-    # Verify history is cleared
+    # Vérifier que l'historique est effacé
     rv = client.get(f"/api/user/xp/history/{username}")
     assert rv.get_json() == []
 
 
 def test_admin_unauthorized_operations(client: FlaskClient, cleanup_user: str):
-    """Test that unauthorized users cannot access admin endpoints."""
+    """Test que les utilisateurs non autorisés ne peuvent pas accéder aux
+    endpoints admin."""
     username = cleanup_user
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
@@ -166,4 +176,4 @@ def test_admin_unauthorized_operations(client: FlaskClient, cleanup_user: str):
 
         assert (
             rv.status_code == 401
-        ), f"{method} {endpoint} should require admin"
+        ), f"{method} {endpoint} doit être réservé à l'admin"

@@ -1,12 +1,13 @@
-"""Tests for authentication endpoints (register, login)."""
+"""Tests pour les endpoints d'authentification (inscription, connexion)."""
 
-from typing import Any
+import uuid
+from typing import Any, cast
 
 from flask.testing import FlaskClient
 
 
 def test_register_new_user(client: FlaskClient, cleanup_user: str):
-    """Test registering a new user."""
+    """Test d'enregistrement d'un nouvel utilisateur."""
     username = cleanup_user
     rv = client.post(
         "/api/register", json={"username": username, "password": "secret"}
@@ -18,17 +19,17 @@ def test_register_new_user(client: FlaskClient, cleanup_user: str):
 def test_register_duplicate_user(
     client: FlaskClient, db_conn: Any, cleanup_user: str
 ):
-    """Test registering a user that already exists."""
+    """Test d'enregistrement d'un utilisateur déjà existant."""
     username = cleanup_user
 
-    # Register once
+    # Enregistrer une fois
     rv = client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
     assert rv.status_code == 200
     assert rv.get_json().get("success") is True
 
-    # Try registering again
+    # Essayer d'enregistrer à nouveau
     rv = client.post(
         "/api/register", json={"username": username, "password": "othersecret"}
     )
@@ -37,21 +38,21 @@ def test_register_duplicate_user(
 
 
 def test_register_missing_fields(client: FlaskClient):
-    """Test registering with missing fields."""
+    """Test d'enregistrement avec des champs manquants."""
     rv = client.post("/api/register", json={"username": "test"})
     assert rv.status_code == 400
 
 
 def test_login_correct_password(client: FlaskClient, cleanup_user: str):
-    """Test login with correct password."""
+    """Test de connexion avec le mot de passe correct."""
     username = cleanup_user
 
-    # Register user
+    # Enregistrer l'utilisateur
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
 
-    # Login with correct password
+    # Connexion avec le mot de passe correct
     rv = client.post(
         "/api/login", json={"username": username, "password": "secret"}
     )
@@ -62,15 +63,15 @@ def test_login_correct_password(client: FlaskClient, cleanup_user: str):
 
 
 def test_login_incorrect_password(client: FlaskClient, cleanup_user: str):
-    """Test login with incorrect password."""
+    """Test de connexion avec un mot de passe incorrect."""
     username = cleanup_user
 
-    # Register user
+    # Enregistrer l'utilisateur
     client.post(
         "/api/register", json={"username": username, "password": "secret"}
     )
 
-    # Login with wrong password
+    # Connexion avec un mot de passe incorrect
     rv = client.post(
         "/api/login", json={"username": username, "password": "wrongpassword"}
     )
@@ -81,7 +82,7 @@ def test_login_incorrect_password(client: FlaskClient, cleanup_user: str):
 
 
 def test_login_nonexistent_user(client: FlaskClient):
-    """Test login for a user that doesn't exist."""
+    """Test de connexion pour un utilisateur inexistant."""
     rv = client.post(
         "/api/login", json={"username": "nonexistent", "password": "anypass"}
     )
@@ -92,6 +93,78 @@ def test_login_nonexistent_user(client: FlaskClient):
 
 
 def test_login_missing_fields(client: FlaskClient):
-    """Test login with missing fields."""
+    """Test de connexion avec des champs manquants."""
     rv = client.post("/api/login", json={"username": "test"})
     assert rv.status_code == 400
+
+
+def test_register_password_not_returned(
+    client: FlaskClient, cleanup_user: str
+):
+    """Vérifie que la réponse d'enregistrement ne contient pas le mot de
+    passe."""
+    username = cleanup_user
+    rv = client.post(
+        "/api/register", json={"username": username, "password": "secret"}
+    )
+    assert rv.status_code == 200
+    data = cast(dict[str, Any], rv.get_json() or {})
+    assert "password" not in data
+
+
+def test_multiple_registrations_and_logins(
+    client: FlaskClient, db_conn: Any, cleanup_user: str
+):
+    """Enregistre plusieurs utilisateurs et vérifie leurs connexions."""
+    user1 = cleanup_user
+    user2 = f"{cleanup_user}_{uuid.uuid4().hex[:6]}"
+
+    # Enregistrer les deux
+    rv1 = client.post(
+        "/api/register", json={"username": user1, "password": "pw1"}
+    )
+    rv2 = client.post(
+        "/api/register", json={"username": user2, "password": "pw2"}
+    )
+    assert rv1.status_code == 200
+    assert rv2.status_code == 200
+
+    # Se connecter aux deux
+    l1 = client.post("/api/login", json={"username": user1, "password": "pw1"})
+    l2 = client.post("/api/login", json={"username": user2, "password": "pw2"})
+    assert (
+        l1.status_code == 200
+        and l1.get_json().get("passwordIsCorrect") is True
+    )
+    assert (
+        l2.status_code == 200
+        and l2.get_json().get("passwordIsCorrect") is True
+    )
+
+    # Nettoyage manuel pour user2 (cleanup_user s'occupe de user1)
+    cur = db_conn.cursor()
+    cur.execute("DELETE FROM users WHERE username = %s", (user2,))
+    db_conn.commit()
+    cur.close()
+
+
+def test_login_after_admin_delete(client: FlaskClient, cleanup_user: str):
+    """Après suppression par admin, la connexion doit indiquer que
+    l'utilisateur n'existe plus."""
+    username = cleanup_user
+    client.post(
+        "/api/register", json={"username": username, "password": "secret"}
+    )
+
+    # Supprimer via endpoint admin
+    rv = client.delete(
+        f"/api/admin/delete-user/{username}", headers={"X-Admin-User": "admin"}
+    )
+    assert rv.status_code == 200
+
+    # Tentative de connexion -> utilisateur introuvable
+    login = client.post(
+        "/api/login", json={"username": username, "password": "secret"}
+    )
+    assert login.status_code == 200
+    assert login.get_json().get("userExist") is False

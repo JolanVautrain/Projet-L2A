@@ -1,11 +1,13 @@
 """
-Legacy test file—tests have been refactored into modular files.
+Fichier de tests hérité — les tests ont été refactorisés en fichiers
+modulaires.
 
-See:
-- test_schema.py      : Database connectivity and table schema tests
-- test_auth.py        : Authentication (register, login) tests
-- test_scores.py      : Score submission and retrieval tests
-- test_users.py       : User profile, XP, language, sessions, stats tests
-- test_admin.py       : Admin-only endpoint tests
-- conftest.py         : Shared pytest fixtures and helpers
+Voir :
+- test_schema.py      : tests de connectivité et du schéma de la base
+- test_auth.py        : tests d'authentification (inscription, connexion)
+- test_scores.py      : tests de soumission et récupération de scores
+- test_users.py       : tests de profil utilisateur, XP, langue, sessions,
+statistiques
+- test_admin.py       : tests des endpoints réservés à l'admin
+- conftest.py         : fixtures et utilitaires pytest partagés
 """
