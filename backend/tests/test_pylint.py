@@ -12,7 +12,7 @@ def test_pylint_backend():
     repo_root = Path(__file__).resolve().parents[2]
     backend_dir = repo_root / "backend"
 
-    cmd = ["pylint", "backend"]
+    cmd = ["pylint", str(backend_dir)]
 
     try:
         proc = subprocess.run(
@@ -20,6 +20,7 @@ def test_pylint_backend():
             cwd=str(repo_root),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            check=False,
             text=True,
         )
     except FileNotFoundError:

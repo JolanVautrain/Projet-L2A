@@ -29,6 +29,7 @@ def test_stylelint_css():
             cwd=str(frontend_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            check=False,
             text=True,
         )
     except FileNotFoundError:
@@ -47,6 +48,7 @@ def test_stylelint_css():
             cwd=str(frontend_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            check=False,
             text=True,
             shell=False,
         )

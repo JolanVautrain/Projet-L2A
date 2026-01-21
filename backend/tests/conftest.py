@@ -38,7 +38,7 @@ def client() -> Generator[FlaskClient, None, None]:
 
 
 @pytest.fixture(name="db_conn")
-def _db_conn() -> Generator[Any, None, None]:
+def _db_conn() -> Generator[Any, None, None]:  # type: ignore
     """Fournit une connexion à la base de données.
 
     La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
@@ -53,7 +53,7 @@ def _db_conn() -> Generator[Any, None, None]:
 
 
 @pytest.fixture(name="username")
-def _username():
+def _username():  # type: ignore[reportUnusedFunction]
     """Génère un nom d'utilisateur de test unique."""
     return f"ci_test_user_{uuid.uuid4().hex[:8]}"
 

@@ -24,6 +24,7 @@ def test_eslint_jsx():
             cwd=str(frontend_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            check=False,
             text=True,
         )
     except FileNotFoundError:
@@ -38,6 +39,7 @@ def test_eslint_jsx():
             cwd=str(frontend_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            check=False,
             text=True,
         )
     except FileNotFoundError:

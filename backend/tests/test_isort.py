@@ -16,6 +16,7 @@ def test_isort_check():
             cwd=str(repo_root),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            check=False,
             text=True,
         )
     except FileNotFoundError:
