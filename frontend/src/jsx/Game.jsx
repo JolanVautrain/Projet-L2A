@@ -164,6 +164,26 @@ function resetGameObjects() {
   // réinitialiser le minuteur lorsque les objets sont réinitialisés
   startTime = Date.now();
   // NE PAS créer un nouvel ID ici - le même ID doit persister jusqu'à l'écran de fin
+
+  // Réinitialiser la position et l'état du joueur pour le respawn
+  try {
+    const p = globalThis.player;
+    if (p) {
+      // Placer le joueur au milieu du ciel (au-dessus du terrain)
+      p.setPosition(400, 100);
+      // Réinitialiser la vélocité et l'état physique
+      if (p.body) {
+        p.body.setVelocity(0, 0);
+        p.body.allowGravity = true;
+        p.setVelocity(0, 0);
+      }
+      p.setBounce(0.2);
+      p.setCollideWorldBounds(true);
+      touchingGround = false;
+    }
+  } catch (e) {
+    console.warn('Failed to reset player position during resetGameObjects', e);
+  }
 }
 
 /**
