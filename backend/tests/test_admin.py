@@ -179,3 +179,14 @@ def test_admin_unauthorized_operations(client: FlaskClient, cleanup_user: str):
         assert (
             rv.status_code == 401
         ), f"{method} {endpoint} doit être réservé à l'admin"
+
+
+def test_admin_cannot_delete_admin(client: FlaskClient):
+    """L'admin ne doit pas pouvoir supprimer le compte `admin`."""
+    rv = client.delete(
+        "/api/admin/delete-user/admin",
+        headers={"X-Admin-User": "admin"},
+    )
+    assert rv.status_code == 403
+    data = rv.get_json()
+    assert data.get("error") == "forbidden"

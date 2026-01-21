@@ -91,5 +91,11 @@ def reset_user_sessions(username: str):
 @utils.require_admin
 def delete_user(username: str):
     username = username.strip()
+    if username.lower() == "admin":
+        return utils.make_response(
+            {"error": "forbidden", "message": "cannot delete admin user"},
+            403,
+        )
+
     db.exec_commit("DELETE FROM users WHERE username = %s", (username,))
     return utils.make_response({"ok": True})
