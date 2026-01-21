@@ -3,6 +3,7 @@
 import uuid
 from typing import Any, cast
 
+import pytest
 from flask.testing import FlaskClient
 
 from backend.tests.conftest import TEST_PASSWORD
@@ -169,3 +170,65 @@ def test_login_after_admin_delete(client: FlaskClient, cleanup_user: str):
     )
     assert login.status_code == 200
     assert login.get_json().get("userExist") is False
+
+
+def test_register_handles_integrity_error(
+    client: FlaskClient, monkeypatch: pytest.MonkeyPatch, cleanup_user: str
+):
+    """Simule une IntegrityError lors de l'INSERT et vérifie le retour 409."""
+    import psycopg2  # type: ignore
+
+    username = cleanup_user
+
+    # Monkeypatch `get_db_cursor` to raise IntegrityError on INSERT
+    from contextlib import contextmanager
+
+    class FakeCursor:
+        _real: Any
+
+        def __init__(self, real: Any) -> None:
+            self._real = real
+
+        def execute(
+            self, sql: Any, params: tuple[Any, ...] | None = None
+        ) -> Any:
+            try:
+                cond = isinstance(sql, str) and "INSERT INTO users" in sql
+            except (TypeError, AttributeError):
+                cond = False
+            if cond:
+                raise psycopg2.IntegrityError()
+            return self._real.execute(sql, params)
+
+        def fetchone(self) -> Any:
+            return self._real.fetchone()
+
+        def fetchall(self) -> list[Any]:
+            return self._real.fetchall()
+
+        def close(self) -> None:
+            try:
+                self._real.close()
+            except (psycopg2.Error, AttributeError):
+                pass
+
+    @contextmanager
+    def fake_get_db_cursor(conn: Any):
+        real_cur: Any = conn.cursor()
+        try:
+            yield FakeCursor(real_cur)
+        finally:
+            try:
+                real_cur.close()
+            except (psycopg2.Error, AttributeError):
+                pass
+
+    monkeypatch.setattr(
+        "backend.api.auth.db.get_db_cursor", fake_get_db_cursor
+    )
+
+    rv = client.post(
+        "/api/register", json={"username": username, "password": "pw"}
+    )
+    assert rv.status_code == 409
+    assert rv.get_json().get("success") is False

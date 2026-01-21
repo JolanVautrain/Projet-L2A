@@ -1,5 +1,6 @@
 """Authentication endpoints."""
 
+import psycopg2  # type: ignore
 from flask import Blueprint, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -82,9 +83,16 @@ def register_user():
             return utils.make_response(
                 {"success": False, "message": "user already exists"}, 409
             )
-        cur.execute(
-            "INSERT INTO users (username, password) VALUES (%s, %s)",
-            (username, password),
-        )
-        conn.commit()
-        return utils.make_response({"success": True})
+        try:
+            cur.execute(
+                "INSERT INTO users (username, password) VALUES (%s, %s)",
+                (username, password),
+            )
+            conn.commit()
+            return utils.make_response({"success": True})
+        except psycopg2.IntegrityError:
+            # Concurrent insertion or constraint violation -> user exists
+            conn.rollback()
+            return utils.make_response(
+                {"success": False, "message": "user already exists"}, 409
+            )
