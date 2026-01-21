@@ -121,7 +121,8 @@ def initialize_database() -> None:
             default_users = load_default_users()
             for init_username, init_password, init_language in default_users:
                 init_cur.execute(
-                    "INSERT INTO users (username, password, language) VALUES (%s, %s, %s)",
+                    "INSERT INTO users (username, password, language) "
+                    "VALUES (%s, %s, %s)",
                     (init_username, init_password, init_language),
                 )
         init_cur.execute(
@@ -189,7 +190,8 @@ def check_and_recreate_schema() -> None:
     try:
         with get_db_connection() as conn, get_db_cursor(conn) as cur:
             cur.execute(
-                "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name = ANY(%s)",
+                "SELECT table_name FROM information_schema.tables WHERE "
+                "table_schema='public' AND table_name = ANY(%s)",
                 (required_tables,),
             )
             present = {r[0] for r in cur.fetchall()}
@@ -205,7 +207,8 @@ def check_and_recreate_schema() -> None:
         mode = os.environ.get("RECREATE_DB_ON_MISSING", "").lower()
         if mode == "drop":
             logger.info(
-                "Dropping known tables and recreating schema (RECREATE_DB_ON_MISSING=drop)"
+                "Dropping known tables and recreating schema "
+                "(RECREATE_DB_ON_MISSING=drop)"
             )
             with get_db_connection() as conn, get_db_cursor(conn) as cur:
                 cur.execute("DROP TABLE IF EXISTS user_xp_history CASCADE")
@@ -220,5 +223,5 @@ def check_and_recreate_schema() -> None:
             logger.info("Creating missing tables using safe initialization")
             initialize_database()
             logger.info("Missing tables created")
-    except Exception:
-        logger.exception("Failed while checking or recreating schema")
+    except psycopg2.Error as err:
+        logger.exception("Failed while checking or recreating schema: %s", err)

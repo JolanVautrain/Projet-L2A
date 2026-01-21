@@ -1,5 +1,7 @@
 """User-centric endpoints (profiles, sessions, XP)."""
 
+from typing import List
+
 from flask import Blueprint, request
 
 from . import db, utils
@@ -12,11 +14,12 @@ bp = Blueprint("users", __name__)
 def get_user_sessions(username: str):
     username = username.strip()
     rows = db.query_fetchall(
-        "SELECT id, score, stage, timer, playedAt FROM game_sessions WHERE username = %s ORDER BY score DESC",
+        "SELECT id, score, stage, timer, playedAt FROM game_sessions WHERE "
+        "username = %s ORDER BY score DESC",
         (username,),
     )
 
-    result = [
+    result: List[dict[str, int | float | str]] = [
         {
             "id": int(r[0]),
             "score": int(r[1]),
@@ -97,7 +100,9 @@ def get_user_xp(username: str):
     )
     if not row:
         return utils.make_response({"xp": 0, "level": 1})
-    return utils.make_response({"xp": int(row[0] or 0), "level": int(row[1] or 1)})
+    return utils.make_response(
+        {"xp": int(row[0] or 0), "level": int(row[1] or 1)}
+    )
 
 
 @bp.route("/api/user/xp/history/<username>")
@@ -111,10 +116,11 @@ def get_user_xp_history(username: str):
         limit = 50
 
     rows = db.query_fetchall(
-        "SELECT xp, level, created_at FROM user_xp_history WHERE username = %s ORDER BY created_at ASC LIMIT %s",
+        "SELECT xp, level, created_at FROM user_xp_history WHERE username = "
+        "%s ORDER BY created_at ASC LIMIT %s",
         (username, limit),
     )
-    result = [
+    result: List[dict[str, int | str]] = [
         {
             "xp": int(r[0] or 0),
             "level": int(r[1] or 1),
@@ -134,7 +140,11 @@ def add_user_xp():
     data = request.get_json()
     if not data or "username" not in data or "xp" not in data:
         return utils.make_response(
-            {"error": utils.BAD_REQUEST, "message": "username and xp required"}, 400
+            {
+                "error": utils.BAD_REQUEST,
+                "message": "username and xp required",
+            },
+            400,
         )
 
     username = str(data["username"]).strip()
@@ -142,7 +152,11 @@ def add_user_xp():
         delta = int(data["xp"])
     except (ValueError, TypeError):
         return utils.make_response(
-            {"error": utils.BAD_REQUEST, "message": "xp must be an integer"}, 400
+            {
+                "error": utils.BAD_REQUEST,
+                "message": "xp must be an integer",
+            },
+            400,
         )
 
     if not username:
@@ -159,11 +173,13 @@ def add_user_xp():
             new_xp = max(0, delta)
             level = new_xp // 100 + 1
             cur.execute(
-                "INSERT INTO user_profiles (username, xp, level) VALUES (%s, %s, %s)",
+                "INSERT INTO user_profiles (username, xp, level) "
+                "VALUES (%s, %s, %s)",
                 (username, new_xp, level),
             )
             cur.execute(
-                "INSERT INTO user_xp_history (username, xp, level) VALUES (%s, %s, %s)",
+                "INSERT INTO user_xp_history (username, xp, level) "
+                "VALUES (%s, %s, %s)",
                 (username, new_xp, level),
             )
         else:
@@ -171,11 +187,13 @@ def add_user_xp():
             new_xp = max(0, current + delta)
             level = new_xp // 100 + 1
             cur.execute(
-                "UPDATE user_profiles SET xp = %s, level = %s WHERE username = %s",
+                "UPDATE user_profiles SET xp = %s, level = %s "
+                "WHERE username = %s",
                 (new_xp, level, username),
             )
             cur.execute(
-                "INSERT INTO user_xp_history (username, xp, level) VALUES (%s, %s, %s)",
+                "INSERT INTO user_xp_history (username, xp, level) "
+                "VALUES (%s, %s, %s)",
                 (username, new_xp, level),
             )
         conn.commit()

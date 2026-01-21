@@ -3,7 +3,7 @@
 import datetime
 from typing import Any, List
 
-from flask import Blueprint, request
+from flask import Blueprint, Response, request
 
 from . import db, utils
 
@@ -19,7 +19,8 @@ def _insert_game_session(
     timer: int | None,
 ) -> None:
     cur.execute(
-        "INSERT INTO game_sessions (username, score, stage, timer, playedAt) VALUES (%s, %s, %s, %s, %s)",
+        "INSERT INTO game_sessions (username, score, stage, timer, playedAt) "
+        "VALUES (%s, %s, %s, %s, %s)",
         (
             username,
             score,
@@ -40,7 +41,8 @@ def _handle_new_highscore(
     timer: int | None,
 ) -> tuple[int, bool]:
     cur.execute(
-        "INSERT INTO highscores (username, high_score, stage, timer) VALUES (%s, %s, %s, %s)",
+        "INSERT INTO highscores (username, high_score, stage, timer) "
+        "VALUES (%s, %s, %s, %s)",
         (
             username,
             score,
@@ -66,7 +68,8 @@ def _update_highscore_if_better(
 
     if stage is not None or timer is not None:
         cur.execute(
-            "UPDATE highscores SET high_score = %s, stage = %s, timer = %s WHERE username = %s",
+            "UPDATE highscores SET high_score = %s, stage = %s, timer = %s "
+            "WHERE username = %s",
             (
                 score,
                 stage if stage is not None else 0,
@@ -85,7 +88,7 @@ def _update_highscore_if_better(
 
 @bp.route("/api/score", methods=["POST"])
 @utils.handle_db_errors
-def submit_score():
+def submit_score() -> Response:
     data = request.get_json()
     if not data or "username" not in data or "score" not in data:
         return utils.make_response(
@@ -135,11 +138,12 @@ def submit_score():
 
 @bp.route("/api/score/<username>")
 @utils.handle_db_errors
-def get_high_score(username: str):
+def get_high_score(username: str) -> Response:
     username = username.strip()
     with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
         cur.execute(
-            "SELECT high_score, stage, timer FROM highscores WHERE username = %s",
+            "SELECT high_score, stage, timer FROM highscores "
+            "WHERE username = %s",
             (username,),
         )
         row = cur.fetchone()
@@ -162,9 +166,10 @@ def get_high_score(username: str):
 
 @bp.route("/api/score", methods=["GET"])
 @utils.handle_db_errors
-def list_high_scores():
+def list_high_scores() -> Response:
     rows = db.query_fetchall(
-        "SELECT username, high_score, stage, timer FROM highscores ORDER BY high_score DESC"
+        "SELECT username, high_score, stage, timer FROM highscores ORDER BY "
+        "high_score DESC"
     )
 
     result: List[dict[str, int | str]] = [
