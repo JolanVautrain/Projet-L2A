@@ -10,6 +10,14 @@ fi
 REPORTS="backend/tests/reports"
 mkdir -p "$REPORTS"
 
+KEEP_PG="false"
+while getopts p: flag
+do
+    case "${flag}" in
+        p) KEEP_PG=${OPTARG};;
+    esac
+done
+
 # Check backend and start if necessary
 echo "Checking backend at http://localhost:5000 ..."
 if command -v curl >/dev/null 2>&1; then
@@ -33,12 +41,11 @@ else
 fi
 
 # Postgres handling: use ephemeral host port mapping to avoid colliding with dev DB
-KEEP_PG=${KEEP_PG_CONTAINER:-0}
 PG_STARTED=0
-if [ "$KEEP_PG" -eq 1 ]; then
-  TEMP_PG_CONTAINER="projl2a_test_db_persistent"
-  if docker ps -a --format '{{.Names}}' | grep -q "^${TEMP_PG_CONTAINER}$"; then
-    if ! docker ps --format '{{.Names}}' | grep -q "^${TEMP_PG_CONTAINER}$"; then
+if [ $KEEP_PG == "true" ]; then
+  TEMP_PG_CONTAINER="projetl2a_test_db_persistent"
+  if docker ps -a --format '{{.Names}}' | grep "projetl2a_test_db"; then
+    if ! docker ps --format '{{.Names}}' | grep "projetl2a_test_db"; then
       echo "Starting existing Postgres container $TEMP_PG_CONTAINER"
       docker start "$TEMP_PG_CONTAINER" || true
     else
@@ -57,7 +64,7 @@ if [ "$KEEP_PG" -eq 1 ]; then
   export POSTGRES_PORT=$MAPPED_PORT
   echo "Persistent test Postgres mapped to host port $POSTGRES_PORT"
 else
-  TEMP_PG_CONTAINER="projl2a_test_db_$$"
+  TEMP_PG_CONTAINER="projetl2a_test_db_$$"
   echo "Starting temporary Postgres container $TEMP_PG_CONTAINER"
   docker run --name "$TEMP_PG_CONTAINER" -e POSTGRES_USER=mon_user -e POSTGRES_PASSWORD=mon_pass -e POSTGRES_DB=ma_db -P -d postgres:15 || { echo "Failed to start temporary Postgres container"; exit 1; }
   PG_STARTED=1
