@@ -24,8 +24,8 @@ if command -v curl >/dev/null 2>&1; then
   if curl -sS --max-time 2 http://localhost:5000/ >/dev/null 2>&1; then
     echo "Backend appears to be running."
   else
-    echo "Backend not reachable — starting via docker-compose (docker/docker-compose.yml)..."
-    (cd docker && docker-compose up -d backend) || echo "docker-compose start failed"
+    echo "Backend not reachable — starting via docker compose (docker/docker-compose.yml)..."
+    (cd docker && docker compose up -d backend) || echo "docker compose start failed"
     echo "Waiting for backend to become available..."
     for i in {1..30}; do
       if curl -sS --max-time 2 http://localhost:5000/ >/dev/null 2>&1; then
@@ -36,8 +36,8 @@ if command -v curl >/dev/null 2>&1; then
     done
   fi
 else
-  echo "curl not found — attempting to start backend via docker-compose"
-  (cd docker && docker-compose up -d backend) || echo "docker-compose start failed"
+  echo "curl not found — attempting to start backend via docker compose"
+  (cd docker && docker compose up -d backend) || echo "docker compose start failed"
 fi
 
 # Postgres handling: use ephemeral host port mapping to avoid colliding with dev DB
@@ -76,25 +76,6 @@ else
   export POSTGRES_HOST=127.0.0.1
   export POSTGRES_PORT=$MAPPED_PORT
   echo "Temporary test Postgres mapped to host port $POSTGRES_PORT"
-  echo "Waiting for Postgres to accept connections..."
-  for i in {1..60}; do
-    if python - <<PY >/dev/null 2>&1
-import socket,sys
-s=socket.socket()
-s.settimeout(1)
-try:
-    s.connect(('127.0.0.1', $MAPPED_PORT))
-    s.close()
-    sys.exit(0)
-except Exception:
-    sys.exit(1)
-PY
-    then
-      echo "Postgres is up"
-      break
-    fi
-    sleep 1
-  done
 fi
 
 # Ensure dependencies were installed via init script
@@ -112,7 +93,35 @@ export POSTGRES_USER=mon_user
 export POSTGRES_PASSWORD=mon_pass
 export POSTGRES_DB=ma_db
 export POSTGRES_HOST=${POSTGRES_HOST:-127.0.0.1}
-export POSTGRES_PORT=${POSTGRES_PORT:-5432}
+export POSTGRES_PORT=$MAPPED_PORT
+
+echo "Waiting for Postgres to be ready..."
+
+for i in {1..60}; do
+  if PYTHONPATH=. $PYTHON - <<'PY'
+import psycopg2, os, sys
+try:
+    psycopg2.connect(
+        host=os.environ["POSTGRES_HOST"],
+        port=os.environ["POSTGRES_PORT"],
+        user=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        dbname=os.environ["POSTGRES_DB"],
+        connect_timeout=1,
+    ).close()
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+PY
+  then
+    echo "Postgres is ready"
+    break
+  fi
+  sleep 1
+done
+
+echo "Initializing database from backend/db_init.json..."
+PYTHONPATH=. $PYTHON backend/db_init.py
 
 echo "Running pytest (reports in $REPORTS)..."
 
@@ -150,7 +159,7 @@ for t in "${QUALITY_TESTS[@]}"; do
   if [ "$EXIT_CODE" -ne 0 ]; then
     echo "Quality test failed: $t"
     OVERALL_FAILED=1
-  fi
+  fiBB
 done
 
 echo "Tests finished. Logs: $REPORTS/pytest.log"

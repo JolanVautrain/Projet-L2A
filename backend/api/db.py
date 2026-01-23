@@ -98,12 +98,11 @@ def connect_to_database() -> Any:
         raise
 
 
-def initialize_database() -> None:
-    init_conn = None
-    init_cur = None
+def initialize_database(init_conn=None,init_cur=None) -> None:
     try:
-        init_conn = connect_to_database()
-        init_cur = init_conn.cursor()
+        if not init_conn or not init_cur:
+            init_conn = connect_to_database()
+            init_cur = init_conn.cursor()
         init_cur.execute(
             """CREATE TABLE IF NOT EXISTS users (
             username varchar(100) PRIMARY KEY,
