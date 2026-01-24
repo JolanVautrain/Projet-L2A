@@ -24,13 +24,13 @@ let showGameOverModalCallback = null; // Callback pour afficher la modal Game Ov
 function preload() {
   this.load.image("sky", "src/assets/sky.png");
   this.load.image("ground", "src/assets/platform.png");
-  this.load.image("star", "src/assets/star.png");
-  this.load.image("bomb", "src/assets/bomb.png");
+  this.load.image("obstacle", "src/assets/bomb.png"); // reuse bomb asset
   this.load.spritesheet("dude", "src/assets/dude.png", {
     frameWidth: 32,
     frameHeight: 48,
   });
 }
+
 
 /**
  * Initialise la scène de jeu Phaser.
@@ -38,89 +38,50 @@ function preload() {
  * @return {void}
  */
 function create() {
-  // démarrer le minuteur de la partie et créer un identifiant de session unique
   startTime = Date.now();
   currentSessionId = Math.random().toString(36).slice(2);
-  sessionPosted = false; // Réinitialiser pour la nouvelle partie
-  // Exposer un getter au lieu d'assigner `this` à une variable
+  sessionPosted = false;
+
   globalThis.getPhaserScene = () => this;
+
   this.add.image(400, 300, "sky");
+
+  // Ground
   globalThis.platforms = this.physics.add.staticGroup();
   globalThis.platforms.create(400, 568, "ground").setScale(2).refreshBody();
-  globalThis.platforms.create(600, 400, "ground");
-  globalThis.platforms.create(50, 250, "ground");
-  globalThis.platforms.create(750, 220, "ground");
-  globalThis.player = this.physics.add.sprite(100, 450, "dude");
-  globalThis.player.setBounce(0.2);
+
+  // Player
+  globalThis.player = this.physics.add.sprite(120, 450, "dude");
   globalThis.player.setCollideWorldBounds(true);
+  globalThis.player.setBounce(0);
+
   this.anims.create({
-    key: "left",
-    frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
-    frameRate: 10,
-    repeat: -1,
-  });
-  this.anims.create({
-    key: "turn",
-    frames: [{ key: "dude", frame: 4 }],
-    frameRate: 20,
-  });
-  this.anims.create({
-    key: "right",
+    key: "run",
     frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
     frameRate: 10,
     repeat: -1,
   });
-  globalThis.stars = this.physics.add.group({
-    key: "star",
-    repeat: 11,
-    setXY: { x: 12, y: 0, stepX: 70 },
+
+  this.anims.create({
+    key: "idle",
+    frames: [{ key: "dude", frame: 4 }],
+    frameRate: 20,
   });
-  globalThis.stars.children.iterate(function (child) {
-    child.setBounceY(globalThis.Phaser.Math.FloatBetween(0.4, 0.8));
-  });
-  globalThis.bombs = this.physics.add.group();
-  // Initialise les contrôles du clavier au scope global
+
+  globalThis.player.anims.play("run");
+
+  // Obstacles
+  globalThis.obstacles = this.physics.add.group();
+
+  // Controls
   globalThis.cursors = this.input.keyboard.createCursorKeys();
-  // Raccourcis clavier : prise en charge AZERTY (ZQSD) et QWERTY (WASD), ainsi que flèches et espace
-  try {
-    const defaultBindings = {
-      up: ["Z", "W", "UP"],
-      left: ["Q", "A", "LEFT"],
-      down: ["S", "DOWN"],
-      right: ["D", "RIGHT"],
-      jump: ["SPACE"],
-    };
-    const saved = (() => {
-      try {
-        return JSON.parse(localStorage.getItem('gameKeyBindings'));
-      } catch (e) {
-        console.warn('Failed to parse gameKeyBindings from localStorage', e);
-        return null;
-      }
-    })();
-    const bindings = saved || defaultBindings;
 
-    const toCode = (k) => {
-      if (!globalThis.Phaser || !globalThis.Phaser.Input || !globalThis.Phaser.Input.Keyboard) return k;
-      const codes = globalThis.Phaser.Input.Keyboard.KeyCodes;
-      const upk = String(k).toUpperCase();
-      return codes && codes[upk] ? codes[upk] : k;
-    };
+  // Collisions
+  this.physics.add.collider(globalThis.player, globalThis.platforms, touchGround);
+  this.physics.add.collider(globalThis.player, globalThis.obstacles, hitBomb);
 
-    globalThis.keyMap = {};
-    Object.entries(bindings).forEach(([action, keysArr]) => {
-      globalThis.keyMap[action] = keysArr.map((k) => this.input.keyboard.addKey(toCode(k)));
-    });
-  } catch (e) {
-    console.warn('Failed to init custom key bindings', e);
-  }
-  // fait apparaitre des bombes initiales en fonction du stage actuel
-  for (let i = 0; i < internalStage; i++) spawnBomb();
-  this.physics.add.collider(globalThis.stars, globalThis.platforms);
-  this.physics.add.collider(globalThis.bombs, globalThis.platforms);
-  this.physics.add.overlap(globalThis.player, globalThis.stars, collectStar, null, this);
-  this.physics.add.collider(globalThis.player, globalThis.bombs, hitBomb, null, this);
-  this.physics.add.collider(globalThis.player, globalThis.platforms, touchGround, null, this);
+  // Spawn first obstacle
+  spawnObstacle(this);
 }
 
 /**
@@ -129,15 +90,36 @@ function create() {
  * @return {void}
  */
 function update() {
-  // accès aux variables globales du module
-  const cursors = globalThis.cursors;
   const player = globalThis.player;
-  if (gameOver) {
-    resetGameObjects();
-    gameOver = false;
+  const cursors = globalThis.cursors;
+
+  if (!player || gameOver) return;
+
+  // Jump
+  if ((cursors.space.isDown || cursors.up.isDown) && touchingGround) {
+    player.setVelocityY(-500);
+    touchingGround = false;
   }
-  handlePlayerMovement(player, cursors);
+
+  // Stage increases every 100 points
+  const newStage = Math.floor((score+10) / 100) + 1;
+  if (newStage !== internalStage) {
+    internalStage = newStage;
+    globalThis.dispatchEvent(new CustomEvent("stage-up", { detail: internalStage }));
+  }
+
+  // Recycle obstacles
+  globalThis.obstacles.children.iterate((o) => {
+    if (o.x < -50) {
+      o.destroy();
+      spawnObstacle(this);
+      // Score & difficulty
+    score += 10;
+    globalThis.dispatchEvent(new CustomEvent("score-up", { detail: score }));
+    }
+  });
 }
+
 
 /**
  * Réinitialise les objets du jeu lors du game over.
@@ -146,20 +128,14 @@ function resetGameObjects() {
   processingDeath = false; // Réinitialiser le flag pour permettre un nouvel appel à hitBomb()
   score = 0; // Réinitialiser le score pour la nouvelle partie
   internalStage = 1; // Réinitialiser la stage pour la nouvelle partie
-  globalThis.stars.children.iterate(function (child) {
-    child.disableBody(true, true);
-  });
-  globalThis.bombs.children.iterate(function (child) {
-    child.disableBody(true, true);
-  });
-  globalThis.stars.children.iterate(function (child) {
-    child.enableBody(true, child.x, 0, true, true);
-  });
   // fait apparaitre des bombes initiales en fonction du stage
   try {
-    for (let i = 0; i < internalStage; i++) spawnBomb();
+    globalThis.obstacles.children.iterate((o) => {
+      o.destroy();
+      spawnObstacle(globalThis.getPhaserScene());
+    })
   } catch (e) {
-    console.warn('spawnBomb unavailable during reset', e);
+    console.warn('spawnObstacle unavailable during reset', e);
   }
   // réinitialiser le minuteur lorsque les objets sont réinitialisés
   startTime = Date.now();
@@ -170,7 +146,7 @@ function resetGameObjects() {
     const p = globalThis.player;
     if (p) {
       // Placer le joueur au milieu du ciel (au-dessus du terrain)
-      p.setPosition(400, 100);
+      p.setPosition(120, 450);
       // Réinitialiser la vélocité et l'état physique
       if (p.body) {
         p.body.setVelocity(0, 0);
@@ -187,117 +163,22 @@ function resetGameObjects() {
 }
 
 /**
- * Gère les mouvements et sauts du joueur.
- */
-function handlePlayerMovement(player, cursors) {
-  if (player && cursors) {
-    const km = globalThis.keyMap || {};
-    const isDown = (action) => {
-      const arr = km[action];
-      if (Array.isArray(arr) && arr.length) {
-        try {
-          return arr.some((k) => k && k.isDown);
-        } catch (e) {
-          console.warn('Error while checking keyMap state for action', action, e);
-          return false;
-        }
-      }
-      return false;
-    };
-
-    const leftPressed = cursors.left?.isDown || isDown('left');
-    const rightPressed = cursors.right?.isDown || isDown('right');
-
-    if (leftPressed) {
-      player.setVelocityX(-160);
-      player.anims.play("left", true);
-    } else if (rightPressed) {
-      player.setVelocityX(160);
-      player.anims.play("right", true);
-    } else {
-      player.setVelocityX(0);
-      player.anims.play("turn");
-    }
-
-    const upPressed = cursors.up?.isDown || isDown('up') || isDown('jump');
-    if (upPressed && player.body.touching.down && touchingGround) {
-      player.setVelocityY(-650);
-      touchingGround = false;
-    }
-  }
-}
-
-/**
- * Gère la collecte d'une étoile par le joueur.
- */
-function collectStar(player, star) {
-  star.disableBody(true, true);
-  // met à jour le score
-  score += 10;
-  globalThis.dispatchEvent(new CustomEvent('score-up', { detail: score }));
-  const stars = globalThis.stars;
-  if (stars && stars.countActive(true) === 0) {
-    internalStage += 1;
-    globalThis.dispatchEvent(new CustomEvent('stage-up', { detail: internalStage }));
-    stars.children.iterate(function (child) {
-      child.enableBody(true, child.x, 0, true, true);
-    });
-    // ajoute une bombe supplémentaire pour le nouveau stage
-    try {
-      spawnBomb();
-    } catch (e) {
-      console.warn('spawnBomb not available when adding bomb', e);
-    }
-  }
-}
-
-/**
- * Génère un nombre aléatoire entre min et max de manière sûre avec Phaser.
- * 
- * @param {number} min - valeur minimale
- * @param {number} max - valeur maximale
- * @return {number} nombre aléatoire entre min et max
- */
-function PhaserSafeBetween(min, max) {
-  // Utilise Phaser.Math.Between si disponible, sinon Math.random
-  if (typeof globalThis?.Phaser?.Math?.Between === 'function') {
-    return globalThis.Phaser.Math.Between(min, max);
-  }
-  // solution de repli simple
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/**
  * Apparition d'une bombe dans le jeu.
  * 
  * @returns {void}
  */
-function spawnBomb() {
-  // accès aux variables globales du module
-  if (!globalThis.bombs || !globalThis.player) return;
-  const playerX = globalThis.player.x;
-  let x;
-  let attempts = 0;
-  const minDistance = 150; // distance minimale en pixels
-  do {
-    x = PhaserSafeBetween(50, 750);
-    attempts++;
-  } while (Math.abs(x - playerX) < minDistance && attempts < 20);
-  let b;
-  try {
-    b = globalThis.bombs.create(x, 16, "bomb");
-  } catch (e) {
-    console.warn('Failed to create bomb', e);
-    return;
-  }
-  b.setBounce(1);
-  b.setCollideWorldBounds(true);
-  const speed = globalThis.Phaser?.Math?.Between
-    ? globalThis.Phaser.Math.Between(-150 - internalStage * 10, 150 + internalStage * 10)
-    : (Math.random() * 400 - 200);
-  b.setVelocity(speed, 20);
-  b.allowGravity = false;
+function spawnObstacle(scene) {
+  if (!scene || !globalThis.obstacles) return;
+
+  const x = 900;
+  const y = 520 - +Math.random()*100;
+
+  const obstacle = globalThis.obstacles.create(x, y, "obstacle");
+  obstacle.setVelocityX(-200 - internalStage * 200);
+  obstacle.setImmovable(true);
+  obstacle.body.allowGravity = false;
 }
+
 
 /**
  * Gère la collision avec une bombe (fin de partie).
@@ -405,7 +286,6 @@ function Game() {
   // reset des variables globales du module à l'initialisation du composant
   useEffect(() => {
      globalThis.player = undefined;
-     globalThis.stars = undefined;
      globalThis.bombs = undefined;
      globalThis.platforms = undefined;
      globalThis.cursors = undefined;
