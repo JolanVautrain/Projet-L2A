@@ -28,7 +28,9 @@ function Account({ user, setUser }) {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const apiBase = globalThis?.window ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000` : '';
+  const apiBase = globalThis?.window
+    ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000`
+    : "";
 
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
@@ -48,8 +50,19 @@ function Account({ user, setUser }) {
                     fetch(`${apiBase}/api/user/xp/${u.username}`),
                     fetch(`${apiBase}/api/user/stats/${u.username}`),
                   ]);
-                  const xpJson = xpRes && xpRes.ok ? await xpRes.json() : { xp: 0, level: 1 };
-                  const statsJson = statsRes && statsRes.ok ? await statsRes.json() : { totalGames: 0, totalScore: 0, bestScore: 0, averageScore: 0 };
+                  const xpJson =
+                    xpRes && xpRes.ok
+                      ? await xpRes.json()
+                      : { xp: 0, level: 1 };
+                  const statsJson =
+                    statsRes && statsRes.ok
+                      ? await statsRes.json()
+                      : {
+                          totalGames: 0,
+                          totalScore: 0,
+                          bestScore: 0,
+                          averageScore: 0,
+                        };
                   return {
                     ...u,
                     xp: xpJson.xp || 0,
@@ -60,7 +73,15 @@ function Account({ user, setUser }) {
                     averageScore: statsJson.averageScore || 0,
                   };
                 } catch {
-                  return { ...u, xp: 0, level: 1, totalGames: 0, totalScore: 0, bestScore: 0, averageScore: 0 };
+                  return {
+                    ...u,
+                    xp: 0,
+                    level: 1,
+                    totalGames: 0,
+                    totalScore: 0,
+                    bestScore: 0,
+                    averageScore: 0,
+                  };
                 }
               })
             );
@@ -91,21 +112,35 @@ function Account({ user, setUser }) {
           <LanguageSelector />
           {user === "admin" && (
             <div className="admin-tools">
-              <h2 className="admin-tools__title" style={{textAlign: 'center'}}>{t("account.adminTools")}</h2>
-              <div style={{width: '100%'}}>
+              <h2
+                className="admin-tools__title"
+                style={{ textAlign: "center" }}
+              >
+                {t("account.adminTools")}
+              </h2>
+              <div style={{ width: "100%" }}>
                 <div className="admin-tools__center">
-                  <h4 style={{textAlign: 'center'}}>{t("account.manageUsers")}</h4>
+                  <h4 style={{ textAlign: "center" }}>
+                    {t("account.manageUsers")}
+                  </h4>
                   <div className="admin-users-search-row">
                     <input
                       type="search"
-                      placeholder={t('account.searchPlaceholder') || 'Rechercher un joueur...'}
+                      placeholder={
+                        t("account.searchPlaceholder") ||
+                        "Rechercher un joueur..."
+                      }
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="admin-users-search"
                     />
                   </div>
 
-                  <div className="admin-users-list" role="region" aria-label="liste-utilisateurs">
+                  <div
+                    className="admin-users-list"
+                    role="region"
+                    aria-label="liste-utilisateurs"
+                  >
                     <table className="admin-users-table">
                       <thead>
                         <tr>
@@ -119,14 +154,23 @@ function Account({ user, setUser }) {
                       </thead>
                       <tbody>
                         {allUsers
-                          .filter((u) => u.username.toLowerCase().includes(searchTerm.toLowerCase()))
+                          .filter((u) =>
+                            u.username
+                              .toLowerCase()
+                              .includes(searchTerm.toLowerCase())
+                          )
                           .map((u) => (
                             <tr
                               key={u.username}
-                              className={u.username === selectedUser ? 'selected' : ''}
+                              className={
+                                u.username === selectedUser ? "selected" : ""
+                              }
                               onClick={() => setSelectedUser(u.username)}
                               tabIndex={0}
-                              onKeyDown={(e) => { if (e.key === 'Enter') setSelectedUser(u.username); }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter")
+                                  setSelectedUser(u.username);
+                              }}
                             >
                               <td>{u.username}</td>
                               <td>{u.xp ?? 0}</td>
@@ -147,28 +191,54 @@ function Account({ user, setUser }) {
                       className="btn primary"
                       disabled={awardXpLoading}
                       onClick={() => {
-                        if (selectedUser && confirm(t("account.confirmAwardXp").replace("{username}", selectedUser))) {
+                        if (
+                          selectedUser &&
+                          confirm(
+                            t("account.confirmAwardXp").replace(
+                              "{username}",
+                              selectedUser
+                            )
+                          )
+                        ) {
                           setAwardXpLoading(true);
                           fetch(`${apiBase}/api/user/xp`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
-                            body: JSON.stringify({ username: selectedUser, xp: 50 }),
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "X-Admin-User": "admin",
+                            },
+                            body: JSON.stringify({
+                              username: selectedUser,
+                              xp: 50,
+                            }),
                           })
                             .then((res) => {
-                              if (!res.ok) throw new Error('Erreur serveur');
+                              if (!res.ok) throw new Error("Erreur serveur");
                               return res.json();
                             })
                             .then(() => {
-                              alert(t("account.awardXpSuccess").replace("{username}", selectedUser));
+                              alert(
+                                t("account.awardXpSuccess").replace(
+                                  "{username}",
+                                  selectedUser
+                                )
+                              );
                             })
-                            .catch((e) => alert(t('common.failedPrefix') + e.message))
+                            .catch((e) =>
+                              alert(t("common.failedPrefix") + e.message)
+                            )
                             .finally(() => setAwardXpLoading(false));
                         }
                       }}
                     >
-                      {awardXpLoading ? t('common.saving') : t('account.award50xp')}
+                      {awardXpLoading
+                        ? t("common.saving")
+                        : t("account.award50xp")}
                     </button>
-                    <p className="admin-action__desc">{t('account.awardXpDesc') || "Ajouter 50 XP à l'utilisateur sélectionné."}</p>
+                    <p className="admin-action__desc">
+                      {t("account.awardXpDesc") ||
+                        "Ajouter 50 XP à l'utilisateur sélectionné."}
+                    </p>
                     <hr />
                   </div>
 
@@ -177,28 +247,54 @@ function Account({ user, setUser }) {
                       className="btn ghost danger"
                       disabled={removeXpLoading}
                       onClick={() => {
-                        if (selectedUser && confirm((t("account.confirmRemoveXp") || `Retirer 50 XP à ${selectedUser}?` ).replace("{username}", selectedUser))) {
+                        if (
+                          selectedUser &&
+                          confirm(
+                            (
+                              t("account.confirmRemoveXp") ||
+                              `Retirer 50 XP à ${selectedUser}?`
+                            ).replace("{username}", selectedUser)
+                          )
+                        ) {
                           setRemoveXpLoading(true);
                           fetch(`${apiBase}/api/user/xp`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-Admin-User': 'admin' },
-                            body: JSON.stringify({ username: selectedUser, xp: -50 }),
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "X-Admin-User": "admin",
+                            },
+                            body: JSON.stringify({
+                              username: selectedUser,
+                              xp: -50,
+                            }),
                           })
                             .then((res) => {
-                              if (!res.ok) throw new Error('Erreur serveur');
+                              if (!res.ok) throw new Error("Erreur serveur");
                               return res.json();
                             })
                             .then(() => {
-                              alert((t("account.removeXpSuccess") || `-50 XP retirés à ${selectedUser}` ).replace("{username}", selectedUser));
+                              alert(
+                                (
+                                  t("account.removeXpSuccess") ||
+                                  `-50 XP retirés à ${selectedUser}`
+                                ).replace("{username}", selectedUser)
+                              );
                             })
-                            .catch((e) => alert(t('common.failedPrefix') + e.message))
+                            .catch((e) =>
+                              alert(t("common.failedPrefix") + e.message)
+                            )
                             .finally(() => setRemoveXpLoading(false));
                         }
                       }}
                     >
-                      {removeXpLoading ? t('common.saving') : (t('account.remove50xp') || '-50 XP')}
+                      {removeXpLoading
+                        ? t("common.saving")
+                        : t("account.remove50xp") || "-50 XP"}
                     </button>
-                    <p className="admin-action__desc">{t('account.removeXpDesc') || "Retirer 50 XP à l'utilisateur sélectionné."}</p>
+                    <p className="admin-action__desc">
+                      {t("account.removeXpDesc") ||
+                        "Retirer 50 XP à l'utilisateur sélectionné."}
+                    </p>
                     <hr />
                   </div>
 
@@ -207,17 +303,35 @@ function Account({ user, setUser }) {
                       className="btn danger"
                       disabled={resetSessionsLoading}
                       onClick={() => {
-                        if (selectedUser && confirm(t("account.confirmResetUserSessions").replace("{username}", selectedUser))) {
+                        if (
+                          selectedUser &&
+                          confirm(
+                            t("account.confirmResetUserSessions").replace(
+                              "{username}",
+                              selectedUser
+                            )
+                          )
+                        ) {
                           setResetSessionsLoading(true);
-                          fetch(`${apiBase}/api/admin/reset-sessions/${selectedUser}`, {
-                            method: "POST",
-                            headers: { "X-Admin-User": "admin" },
-                          })
+                          fetch(
+                            `${apiBase}/api/admin/reset-sessions/${selectedUser}`,
+                            {
+                              method: "POST",
+                              headers: { "X-Admin-User": "admin" },
+                            }
+                          )
                             .then((res) => {
                               if (!res.ok) throw new Error("Erreur serveur");
-                              alert(t("account.resetUserSessionsSuccess").replace("{username}", selectedUser));
+                              alert(
+                                t("account.resetUserSessionsSuccess").replace(
+                                  "{username}",
+                                  selectedUser
+                                )
+                              );
                             })
-                            .catch((e) => alert(t("common.failedPrefix") + e.message))
+                            .catch((e) =>
+                              alert(t("common.failedPrefix") + e.message)
+                            )
                             .finally(() => setResetSessionsLoading(false));
                         }
                       }}
@@ -226,7 +340,10 @@ function Account({ user, setUser }) {
                         ? t("account.resetting")
                         : t("account.resetUserSessions")}
                     </button>
-                    <p className="admin-action__desc">{t('account.resetSessionsDesc') || "Supprime les parties et scores de l'utilisateur."}</p>
+                    <p className="admin-action__desc">
+                      {t("account.resetSessionsDesc") ||
+                        "Supprime les parties et scores de l'utilisateur."}
+                    </p>
                     <hr />
                   </div>
 
@@ -235,27 +352,52 @@ function Account({ user, setUser }) {
                       className="btn ghost warning"
                       disabled={deleteHistoryLoading}
                       onClick={() => {
-                        if (selectedUser && confirm((t("account.confirmDeleteXpHistory") || `Supprimer l'historique XP de ${selectedUser}?`).replace("{username}", selectedUser))) {
+                        if (
+                          selectedUser &&
+                          confirm(
+                            (
+                              t("account.confirmDeleteXpHistory") ||
+                              `Supprimer l'historique XP de ${selectedUser}?`
+                            ).replace("{username}", selectedUser)
+                          )
+                        ) {
                           setDeleteHistoryLoading(true);
-                          fetch(`${apiBase}/api/admin/delete-xp-history/${selectedUser}`, {
-                            method: "POST",
-                            headers: { "X-Admin-User": "admin" },
-                          })
+                          fetch(
+                            `${apiBase}/api/admin/delete-xp-history/${selectedUser}`,
+                            {
+                              method: "POST",
+                              headers: { "X-Admin-User": "admin" },
+                            }
+                          )
                             .then((res) => {
                               if (!res.ok) throw new Error("Erreur serveur");
                               return res.json();
                             })
                             .then(() => {
-                              alert(t("account.deleteXpHistorySuccess")?.replace("{username}", selectedUser) || `Historique XP supprimé pour ${selectedUser}`);
+                              alert(
+                                t("account.deleteXpHistorySuccess")?.replace(
+                                  "{username}",
+                                  selectedUser
+                                ) ||
+                                  `Historique XP supprimé pour ${selectedUser}`
+                              );
                             })
-                            .catch((e) => alert(t("common.failedPrefix") + e.message))
+                            .catch((e) =>
+                              alert(t("common.failedPrefix") + e.message)
+                            )
                             .finally(() => setDeleteHistoryLoading(false));
                         }
                       }}
                     >
-                      {deleteHistoryLoading ? t('common.saving') : (t('account.deleteXpHistory') || 'Supprimer historique XP')}
+                      {deleteHistoryLoading
+                        ? t("common.saving")
+                        : t("account.deleteXpHistory") ||
+                          "Supprimer historique XP"}
                     </button>
-                    <p className="admin-action__desc">{t('account.deleteXpHistoryDesc') || "Supprime toutes les entrées d'historique XP."}</p>
+                    <p className="admin-action__desc">
+                      {t("account.deleteXpHistoryDesc") ||
+                        "Supprime toutes les entrées d'historique XP."}
+                    </p>
                     <hr />
                   </div>
 
@@ -263,37 +405,130 @@ function Account({ user, setUser }) {
                     <button
                       className="btn ghost danger admin-tools__delete"
                       onClick={() => {
-                        if (selectedUser && confirm(t("account.confirmDeleteUserFull").replace("{username}", selectedUser))) {
-                          fetch(`${apiBase}/api/admin/delete-user/${selectedUser}`, {
-                            method: "DELETE",
-                            headers: { "X-Admin-User": "admin" },
-                          })
+                        if (
+                          selectedUser &&
+                          confirm(
+                            t("account.confirmDeleteUserFull").replace(
+                              "{username}",
+                              selectedUser
+                            )
+                          )
+                        ) {
+                          fetch(
+                            `${apiBase}/api/admin/delete-user/${selectedUser}`,
+                            {
+                              method: "DELETE",
+                              headers: { "X-Admin-User": "admin" },
+                            }
+                          )
                             .then((res) => {
                               if (!res.ok) throw new Error("Erreur serveur");
-                              const remaining = allUsers.filter((u) => u.username !== selectedUser);
+                              const remaining = allUsers.filter(
+                                (u) => u.username !== selectedUser
+                              );
                               setAllUsers(remaining);
-                              if (remaining.length > 0) setSelectedUser(remaining[0].username);
+                              if (remaining.length > 0)
+                                setSelectedUser(remaining[0].username);
                               else setSelectedUser("");
-                              alert(t("account.deleteUserSuccess").replace("{username}", selectedUser));
+                              alert(
+                                t("account.deleteUserSuccess").replace(
+                                  "{username}",
+                                  selectedUser
+                                )
+                              );
                             })
-                            .catch((e) => alert(t("common.failedPrefix") + e.message));
+                            .catch((e) =>
+                              alert(t("common.failedPrefix") + e.message)
+                            );
                         }
                       }}
                     >
                       {t("account.deleteUser")}
                     </button>
-                    <p className="admin-action__desc">{t('account.deleteUserDesc') || "Supprime l'utilisateur et les données associées."}</p>
+                    <p className="admin-action__desc">
+                      {t("account.deleteUserDesc") ||
+                        "Supprime l'utilisateur et les données associées."}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           )}
-          <button
-            className="btn ghost no-border account__logout"
-            onClick={handleLogout}
-          >
-            {t("common.logout")}
-          </button>
+
+          <div className="user-action">
+            <button
+              className="btn ghost no-border account__logout"
+              onClick={handleLogout}
+            >
+              {t("common.logout")}
+            </button>
+
+            <button
+              className="btn ghost danger user__delete"
+              onClick={() => {
+                confirm(
+                  t("account.confirmDeleteUserFull").replace("{username}", user)
+                ) &&
+                  fetch(`${apiBase}/api/user/delete-user/${user}`, {
+                    method: "DELETE",
+                    headers: { "X-Admin-User": "user" },
+                  })
+                    .then((res) => {
+                      if (!res.ok) throw new Error("Erreur serveur");
+                      const remaining = allUsers.filter(
+                        (u) => u.username !== user
+                      );
+                      setAllUsers(remaining);
+                      if (remaining.length > 0)
+                        setSelectedUser(remaining[0].username);
+                      else setSelectedUser("");
+                      alert(
+                        t("account.deleteUserSuccess").replace(
+                          "{username}",
+                          user
+                        )
+                      );
+                    })
+                    .catch((e) => alert(t("common.failedPrefix") + e.message));
+                    handleLogout()
+              }}
+            >
+              {t("account.deleteSelf")}
+            </button>
+
+            <button
+              className="btn danger"
+              disabled={resetSessionsLoading}
+              onClick={() => {
+                confirm(
+                  t("account.confirmResetUserSessionsFull").replace(
+                    "{username}",
+                    user
+                  )
+                ) &&
+                  fetch(`${apiBase}/api/user/reset-sessions/${user}`, {
+                    method: "POST",
+                    headers: { "X-Admin-User": "user" },
+                  })
+                    .then((res) => {
+                      setResetSessionsLoading(true);
+                      if (!res.ok) throw new Error("Erreur serveur");
+                      alert(
+                        t("account.resetUserSessionsSuccess").replace(
+                          "{username}",
+                          user
+                        )
+                      );
+                    })
+                    .catch((e) => alert(t("common.failedPrefix") + e.message))
+                    .finally(() => setResetSessionsLoading(false));
+              }}
+            >
+              {resetSessionsLoading
+                ? t("account.resetting")
+                : t("account.resetSelfSessions")}
+            </button>
+          </div>
         </div>
       </>
     );
@@ -303,7 +538,10 @@ function Account({ user, setUser }) {
     <div className="account account--centered">
       <h1>{t("account.title")}</h1>
       <p className="account__notice">{t("account.loginRequired")}</p>
-      <button className="btn primary account__login-btn" onClick={() => setIsOpen(true)}>
+      <button
+        className="btn primary account__login-btn"
+        onClick={() => setIsOpen(true)}
+      >
         {t("account.openLogin")}
       </button>
       <LoginModal
@@ -311,12 +549,15 @@ function Account({ user, setUser }) {
         action={setUser}
         onClose={() => setIsOpen(false)}
         openRegister={() => setIsRegisterOpen(true)}
-        afterLogin={() => navigate('/account', { replace: true })}
+        afterLogin={() => navigate("/account", { replace: true })}
       />
       <RegisterModal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
-        afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }}
+        afterRegister={(u) => {
+          setUser(u);
+          navigate("/account", { replace: true });
+        }}
       />
       <div className="account-loop" aria-hidden>
         <div className="loop-wrapper">

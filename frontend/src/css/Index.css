@@ -84,6 +84,11 @@ header {
   border: none;
 }
 
+.nav-account-display {
+  display: flex;
+  flex-direction: column;
+}
+
 .nav-greeting span {
   padding: 4px 10px;
   border-radius: 8px;

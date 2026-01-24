@@ -217,3 +217,25 @@ def set_user_language():
         (language, username),
     )
     return utils.make_response({"language": language})
+
+@bp.route("/api/user/delete-user/<username>", methods=["DELETE", "POST"])
+@utils.handle_db_errors
+def delete_user(username: str):
+    if username.lower() == "admin":
+        return utils.make_response(
+            {"error": "forbidden", "message": "cannot delete admin user"},
+            403,
+        )
+
+    db.exec_commit("DELETE FROM users WHERE username = %s", (username,))
+    return utils.make_response({"ok": True})
+
+@bp.route("/api/user/reset-sessions/<username>", methods=["POST"])
+@utils.handle_db_errors
+def reset_user_sessions(username: str):
+    username = username.strip()
+    db.exec_commit(
+        "DELETE FROM game_sessions WHERE username = %s", (username,)
+    )
+    db.exec_commit("DELETE FROM highscores WHERE username = %s", (username,))
+    return utils.make_response({"ok": True})
