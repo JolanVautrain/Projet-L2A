@@ -281,6 +281,13 @@ function Game() {
         console.warn("Failed to resume scene", e);
       }
     }
+    // Réinitialiser les états React
+    setScoreDisplay(0);
+    setStage(1);
+    setTimerSeconds(0);
+    resetGameObjects();
+    gameOver = false;
+    sessionPosted = false;  // Permettre l'enregistrement de la prochaine partie
     navigate("/");
   };
   // reset des variables globales du module à l'initialisation du composant
