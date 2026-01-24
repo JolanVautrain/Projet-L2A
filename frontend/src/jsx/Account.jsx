@@ -466,6 +466,10 @@ function Account({ user, setUser }) {
             <button
               className="btn ghost danger user__delete"
               onClick={() => {
+                if (user == "admin") {
+                  alert(t("common.failedPrefix")+"cannot delete admin")
+                  return
+                }
                 confirm(
                   t("account.confirmDeleteUserFull").replace("{username}", user)
                 ) &&
