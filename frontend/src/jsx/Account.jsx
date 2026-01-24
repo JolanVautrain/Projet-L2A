@@ -101,6 +101,79 @@ function Account({ user, setUser }) {
   };
   if (user) {
     // Utilisateur connecté : afficher les informations de compte
+
+    const handleSubmit = (event) => {
+      event.preventDefault();
+
+      const data = new FormData(event.target);
+      let xp = parseInt(data.get("number"), 10);
+
+      if (data.get("sub_xp")) {
+        xp = -xp;
+      }
+
+      if (
+        selectedUser &&
+        confirm(
+          t("account.confirmAwardXp")
+            .replace("{username}", selectedUser)
+            .replace("{xp}", xp)
+        )
+      ) {
+        setAwardXpLoading(true);
+
+        fetch(`${apiBase}/api/user/xp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-User": "admin",
+          },
+          body: JSON.stringify({
+            username: selectedUser,
+            xp: xp,
+          }),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Erreur serveur");
+            return res.json();
+          })
+          .then(() => {
+            alert(
+              t("account.awardXpSuccess")
+                .replace("{username}", selectedUser)
+                .replace("{xp}", xp)
+            );
+          })
+          .catch((e) => alert(t("common.failedPrefix") + e.message))
+          .finally(() => setAwardXpLoading(false));
+      }
+    };
+
+    const xp_form = (
+      <form id="xp-form" onSubmit={handleSubmit}>
+        <label htmlFor="input-xp">
+          Ajoute l'XP à l'utilisateur
+          <input
+            type="text"
+            name="number"
+            placeholder="50"
+            inputMode="numeric"
+            pattern="[0-9]{0,}"
+            required
+          />
+        </label>
+
+        <label htmlFor="sub-xp">
+          soustrait l'xp si cocher
+          <input type="checkbox" name="sub_xp" />
+        </label>
+
+        <button type="submit" className="btn primary" disabled={awardXpLoading}>
+          {awardXpLoading ? t("common.saving") : t("account.awardXp")}
+        </button>
+      </form>
+    );
+
     return (
       <>
         <h1>{t("account.title")}</h1>
@@ -187,113 +260,10 @@ function Account({ user, setUser }) {
 
                 <div className="admin-actions">
                   <div className="admin-action">
-                    <button
-                      className="btn primary"
-                      disabled={awardXpLoading}
-                      onClick={() => {
-                        if (
-                          selectedUser &&
-                          confirm(
-                            t("account.confirmAwardXp").replace(
-                              "{username}",
-                              selectedUser
-                            )
-                          )
-                        ) {
-                          setAwardXpLoading(true);
-                          fetch(`${apiBase}/api/user/xp`, {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              "X-Admin-User": "admin",
-                            },
-                            body: JSON.stringify({
-                              username: selectedUser,
-                              xp: 50,
-                            }),
-                          })
-                            .then((res) => {
-                              if (!res.ok) throw new Error("Erreur serveur");
-                              return res.json();
-                            })
-                            .then(() => {
-                              alert(
-                                t("account.awardXpSuccess").replace(
-                                  "{username}",
-                                  selectedUser
-                                )
-                              );
-                            })
-                            .catch((e) =>
-                              alert(t("common.failedPrefix") + e.message)
-                            )
-                            .finally(() => setAwardXpLoading(false));
-                        }
-                      }}
-                    >
-                      {awardXpLoading
-                        ? t("common.saving")
-                        : t("account.award50xp")}
-                    </button>
+                    {xp_form}
                     <p className="admin-action__desc">
                       {t("account.awardXpDesc") ||
-                        "Ajouter 50 XP à l'utilisateur sélectionné."}
-                    </p>
-                    <hr />
-                  </div>
-
-                  <div className="admin-action">
-                    <button
-                      className="btn ghost danger"
-                      disabled={removeXpLoading}
-                      onClick={() => {
-                        if (
-                          selectedUser &&
-                          confirm(
-                            (
-                              t("account.confirmRemoveXp") ||
-                              `Retirer 50 XP à ${selectedUser}?`
-                            ).replace("{username}", selectedUser)
-                          )
-                        ) {
-                          setRemoveXpLoading(true);
-                          fetch(`${apiBase}/api/user/xp`, {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              "X-Admin-User": "admin",
-                            },
-                            body: JSON.stringify({
-                              username: selectedUser,
-                              xp: -50,
-                            }),
-                          })
-                            .then((res) => {
-                              if (!res.ok) throw new Error("Erreur serveur");
-                              return res.json();
-                            })
-                            .then(() => {
-                              alert(
-                                (
-                                  t("account.removeXpSuccess") ||
-                                  `-50 XP retirés à ${selectedUser}`
-                                ).replace("{username}", selectedUser)
-                              );
-                            })
-                            .catch((e) =>
-                              alert(t("common.failedPrefix") + e.message)
-                            )
-                            .finally(() => setRemoveXpLoading(false));
-                        }
-                      }}
-                    >
-                      {removeXpLoading
-                        ? t("common.saving")
-                        : t("account.remove50xp") || "-50 XP"}
-                    </button>
-                    <p className="admin-action__desc">
-                      {t("account.removeXpDesc") ||
-                        "Retirer 50 XP à l'utilisateur sélectionné."}
+                        "Modifie l'XP de l'utilisateur sélectionné."}
                     </p>
                     <hr />
                   </div>
@@ -467,8 +437,8 @@ function Account({ user, setUser }) {
               className="btn ghost danger user__delete"
               onClick={() => {
                 if (user == "admin") {
-                  alert(t("common.failedPrefix")+"cannot delete admin")
-                  return
+                  alert(t("common.failedPrefix") + "cannot delete admin");
+                  return;
                 }
                 confirm(
                   t("account.confirmDeleteUserFull").replace("{username}", user)
@@ -494,7 +464,7 @@ function Account({ user, setUser }) {
                       );
                     })
                     .catch((e) => alert(t("common.failedPrefix") + e.message));
-                    handleLogout()
+                handleLogout();
               }}
             >
               {t("account.deleteSelf")}
