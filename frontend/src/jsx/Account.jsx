@@ -276,7 +276,7 @@ function Account({ user, setUser }) {
                         if (
                           selectedUser &&
                           confirm(
-                            t("account.confirmResetUserSessions").replace(
+                            t("account.confirmResetUserSessionsFull").replace(
                               "{username}",
                               selectedUser
                             )
