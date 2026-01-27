@@ -14,9 +14,9 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 try:
-    from api import admin, auth, db, scores, users, utils  # type: ignore
+    from api import admin, auth, db, scores, users, utils, game  # type: ignore
 except Exception:  # pragma: no cover - fallback for package-style import
-    from .api import admin, auth, db, scores, users, utils  # type: ignore
+    from .api import admin, auth, db, scores, users, utils, game  # type: ignore
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +44,7 @@ app.register_blueprint(auth.bp)
 app.register_blueprint(scores.bp)
 app.register_blueprint(admin.bp)
 app.register_blueprint(users.bp)
+app.register_blueprint(game.bp)
 
 # Ensure database schema exists
 db.check_and_recreate_schema()

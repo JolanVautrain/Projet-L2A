@@ -18,7 +18,7 @@ let showGameOverModalCallback = null; // Callback pour afficher la modal Game Ov
 
 /**
  * Précharge les assets Phaser.
- * 
+ *
  * @return {void}
  */
 function preload() {
@@ -31,10 +31,9 @@ function preload() {
   });
 }
 
-
 /**
  * Initialise la scène de jeu Phaser.
- * 
+ *
  * @return {void}
  */
 function create() {
@@ -77,7 +76,11 @@ function create() {
   globalThis.cursors = this.input.keyboard.createCursorKeys();
 
   // Collisions
-  this.physics.add.collider(globalThis.player, globalThis.platforms, touchGround);
+  this.physics.add.collider(
+    globalThis.player,
+    globalThis.platforms,
+    touchGround
+  );
   this.physics.add.collider(globalThis.player, globalThis.obstacles, hitBomb);
 
   // Spawn first obstacle
@@ -86,10 +89,11 @@ function create() {
 
 /**
  * Met à jour la logique du jeu à chaque frame.
- * 
+ *
  * @return {void}
  */
 function update() {
+  const username = localStorage.getItem("user");
   const player = globalThis.player;
   const cursors = globalThis.cursors;
 
@@ -99,13 +103,24 @@ function update() {
   if ((cursors.space.isDown || cursors.up.isDown) && touchingGround) {
     player.setVelocityY(-500);
     touchingGround = false;
+    try {
+      fetch("/api/game/input", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, input: "JUMP", date: Date.now()}),
+      })
+    } catch (e) {
+      console.warn("Error while stocking inputs", e);
+    }
   }
 
   // Stage increases every 100 points
-  const newStage = Math.floor((score+10) / 100) + 1;
+  const newStage = Math.floor((score + 10) / 100) + 1;
   if (newStage !== internalStage) {
     internalStage = newStage;
-    globalThis.dispatchEvent(new CustomEvent("stage-up", { detail: internalStage }));
+    globalThis.dispatchEvent(
+      new CustomEvent("stage-up", { detail: internalStage })
+    );
   }
 
   // Recycle obstacles
@@ -114,12 +129,11 @@ function update() {
       o.destroy();
       spawnObstacle(this);
       // Score & difficulty
-    score += 10;
-    globalThis.dispatchEvent(new CustomEvent("score-up", { detail: score }));
+      score += 10;
+      globalThis.dispatchEvent(new CustomEvent("score-up", { detail: score }));
     }
   });
 }
-
 
 /**
  * Réinitialise les objets du jeu lors du game over.
@@ -133,9 +147,9 @@ function resetGameObjects() {
     globalThis.obstacles.children.iterate((o) => {
       o.destroy();
       spawnObstacle(globalThis.getPhaserScene());
-    })
+    });
   } catch (e) {
-    console.warn('spawnObstacle unavailable during reset', e);
+    console.warn("spawnObstacle unavailable during reset", e);
   }
   // réinitialiser le minuteur lorsque les objets sont réinitialisés
   startTime = Date.now();
@@ -158,27 +172,26 @@ function resetGameObjects() {
       touchingGround = false;
     }
   } catch (e) {
-    console.warn('Failed to reset player position during resetGameObjects', e);
+    console.warn("Failed to reset player position during resetGameObjects", e);
   }
 }
 
 /**
  * Apparition d'une bombe dans le jeu.
- * 
+ *
  * @returns {void}
  */
 function spawnObstacle(scene) {
   if (!scene || !globalThis.obstacles) return;
 
   const x = 900;
-  const y = 520 - +Math.random()*100;
+  const y = 520 - +Math.random() * 100;
 
   const obstacle = globalThis.obstacles.create(x, y, "obstacle");
   obstacle.setVelocityX(-200 - internalStage * 200);
   obstacle.setImmovable(true);
   obstacle.body.allowGravity = false;
 }
-
 
 /**
  * Gère la collision avec une bombe (fin de partie).
@@ -187,7 +200,7 @@ function hitBomb(_player, _bomb) {
   // Empêcher les appels multiples à hitBomb pendant qu'on traite la mort
   if (processingDeath) return;
   processingDeath = true;
-  
+
   gameOver = true;
   // capture le score final avant de réinitialiser
   const finalScore = score;
@@ -202,23 +215,28 @@ function hitBomb(_player, _bomb) {
         fetch("/api/score", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, score: finalScore, stage: internalStage, timer: timerSeconds }),
+          body: JSON.stringify({
+            username,
+            score: finalScore,
+            stage: internalStage,
+            timer: timerSeconds,
+          }),
         })
           .then((r) => r.json())
           .then((data) => {
             // Award XP based on the final score (persist XP automatically)
             try {
               const xpAmount = Math.max(0, Math.floor(finalScore / 10) + 10);
-              fetch('/api/user/xp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+              fetch("/api/user/xp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, xp: xpAmount }),
               })
                 .then((r) => r.json())
                 .then(() => {})
-                .catch((err) => console.warn('Failed to award XP', err));
+                .catch((err) => console.warn("Failed to award XP", err));
             } catch (e) {
-              console.warn('Error while awarding XP', e);
+              console.warn("Error while awarding XP", e);
             }
           })
           .catch((err) => console.warn("Failed to submit score", err));
@@ -268,7 +286,7 @@ function Game() {
     setTimerSeconds(0);
     resetGameObjects();
     gameOver = false;
-    sessionPosted = false;  // Permettre l'enregistrement de la prochaine partie
+    sessionPosted = false; // Permettre l'enregistrement de la prochaine partie
   };
   const handleReturnHome = async () => {
     setShowGameOverModal(false);
@@ -287,40 +305,40 @@ function Game() {
     setTimerSeconds(0);
     resetGameObjects();
     gameOver = false;
-    sessionPosted = false;  // Permettre l'enregistrement de la prochaine partie
+    sessionPosted = false; // Permettre l'enregistrement de la prochaine partie
     navigate("/");
   };
   // reset des variables globales du module à l'initialisation du composant
   useEffect(() => {
-     globalThis.player = undefined;
-     globalThis.bombs = undefined;
-     globalThis.platforms = undefined;
-     globalThis.cursors = undefined;
-     globalThis.score = 0;
-     globalThis.gameOver = false;
-     globalThis.touchingGround = false;
-     globalThis.internalStage = 1;
-     currentSessionId = null;
-     processingDeath = false;
-     sessionPosted = false;
-     // Initialiser le callback pour afficher la modal Game Over et mettre en paus
-     showGameOverModalCallback = () => {
-       const scene = globalThis.getPhaserScene?.();
-       if (scene && scene.scene) {
-         try {
-           scene.scene.pause();
-         } catch (e) {
-           console.warn("Failed to pause scene", e);
-         }
-       }
-       setShowGameOverModal(true);
-     };
+    globalThis.player = undefined;
+    globalThis.bombs = undefined;
+    globalThis.platforms = undefined;
+    globalThis.cursors = undefined;
+    globalThis.score = 0;
+    globalThis.gameOver = false;
+    globalThis.touchingGround = false;
+    globalThis.internalStage = 1;
+    currentSessionId = null;
+    processingDeath = false;
+    sessionPosted = false;
+    // Initialiser le callback pour afficher la modal Game Over et mettre en paus
+    showGameOverModalCallback = () => {
+      const scene = globalThis.getPhaserScene?.();
+      if (scene && scene.scene) {
+        try {
+          scene.scene.pause();
+        } catch (e) {
+          console.warn("Failed to pause scene", e);
+        }
+      }
+      setShowGameOverModal(true);
+    };
   }, []);
 
   /**
    * Initialise Phaser et crée le jeu dans le conteneur.
-   * 
-   * @return {void} 
+   *
+   * @return {void}
    */
   useEffect(() => {
     let destroyed = false;
@@ -328,10 +346,10 @@ function Game() {
     const container = gameContainer.current;
     // Crée l'instance du jeu Phaser
     const createGame = () => {
-    if (destroyed || !container || container._phaserGame) {
-      return;
-    }
-    const config = {
+      if (destroyed || !container || container._phaserGame) {
+        return;
+      }
+      const config = {
         type: globalThis.Phaser.AUTO,
         width: 800,
         height: 600,
@@ -349,11 +367,11 @@ function Game() {
       if (container) container._phaserGame = gameInstance;
       // Affiche le canvas une fois prêt
       setTimeout(() => {
-        const canvas = container?.querySelector('canvas');
+        const canvas = container?.querySelector("canvas");
         if (canvas) {
-          canvas.style.display = 'block';
-          canvas.style.visibility = 'visible';
-          canvas.style.opacity = '1';
+          canvas.style.display = "block";
+          canvas.style.visibility = "visible";
+          canvas.style.opacity = "1";
         } else {
         }
       }, 100);
@@ -362,12 +380,12 @@ function Game() {
     const initPhaser = () => {
       if (destroyed) return;
 
-        if (globalThis.Phaser) {
-          createGame();
-          return;
-        }
+      if (globalThis.Phaser) {
+        createGame();
+        return;
+      }
       // charge le script Phaser depuis le CDN
-      let script = document.querySelector('script[data-phaser-dynamic]');
+      let script = document.querySelector("script[data-phaser-dynamic]");
       if (script) {
         const checkPhaser = setInterval(() => {
           if (destroyed) {
@@ -375,21 +393,23 @@ function Game() {
             return;
           }
           if (globalThis.Phaser) {
-                clearInterval(checkPhaser);
-                createGame();
-              }
+            clearInterval(checkPhaser);
+            createGame();
+          }
         }, 100);
-      } else { // charge le script
-        script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js';
-        script.dataset.phaserDynamic = '1';
+      } else {
+        // charge le script
+        script = document.createElement("script");
+        script.src =
+          "https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js";
+        script.dataset.phaserDynamic = "1";
         script.onload = () => {
           if (!destroyed) {
             createGame();
           }
         };
         script.onerror = () => {
-          console.error('Failed to load Phaser script');
+          console.error("Failed to load Phaser script");
         };
         document.head.appendChild(script);
       }
@@ -415,16 +435,16 @@ function Game() {
     const onStage = (e) => {
       if (e?.detail) setStage(e.detail);
     };
-    globalThis.addEventListener('stage-up', onStage);
-    return () => globalThis.removeEventListener('stage-up', onStage);
+    globalThis.addEventListener("stage-up", onStage);
+    return () => globalThis.removeEventListener("stage-up", onStage);
   }, []);
   // Écoute les événements de mise à jour du score
   useEffect(() => {
     const onScore = (e) => {
       if (e?.detail !== undefined) setScoreDisplay(e.detail);
     };
-    globalThis.addEventListener('score-up', onScore);
-    return () => globalThis.removeEventListener('score-up', onScore);
+    globalThis.addEventListener("score-up", onScore);
+    return () => globalThis.removeEventListener("score-up", onScore);
   }, []);
   // Met à jour le chronomètre affiché toutes les 500ms
   useEffect(() => {
@@ -440,25 +460,40 @@ function Game() {
   const formatTime = (sec) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
-  // Rendu du composant Game avec l'overlay  
+  // Rendu du composant Game avec l'overlay
   return (
     <div className="game-wrap">
       <div className="game-overlay">
         <div className="game-overlay__group">
-          <div className="stage-pill">{t("common.stage")} {stage}</div>
+          <div className="stage-pill">
+            {t("common.stage")} {stage}
+          </div>
         </div>
         <div className="game-overlay__group">
-          <div className="score-display">{t("common.score")}: {scoreDisplay}</div>
-          <div className="timer-display">{t("game.time")}: {formatTime(timerSeconds)}</div>
+          <div className="score-display">
+            {t("common.score")}: {scoreDisplay}
+          </div>
+          <div className="timer-display">
+            {t("game.time")}: {formatTime(timerSeconds)}
+          </div>
         </div>
       </div>
-      <div ref={gameContainer} id="phaser-container" className="phaser-container phaser-canvas" />
-        <div className="options-buttons">
-          <button className="btn ghost" onClick={() => globalThis.location.reload()}>{t("game.reloadGame")}</button>
-        </div>
-      <ModalGameOver 
+      <div
+        ref={gameContainer}
+        id="phaser-container"
+        className="phaser-container phaser-canvas"
+      />
+      <div className="options-buttons">
+        <button
+          className="btn ghost"
+          onClick={() => globalThis.location.reload()}
+        >
+          {t("game.reloadGame")}
+        </button>
+      </div>
+      <ModalGameOver
         isOpen={showGameOverModal}
         score={scoreDisplay}
         stage={stage}
