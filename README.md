@@ -23,9 +23,9 @@ CTRL + MAJ + P => Recharger la page/Reload the page
 
 ```bash
 # crée et installe deps
-./script/script/install_requirements_V2.sh
+bash ./script/install_requirements_V2.sh
 # activer la venv
-source .venv/bin/activate
+bash source .venv/bin/activate
 # recharger la page vscode
 CTRL + MAJ + P => Recharger la page/Reload the page
 ```
@@ -45,7 +45,7 @@ Utilisez les scripts fournis pour initialiser l'environnement et exécuter les t
 
 ```bash
 # lancer les tests (génère rapports dans backend/tests/reports)
-./script/run_tests_V2.sh
+bash ./script/run_tests_V2.sh
 ```
 
 Les rapports et logs de tests sont écrits dans `backend/tests/reports/` :
@@ -70,5 +70,5 @@ docker compose logs backend --tail 200
 
 il suffit de faire la commande :
 ```bash
-./script/script/install_requirements_V2.sh
+bash ./script/script/install_requirements_V2.sh
 ```
