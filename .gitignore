@@ -40,3 +40,7 @@ backend/inputs.txt
 .coverage
 backend/tests/reports/
 backend/tests/__pycache__/
+
+test/reports/coverage.xml
+test/reports/junit.xml
+test/reports/RESUME.txt
