@@ -1,3 +1,28 @@
-flask==3.0.1
-flask_cors==6.0.1
-psycopg2-binary
+# Backend - Development
+flask==3.0.0
+flask-cors==4.0.0
+requests==2.31.0
+python-dotenv==1.0.0
+apscheduler==3.10.4
+flake8==6.0.0
+mypy==1.11.0
+# Optionnel: stubs si disponibles pour des dépendances typées
+# Utiliser une version disponible sur PyPI
+types-requests==0.1.13
+# types-Flask (si disponible)
+
+# Optional: Debug
+flask-debugtoolbar==0.13.1
+pyright
+
+# Testing Tools
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-flask==1.3.0
+coverage==7.3.2
+pylint==3.0.3
+isort==5.13.2
+black==23.12.1
+psycopg2-binary>=2.9.3
+
