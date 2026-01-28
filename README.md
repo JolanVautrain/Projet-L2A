@@ -6,7 +6,7 @@
 - `backend/` : API serveur (Flask). Point d'entrée : `backend/app.py`.
 - `docker/` : Dockerfiles, scripts et `docker-compose.yml` pour orchestrer les services.
 
-## Lancer le projet
+## Lancer le projet V2
 
 - PowerShell (Windows) :
 
@@ -23,14 +23,14 @@ CTRL + MAJ + P => Recharger la page/Reload the page
 
 ```bash
 # crée et installe deps
-./scripts/init_env.sh
+./script/script/install_requirements_V2.sh
 # activer la venv
 source .venv/bin/activate
 # recharger la page vscode
 CTRL + MAJ + P => Recharger la page/Reload the page
 ```
 
-## Lancer les tests localement (RECOMMANDÉ : utiliser les scripts)
+## Lancer les tests localement
 
 Utilisez les scripts fournis pour initialiser l'environnement et exécuter les tests — c'est la méthode recommandée :
 
@@ -45,7 +45,7 @@ Utilisez les scripts fournis pour initialiser l'environnement et exécuter les t
 
 ```bash
 # lancer les tests (génère rapports dans backend/tests/reports)
-./scripts/run_tests.sh
+./script/run_tests_V2.sh
 ```
 
 Les rapports et logs de tests sont écrits dans `backend/tests/reports/` :
@@ -65,11 +65,10 @@ Docker / debug :
 docker compose logs backend --tail 200
 ```
 
-curl.exe -v -X OPTIONS "http://localhost:5000/api/admin/delete-xp-history/admin" -H "Origin: http://localhost:5173" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: X-Admin-User"
 
-curl.exe -v -X POST "http://localhost:5000/api/admin/delete-xp-history/admin" -H "X-Admin-User: admin"
+## Mettre à jour les dépendances du projet
 
-npm run lint
-npx eslint . --fix
-pylint backend
-détecter code inutiliser
+il suffit de faire la commande :
+```bash
+./script/script/install_requirements_V2.sh
+```
