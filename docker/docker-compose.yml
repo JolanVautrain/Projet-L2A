@@ -9,8 +9,8 @@ services:
       POSTGRES_PASSWORD: mon_pass
       POSTGRES_DB: ma_db
     volumes:
-      # Monte le dossier du projet (pas celui dans docker/) pour persister les données
-      - ../backend/db_data:/var/lib/postgresql/data
+      # Volume nommé Docker pour persister les données PostgreSQL
+      - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"  # Optionnel : pour se connecter avec DBeaver
     healthcheck:
@@ -63,6 +63,7 @@ services:
       - backend
 
 volumes:
+  db_data:  # Volume pour PostgreSQL
   frontend_node_modules:  # Important pour les perfs !
   yarn_cache:  # Accélère les rebuild !
 
