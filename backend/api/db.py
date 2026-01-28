@@ -162,6 +162,14 @@ def initialize_database(init_conn=None,init_cur=None) -> None:
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
         )
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS user_inputs (
+            username varchar(100) NOT NULL,
+            input varchar(100) NOT NULL,
+            time TIMESTAMP DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        );"""
+        )
         init_conn.commit()
     except psycopg2.Error as err:
         logger.exception("Failed to initialize database: %s", err)
@@ -185,6 +193,7 @@ def check_and_recreate_schema() -> None:
         "user_profiles",
         "user_xp_history",
         "game_sessions",
+        "user_inputs"
     ]
     try:
         with get_db_connection() as conn, get_db_cursor(conn) as cur:
@@ -215,6 +224,7 @@ def check_and_recreate_schema() -> None:
                 cur.execute("DROP TABLE IF EXISTS highscores CASCADE")
                 cur.execute("DROP TABLE IF EXISTS user_profiles CASCADE")
                 cur.execute("DROP TABLE IF EXISTS users CASCADE")
+                cur.execute("DROP TABLE IF EXISTS user_inputs CASCADE")
                 conn.commit()
             initialize_database()
             logger.info("Schema recreated (drop -> init)")

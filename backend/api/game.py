@@ -2,9 +2,12 @@
 
 from flask import Blueprint, jsonify, request
 
+from . import db,utils
+
 bp = Blueprint("game", __name__)
 
 @bp.route("/api/game/input", methods=["POST"])
+@utils.handle_db_errors
 def storeInput():
     data = request.get_json(silent=True)
     if not data:
@@ -12,15 +15,16 @@ def storeInput():
 
     username = data.get("username")
     user_input = data.get("input")
-    date = data.get("date")
+    conn = db.connect_to_database()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO user_inputs (username, input) "
+        "VALUES (%s, %s)",
+        (
+            username,
+            user_input
+        ),
+    )
+    conn.commit()
 
-    import os
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(BASE_DIR, "..", "inputs.txt")
-
-    try:
-        with open(file_path, "a", encoding="utf-8") as f:
-            f.write(f"{username} {user_input} {date}\n")
-        return jsonify({"Success": "input written"})
-    except Exception as e:
-        return jsonify({"Error": str(e)}), 500
+    return utils.make_response({"Success":"input written"})
