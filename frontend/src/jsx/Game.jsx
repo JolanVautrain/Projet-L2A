@@ -107,8 +107,8 @@ function update() {
       fetch("/api/game/input", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, input: "JUMP", date: Date.now()}),
-      })
+        body: JSON.stringify({ username, input: "JUMP", date: Date.now() }),
+      });
     } catch (e) {
       console.warn("Error while stocking inputs", e);
     }

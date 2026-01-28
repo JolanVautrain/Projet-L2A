@@ -37,6 +37,7 @@ import Account from "./Account";
 import Contacts from "./Contacts";
 import PageNotFound from "./PageNotFound";
 import Game from "./Game.jsx";
+import GameWaitingRoom from "./GameWaitingRoom.jsx";
 
 /**
  * Composant principal de l'application.
@@ -137,6 +138,7 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route path="/lobby" element={<RequireAuth user={userState}><GameWaitingRoom /></RequireAuth>}/>
         <Route path="/*" element={<PageNotFound />} />
       </Routes>
     </>
