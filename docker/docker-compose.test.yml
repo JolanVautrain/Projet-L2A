@@ -1,0 +1,21 @@
+name: raspberry control test
+services:
+  test-postgres:
+    image: postgres:15-alpine
+    container_name: sail-weather-test-db
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: testdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - test-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  test-db-data:

@@ -1,0 +1,3378 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="45" failures="10" skipped="0" tests="64" time="16.160" timestamp="2026-01-28T11:08:31.476357" hostname="julien-83ex"><testcase classname="test.backend.test_admin" name="test_reset_test_account" time="0.009"><failure message="assert 500 == 200&#10; +  where 500 = &lt;WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]&gt;.status_code">client = &lt;FlaskClient &lt;Flask 'backend.app'&gt;&gt;
+
+    def test_reset_test_account(client: FlaskClient):
+        """Test de réinitialisation des scores du compte de test administrateur."""
+        # Soumettre d'abord un score pour l'administrateur
+        client.post("/api/score", json={"username": "admin", "score": 500})
+    
+        # Le réinitialiser
+        rv = client.post("/api/admin/reset-test")
+&gt;       assert rv.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = &lt;WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]&gt;.status_code
+
+test/backend/test_admin.py:17: AssertionError</failure></testcase><testcase classname="test.backend.test_admin" name="test_admin_list_users" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_admin" name="test_admin_list_users_unauthorized" time="0.002" /><testcase classname="test.backend.test_admin" name="test_admin_reset_user_scores" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_admin" name="test_admin_reset_user_sessions" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_admin" name="test_admin_delete_user" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_admin" name="test_admin_delete_xp_history" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_admin" name="test_admin_unauthorized_operations" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_admin" name="test_admin_cannot_delete_admin" time="0.002" /><testcase classname="test.backend.test_auth" name="test_register_new_user" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_auth" name="test_register_duplicate_user" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_auth" name="test_register_missing_fields" time="0.002" /><testcase classname="test.backend.test_auth" name="test_login_correct_password" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_auth" name="test_login_incorrect_password" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_auth" name="test_login_nonexistent_user" time="0.003"><failure message="assert 500 == 200&#10; +  where 500 = &lt;WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]&gt;.status_code">client = &lt;FlaskClient &lt;Flask 'backend.app'&gt;&gt;
+
+    def test_login_nonexistent_user(client: FlaskClient):
+        """Test de connexion pour un utilisateur inexistant."""
+        rv = client.post(
+            "/api/login",
+            json={"username": "nonexistent", "password": TEST_PASSWORD},
+        )
+&gt;       assert rv.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = &lt;WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]&gt;.status_code
+
+test/backend/test_auth.py:91: AssertionError</failure></testcase><testcase classname="test.backend.test_auth" name="test_login_missing_fields" time="0.002" /><testcase classname="test.backend.test_auth" name="test_register_password_not_returned" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_auth" name="test_multiple_registrations_and_logins" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_auth" name="test_login_after_admin_delete" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_auth" name="test_register_handles_integrity_error" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_css" name="test_stylelint_css" time="0.645"><failure message="AssertionError: Stylelint found CSS issues (voir sortie)&#10;assert 78 == 0&#10; +  where 78 = CompletedProcess(args=['npx', 'stylelint', 'src/css/**/*.css'], returncode=78, stdout='ConfigurationError: No configuration provided for /home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/css/Account.css\n    at getConfigForFile (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/getConfigForFile.mjs:77:9)\n    at async isPathIgnored (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/isPathIgnored.mjs:23:17)\n    at async lintSource (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/lintSource.mjs:43:20)\n    at async file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/standalone.mjs:238:27\n    at async Promise.all (index 0)\n    at async standalone (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/standalone.mjs:283:22)\n').returncode">def test_stylelint_css():
+        """Exécute Stylelint sur `frontend/src/css`.
+    
+        - Essaie `npm run lint:css` d'abord (si script présent)
+        - Sinon utilise `npx stylelint "src/css/**/*.css"` en fallback
+        - Skippe si `frontend` absent ou `npm` manquant
+        """
+        repo_root = Path(__file__).resolve().parents[2]
+        frontend_dir = repo_root / "frontend"
+        css_dir = frontend_dir / "src" / "css"
+    
+        if not frontend_dir.exists() or not css_dir.exists():
+            pytest.skip("frontend/src/css not found")
+    
+        npm_cmd = ["npm", "run", "lint:css"]
+        # fallback direct stylelint command; prefer unquoted glob on windows-shell
+        npx_cmd = ["npx", "stylelint", "src/css/**/*.css"]
+    
+        # Try npm script first
+        try:
+            proc = subprocess.run(
+                npm_cmd,
+                cwd=str(frontend_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            pytest.skip("npm not installed in this environment")
+    
+        # If npm script succeeded, test passes
+        if proc.returncode == 0:
+            return
+    
+        # If npm script failed because script missing, try to run npx stylelint
+    
+        # npm script failed (maybe absent) - try npx stylelint
+        try:
+            proc2 = subprocess.run(
+                npx_cmd,
+                cwd=str(frontend_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+                shell=False,
+            )
+        except FileNotFoundError:
+            print(proc.stdout)
+            pytest.fail(
+                "Stylelint via 'npm run lint:css' failed and 'npx' not available"
+            )
+    
+        print("--- npm run lint:css output ---")
+        print(proc.stdout)
+        print("--- npx stylelint output ---")
+        print(proc2.stdout)
+&gt;       assert proc2.returncode == 0, "Stylelint found CSS issues (voir sortie)"
+E       AssertionError: Stylelint found CSS issues (voir sortie)
+E       assert 78 == 0
+E        +  where 78 = CompletedProcess(args=['npx', 'stylelint', 'src/css/**/*.css'], returncode=78, stdout='ConfigurationError: No configuration provided for /home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/css/Account.css\n    at getConfigForFile (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/getConfigForFile.mjs:77:9)\n    at async isPathIgnored (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/isPathIgnored.mjs:23:17)\n    at async lintSource (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/lintSource.mjs:43:20)\n    at async file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/standalone.mjs:238:27\n    at async Promise.all (index 0)\n    at async standalone (file:///home/julien/Documents/PROJET/projet-l2a-g34/frontend/node_modules/stylelint/lib/standalone.mjs:283:22)\n').returncode
+
+test/backend/test_css.py:65: AssertionError</failure></testcase><testcase classname="test.backend.test_db_utils" name="test_load_default_users_contains_admin" time="0.197" /><testcase classname="test.backend.test_db_utils" name="test_exec_and_query_helpers_roundtrip" time="0.002"><failure message="psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?">def test_exec_and_query_helpers_roundtrip():
+        """Test du comportement de `exec_commit`, `query_fetchone` et
+        `query_fetchall`."""
+        # créer un utilisateur de test unique pour éviter les collisions
+        username = f"dbutil_{uuid.uuid4().hex[:8]}"
+    
+        # Insérer l'utilisateur directement via l'utilitaire
+&gt;       db.exec_commit(
+            "INSERT INTO users (username, password, language) VALUES (%s, %s, %s)",
+            (username, "pwd", "fr"),
+        )
+
+test/backend/test_db_utils.py:24: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+backend/api/db.py:54: in exec_commit
+    with get_db_connection() as conn, get_db_cursor(conn) as cur:
+/usr/lib/python3.14/contextlib.py:141: in __enter__
+    return next(self.gen)
+backend/api/db.py:21: in get_db_connection
+    conn = connect_to_database()
+backend/api/db.py:89: in connect_to_database
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=password_change host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'password_change', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</failure></testcase><testcase classname="test.backend.test_eslint" name="test_eslint_frontend" time="3.154"><failure message="AssertionError: ESLint found issues (voir sortie ci-dessus)&#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['npx', 'eslint', 'src', '--ext', '.js,.jsx'], returncode=1, stdout=&quot;\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Account.jsx\n  24:10  error  'removeXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars\n  24:27  error  'setRemoveXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars\n\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Game.jsx\n  199:18  error  '_player' is defined but never used  no-unused-vars\n  199:27  error  '_bomb' is defined but never used    no-unused-vars\n  226:18  error  'data' is defined but never used     no-unused-vars\n  257:22  error  '_player' is defined but never used  no-unused-vars\n  257:31  error  '_ground' is defined but never used  no-unused-vars\n  375:16  error  Empty block statement                no-empty\n\n✖ 8 problems (8 errors, 0 warnings)\n\n&quot;).returncode">def test_eslint_frontend():
+        """Exécute ESLint sur le dossier `frontend`.
+    
+        Le test :
+        - tente `npm run lint` si possible
+        - sinon tente `npx eslint src --ext .js,.jsx`
+        - skippe si `npm`/`npx` manquent ou si `frontend` absent
+        """
+        repo_root = Path(__file__).resolve().parents[2]
+        frontend_dir = repo_root / "frontend"
+    
+        if not frontend_dir.exists():
+            pytest.skip("frontend directory not found")
+    
+        npm_cmd = ["npm", "run", "lint"]
+        npx_cmd = ["npx", "eslint", "src", "--ext", ".js,.jsx"]
+    
+        # Essayer npm run lint d'abord, puis fallback vers npx
+        try:
+            proc = subprocess.run(
+                npm_cmd,
+                cwd=str(frontend_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            pytest.skip("npm not installed in this environment")
+    
+        if proc.returncode == 0:
+            return
+    
+        # npm failed — essayer npx
+        try:
+            proc2 = subprocess.run(
+                npx_cmd,
+                cwd=str(frontend_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            # npm présent mais npx absent — afficher sortie npm
+            print(proc.stdout)
+            pytest.fail("ESLint via 'npm run lint' failed and 'npx' not available")
+    
+        # Afficher les sorties pour debug
+        print("--- npm run lint output ---")
+        print(proc.stdout)
+        print("--- npx eslint output ---")
+        print(proc2.stdout)
+    
+&gt;       assert proc2.returncode == 0, "ESLint found issues (voir sortie ci-dessus)"
+E       AssertionError: ESLint found issues (voir sortie ci-dessus)
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['npx', 'eslint', 'src', '--ext', '.js,.jsx'], returncode=1, stdout="\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Account.jsx\n  24:10  error  'removeXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars\n  24:27  error  'setRemoveXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars\n\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Game.jsx\n  199:18  error  '_player' is defined but never used  no-unused-vars\n  199:27  error  '_bomb' is defined but never used    no-unused-vars\n  226:18  error  'data' is defined but never used     no-unused-vars\n  257:22  error  '_player' is defined but never used  no-unused-vars\n  257:31  error  '_ground' is defined but never used  no-unused-vars\n  375:16  error  Empty block statement                no-empty\n\n✖ 8 problems (8 errors, 0 warnings)\n\n").returncode
+
+test/backend/test_eslint.py:61: AssertionError</failure></testcase><testcase classname="test.backend.test_isort" name="test_isort_check" time="0.178"><failure message="AssertionError: isort detected import order issues (voir sortie)&#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['isort', '--check-only', '--diff', 'backend'], returncode=1, stdout='ERROR: /home/julien/Documents/PROJET/projet-l2a-g34/backend/db_init.py Imports are incorrectly sorted and/or formatted.\nERROR: /home/julien/Documents/PROJET/projet-l2a-g34/backend/app.py Imports are incorrectly sorted and/or formatted.\nERROR: /home/julien/Documents/PROJET/projet-l2a-g34/backend/api/utils.py Imports are incorrectly sorted and/or formatted.\n--- /home/julien/Documents/PROJET/projet-l2a-g34/backend/db_init.py:before\t2026-01-27 09:53:18.129303\n+++ /home/julien/Documents/PROJET/projet-l2a-g34/backend/db_init.py:after\t2026-01-28 11:08:36.034910\n@@ -1,6 +1,7 @@\n import os\n \n import psycopg2\n+\n from backend.api.db import initialize_database\n \n if __name__ == &quot;__main__&quot;:\n--- /home/julien/Documents/PROJET/projet-l2a-g34/backend/app.py:before\t2026-01-28 10:51:57.333097\n+++ /home/julien/Documents/PROJET/projet-l2a-g34/backend/app.py:after\t2026-01-28 11:08:36.039041\n@@ -14,9 +14,10 @@\n     sys.path.insert(0, str(BASE_DIR))\n \n try:\n-    from api import admin, auth, db, scores, users, utils, game  # type: ignore\n+    from api import admin, auth, db, game, scores, users, utils  # type: ignore\n except Exception:  # pragma: no cover - fallback for package-style import\n-    from .api import admin, auth, db, scores, users, utils, game  # type: ignore\n+    from .api import (admin, auth, db, game, scores, users,  # type: ignore\n+                      utils)\n \n app = Flask(__name__)\n logging.basicConfig(level=logging.INFO)\n--- /home/julien/Documents/PROJET/projet-l2a-g34/backend/api/utils.py:before\t2026-01-23 12:20:39.338906\n+++ /home/julien/Documents/PROJET/projet-l2a-g34/backend/api/utils.py:after\t2026-01-28 11:08:36.045122\n@@ -5,8 +5,8 @@\n from typing import Any, Callable\n \n import psycopg2  # type: ignore\n+from flask import Response, jsonify, request\n from psycopg2 import OperationalError  # type: ignore\n-from flask import Response, jsonify, request\n \n BAD_REQUEST = &quot;Bad Request&quot;\n DATABASE_ERROR = &quot;Database error&quot;\n').returncode">def test_isort_check():
+        """Vérifie que `isort` ne signale pas d'imports mal ordonnés."""
+        repo_root = Path(__file__).resolve().parents[2]
+    
+        cmd = ["isort", "--check-only", "--diff", "backend"]
+    
+        try:
+            proc = subprocess.run(
+                cmd,
+                cwd=str(repo_root),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            pytest.skip("isort not installed in this environment")
+    
+        print(proc.stdout)
+&gt;       assert (
+            proc.returncode == 0
+        ), "isort detected import order issues (voir sortie)"
+E       AssertionError: isort detected import order issues (voir sortie)
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['isort', '--check-only', '--diff', 'backend'], returncode=1, stdout='ERROR: /home/julien/Documents/PROJET/projet-l2a-g34/backend/db_init.py Imports are incorrectly sorted and/or formatted.\nERROR: /home/julien/Documents/PROJET/projet-l2a-g34/backend/app.py Imports are incorrectly sorted and/or formatted.\nERROR: /home/julien/Documents/PROJET/projet-l2a-g34/backend/api/utils.py Imports are incorrectly sorted and/or formatted.\n--- /home/julien/Documents/PROJET/projet-l2a-g34/backend/db_init.py:before\t2026-01-27 09:53:18.129303\n+++ /home/julien/Documents/PROJET/projet-l2a-g34/backend/db_init.py:after\t2026-01-28 11:08:36.034910\n@@ -1,6 +1,7 @@\n import os\n \n import psycopg2\n+\n from backend.api.db import initialize_database\n \n if __name__ == "__main__":\n--- /home/julien/Documents/PROJET/projet-l2a-g34/backend/app.py:before\t2026-01-28 10:51:57.333097\n+++ /home/julien/Documents/PROJET/projet-l2a-g34/backend/app.py:after\t2026-01-28 11:08:36.039041\n@@ -14,9 +14,10 @@\n     sys.path.insert(0, str(BASE_DIR))\n \n try:\n-    from api import admin, auth, db, scores, users, utils, game  # type: ignore\n+    from api import admin, auth, db, game, scores, users, utils  # type: ignore\n except Exception:  # pragma: no cover - fallback for package-style import\n-    from .api import admin, auth, db, scores, users, utils, game  # type: ignore\n+    from .api import (admin, auth, db, game, scores, users,  # type: ignore\n+                      utils)\n \n app = Flask(__name__)\n logging.basicConfig(level=logging.INFO)\n--- /home/julien/Documents/PROJET/projet-l2a-g34/backend/api/utils.py:before\t2026-01-23 12:20:39.338906\n+++ /home/julien/Documents/PROJET/projet-l2a-g34/backend/api/utils.py:after\t2026-01-28 11:08:36.045122\n@@ -5,8 +5,8 @@\n from typing import Any, Callable\n \n import psycopg2  # type: ignore\n+from flask import Response, jsonify, request\n from psycopg2 import OperationalError  # type: ignore\n-from flask import Response, jsonify, request\n \n BAD_REQUEST = "Bad Request"\n DATABASE_ERROR = "Database error"\n').returncode
+
+test/backend/test_isort.py:26: AssertionError</failure></testcase><testcase classname="test.backend.test_jsx_eslint" name="test_eslint_jsx" time="3.055"><failure message="AssertionError: ESLint found JSX issues (voir sortie)&#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['npx', 'eslint', 'src', '--ext', '.js,.jsx'], returncode=1, stdout=&quot;\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Account.jsx\n  24:10  error  'removeXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars\n  24:27  error  'setRemoveXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars\n\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Game.jsx\n  199:18  error  '_player' is defined but never used  no-unused-vars\n  199:27  error  '_bomb' is defined but never used    no-unused-vars\n  226:18  error  'data' is defined but never used     no-unused-vars\n  257:22  error  '_player' is defined but never used  no-unused-vars\n  257:31  error  '_ground' is defined but never used  no-unused-vars\n  375:16  error  Empty block statement                no-empty\n\n✖ 8 problems (8 errors, 0 warnings)\n\n&quot;).returncode">def test_eslint_jsx():
+        """Exécute ESLint spécifiquement sur les fichiers JSX du `frontend/src`.
+    
+        Utilise `npm run lint` si disponible, sinon `npx eslint`.
+        """
+        repo_root = Path(__file__).resolve().parents[2]
+        frontend_dir = repo_root / "frontend"
+    
+        if not frontend_dir.exists():
+            pytest.skip("frontend directory not found")
+    
+        npm_cmd = ["npm", "run", "lint"]
+        npx_cmd = ["npx", "eslint", "src", "--ext", ".js,.jsx"]
+    
+        try:
+            proc = subprocess.run(
+                npm_cmd,
+                cwd=str(frontend_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            pytest.skip("npm not installed in this environment")
+    
+        if proc.returncode == 0:
+            return
+    
+        try:
+            proc2 = subprocess.run(
+                npx_cmd,
+                cwd=str(frontend_dir),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            print(proc.stdout)
+            pytest.fail("ESLint via 'npm run lint' failed and 'npx' not available")
+    
+        print(proc.stdout)
+        print(proc2.stdout)
+&gt;       assert proc2.returncode == 0, "ESLint found JSX issues (voir sortie)"
+E       AssertionError: ESLint found JSX issues (voir sortie)
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['npx', 'eslint', 'src', '--ext', '.js,.jsx'], returncode=1, stdout="\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Account.jsx\n  24:10  error  'removeXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u     no-unused-vars\n  24:27  error  'setRemoveXpLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars\n\n/home/julien/Documents/PROJET/projet-l2a-g34/frontend/src/jsx/Game.jsx\n  199:18  error  '_player' is defined but never used  no-unused-vars\n  199:27  error  '_bomb' is defined but never used    no-unused-vars\n  226:18  error  'data' is defined but never used     no-unused-vars\n  257:22  error  '_player' is defined but never used  no-unused-vars\n  257:31  error  '_ground' is defined but never used  no-unused-vars\n  375:16  error  Empty block statement                no-empty\n\n✖ 8 problems (8 errors, 0 warnings)\n\n").returncode
+
+test/backend/test_jsx_eslint.py:51: AssertionError</failure></testcase><testcase classname="test.backend.test_mypy" name="test_mypy_backend" time="2.821"><failure message="AssertionError: mypy found type errors (voir sortie)&#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['mypy', 'backend'], returncode=1, stdout='backend/tests/test_schema.py:3: error: Library stubs not installed for &quot;psycopg2.extensions&quot;  [import-untyped]\nbackend/db_init.py:3: error: Library stubs not installed for &quot;psycopg2&quot;  [import-untyped]\nbackend/app.py:8: error: Library stubs not installed for &quot;flask_cors&quot;  [import-untyped]\nbackend/app.py:8: note: Hint: &quot;python3 -m pip install types-Flask-Cors&quot;\nbackend/tests/conftest.py:7: error: Library stubs not installed for &quot;psycopg2&quot;  [import-untyped]\nbackend/tests/conftest.py:7: note: Hint: &quot;python3 -m pip install types-psycopg2&quot;\nbackend/tests/conftest.py:7: note: (or run &quot;mypy --install-types&quot; to install all missing stub packages)\nbackend/tests/conftest.py:7: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports\nFound 4 errors in 4 files (checked 26 source files)\n').returncode">def test_mypy_backend():
+        """Lance `mypy` sur le package `backend`.
+    
+        Skippe si `mypy` absent.
+        """
+        repo_root = Path(__file__).resolve().parents[2]
+    
+        cmd = ["mypy", "backend"]
+    
+        try:
+            proc = subprocess.run(
+                cmd,
+                cwd=str(repo_root),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            pytest.skip("mypy not installed in this environment")
+    
+        print(proc.stdout)
+&gt;       assert proc.returncode == 0, "mypy found type errors (voir sortie)"
+E       AssertionError: mypy found type errors (voir sortie)
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['mypy', 'backend'], returncode=1, stdout='backend/tests/test_schema.py:3: error: Library stubs not installed for "psycopg2.extensions"  [import-untyped]\nbackend/db_init.py:3: error: Library stubs not installed for "psycopg2"  [import-untyped]\nbackend/app.py:8: error: Library stubs not installed for "flask_cors"  [import-untyped]\nbackend/app.py:8: note: Hint: "python3 -m pip install types-Flask-Cors"\nbackend/tests/conftest.py:7: error: Library stubs not installed for "psycopg2"  [import-untyped]\nbackend/tests/conftest.py:7: note: Hint: "python3 -m pip install types-psycopg2"\nbackend/tests/conftest.py:7: note: (or run "mypy --install-types" to install all missing stub packages)\nbackend/tests/conftest.py:7: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports\nFound 4 errors in 4 files (checked 26 source files)\n').returncode
+
+test/backend/test_mypy.py:29: AssertionError</failure></testcase><testcase classname="test.backend.test_pylint" name="test_pylint_backend" time="5.174"><failure message="AssertionError: pylint found issues (voir sortie)&#10;assert 28 == 0&#10; +  where 28 = CompletedProcess(args=['pylint', '/home/julien/Documents/PROJET/projet-l2a-g34/backend'], returncode=28, stdout='************* Module backend.db_init\nbackend/db_init.py:15:0: C0301: Line too long (177/100) (line-too-long)\nbackend/db_init.py:19:0: C0305: Trailing newlines (trailing-newlines)\nbackend/db_init.py:1:0: C0114: Missing module docstring (missing-module-docstring)\n************* Module backend.app\nbackend/app.py:18:7: W0718: Catching too general exception Exception (broad-exception-caught)\nbackend/app.py:54:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/app.py:64:0: C0116: Missing function or method docstring (missing-function-docstring)\n************* Module backend.api.admin\nbackend/api/admin.py:14:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:35:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:43:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:54:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:62:0: C0116: Missing function or me...py:110:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:136:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:207:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:223:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:235:0: C0116: Missing function or method docstring (missing-function-docstring)\n************* Module backend.api.game\nbackend/api/game.py:8:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/game.py:8:0: C0103: Function name &quot;storeInput&quot; doesn\'t conform to snake_case naming style (invalid-name)\nbackend/api/game.py:17:4: C0415: Import outside toplevel (os) (import-outside-toplevel)\nbackend/api/game.py:18:4: C0103: Variable name &quot;BASE_DIR&quot; doesn\'t conform to snake_case naming style (invalid-name)\nbackend/api/game.py:25:11: W0718: Catching too general exception Exception (broad-exception-caught)\n\n------------------------------------------------------------------\nYour code has been rated at 8.85/10 (previous run: 8.85/10, +0.00)\n\n').returncode">def test_pylint_backend():
+        """Lance `pylint` sur le package `backend`.
+    
+        Skippe le test si `pylint` n'est pas installé.
+        """
+        repo_root = Path(__file__).resolve().parents[2]
+        backend_dir = repo_root / "backend"
+    
+        cmd = ["pylint", str(backend_dir)]
+    
+        try:
+            proc = subprocess.run(
+                cmd,
+                cwd=str(repo_root),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                check=False,
+                text=True,
+            )
+        except FileNotFoundError:
+            pytest.skip("pylint not installed in this environment")
+    
+        print(proc.stdout)
+&gt;       assert proc.returncode == 0, "pylint found issues (voir sortie)"
+E       AssertionError: pylint found issues (voir sortie)
+E       assert 28 == 0
+E        +  where 28 = CompletedProcess(args=['pylint', '/home/julien/Documents/PROJET/projet-l2a-g34/backend'], returncode=28, stdout='************* Module backend.db_init\nbackend/db_init.py:15:0: C0301: Line too long (177/100) (line-too-long)\nbackend/db_init.py:19:0: C0305: Trailing newlines (trailing-newlines)\nbackend/db_init.py:1:0: C0114: Missing module docstring (missing-module-docstring)\n************* Module backend.app\nbackend/app.py:18:7: W0718: Catching too general exception Exception (broad-exception-caught)\nbackend/app.py:54:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/app.py:64:0: C0116: Missing function or method docstring (missing-function-docstring)\n************* Module backend.api.admin\nbackend/api/admin.py:14:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:35:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:43:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:54:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/admin.py:62:0: C0116: Missing function or me...py:110:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:136:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:207:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:223:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/users.py:235:0: C0116: Missing function or method docstring (missing-function-docstring)\n************* Module backend.api.game\nbackend/api/game.py:8:0: C0116: Missing function or method docstring (missing-function-docstring)\nbackend/api/game.py:8:0: C0103: Function name "storeInput" doesn\'t conform to snake_case naming style (invalid-name)\nbackend/api/game.py:17:4: C0415: Import outside toplevel (os) (import-outside-toplevel)\nbackend/api/game.py:18:4: C0103: Variable name "BASE_DIR" doesn\'t conform to snake_case naming style (invalid-name)\nbackend/api/game.py:25:11: W0718: Catching too general exception Exception (broad-exception-caught)\n\n------------------------------------------------------------------\nYour code has been rated at 8.85/10 (previous run: 8.85/10, +0.00)\n\n').returncode
+
+test/backend/test_pylint.py:30: AssertionError</failure></testcase><testcase classname="test.backend.test_schema" name="test_db_connection" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_users_table_columns_and_defaults" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_highscores_fk_and_defaults" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_cascade_delete_on_users" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_users_table_exists" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_highscores_table_exists" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_user_profiles_table_exists" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_game_sessions_table_exists" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_schema" name="test_user_xp_history_table_exists" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_submit_score" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_submit_score_update_highscore" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_submit_score_no_update_lower" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_get_high_score" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_get_high_score_not_found" time="0.003"><failure message="assert 500 == 404&#10; +  where 500 = &lt;WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]&gt;.status_code">client = &lt;FlaskClient &lt;Flask 'backend.app'&gt;&gt;
+
+    def test_get_high_score_not_found(client: FlaskClient):
+        """Test de récupération du meilleur score pour un utilisateur
+        inexistant."""
+        rv = client.get("/api/score/nonexistent_user")
+&gt;       assert rv.status_code == 404
+E       assert 500 == 404
+E        +  where 500 = &lt;WrapperTestResponse streamed [500 INTERNAL SERVER ERROR]&gt;.status_code
+
+test/backend/test_scores.py:97: AssertionError</failure></testcase><testcase classname="test.backend.test_scores" name="test_list_high_scores" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_submit_score_missing_fields" time="0.002" /><testcase classname="test.backend.test_scores" name="test_submit_score_invalid_score_type" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_game_session_recorded" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_stage_timer_persistence_on_update" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_scores" name="test_list_ordering_by_highscore" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_get_user_xp_new_user" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_add_user_xp" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_add_user_xp_level_up" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_remove_user_xp" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_xp_cannot_go_negative" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_get_user_language" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_set_user_language" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_get_user_sessions" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_get_user_sessions_empty" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_get_user_stats" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_get_user_stats_no_sessions" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_get_user_xp_history" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase><testcase classname="test.backend.test_users" name="test_xp_add_missing_fields" time="0.002" /><testcase classname="test.backend.test_utils_and_security" name="test_parse_optional_int" time="0.001" /><testcase classname="test.backend.test_utils_and_security" name="test_require_admin_allows_options" time="0.002" /><testcase classname="test.backend.test_utils_and_security" name="test_register_stores_hashed_password" time="0.001"><error message="failed on setup with &quot;psycopg2.OperationalError: connection to server at &quot;127.0.0.1&quot;, port 5432 failed: Connection refused&#10;&#09;Is the server running on that host and accepting TCP/IP connections?&quot;">@pytest.fixture(name="db_conn")
+    def _db_conn() -&gt; Generator[Any, None, None]:  # type: ignore
+        """Fournit une connexion à la base de données.
+    
+        La fonction utilisable par pytest s'appelle toujours `db_conn` mais la
+        fonction définie est `_db_conn` pour éviter l'ombrement de nom au niveau
+        du module (Pylint W0621). Utilise try/finally pour garantir la fermeture.
+        """
+&gt;       conn = get_db_connection()
+
+test/backend/conftest.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test/backend/conftest.py:23: in get_db_connection
+    return psycopg2.connect(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dsn = 'user=mon_user password=mon_pass host=127.0.0.1 port=5432 dbname=ma_db'
+connection_factory = None, cursor_factory = None
+kwargs = {'database': 'ma_db', 'host': '127.0.0.1', 'password': 'mon_pass', 'port': '5432', ...}
+kwasync = {}
+
+    def connect(dsn=None, connection_factory=None, cursor_factory=None, **kwargs):
+        """
+        Create a new database connection.
+    
+        The connection parameters can be specified as a string:
+    
+            conn = psycopg2.connect("dbname=test user=postgres password=secret")
+    
+        or using a set of keyword arguments:
+    
+            conn = psycopg2.connect(database="test", user="postgres", password="secret")
+    
+        Or as a mix of both. The basic connection parameters are:
+    
+        - *dbname*: the database name
+        - *database*: the database name (only as keyword argument)
+        - *user*: user name used to authenticate
+        - *password*: password used to authenticate
+        - *host*: database host address (defaults to UNIX socket if not provided)
+        - *port*: connection port number (defaults to 5432 if not provided)
+    
+        Using the *connection_factory* parameter a different class or connections
+        factory can be specified. It should be a callable object taking a dsn
+        argument.
+    
+        Using the *cursor_factory* parameter, a new default cursor factory will be
+        used by cursor().
+    
+        Using *async*=True an asynchronous connection will be created. *async_* is
+        a valid alias (for Python versions where ``async`` is a keyword).
+    
+        Any other keyword parameter will be passed to the underlying client
+        library: the list of supported parameters depends on the library version.
+    
+        """
+        kwasync = {}
+        if 'async' in kwargs:
+            kwasync['async'] = kwargs.pop('async')
+        if 'async_' in kwargs:
+            kwasync['async_'] = kwargs.pop('async_')
+    
+        dsn = _ext.make_dsn(dsn, **kwargs)
+&gt;       conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+E       psycopg2.OperationalError: connection to server at "127.0.0.1", port 5432 failed: Connection refused
+E       	Is the server running on that host and accepting TCP/IP connections?
+
+../raspberry/raspberry_control/.venv/lib/python3.14/site-packages/psycopg2/__init__.py:122: OperationalError</error></testcase></testsuite></testsuites>
