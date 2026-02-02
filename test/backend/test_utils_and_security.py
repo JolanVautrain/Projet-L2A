@@ -5,7 +5,7 @@ from typing import Any
 from flask.testing import FlaskClient
 from werkzeug.security import check_password_hash
 
-from backend.api import utils
+from backend.core import utils
 from backend.tests.conftest import TEST_PASSWORD
 
 

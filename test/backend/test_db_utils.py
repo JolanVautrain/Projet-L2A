@@ -2,7 +2,7 @@
 
 import uuid
 
-from backend.api import db
+from backend.core import db
 
 
 def test_load_default_users_contains_admin():

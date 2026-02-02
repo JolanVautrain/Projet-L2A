@@ -1,12 +1,12 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { useLanguage } from "./Language.jsx";
-import "../css/Index.css";
-import "../css/Contacts.css";
-import jolanImg from "../assets/contacts/jolan.png";
-import gabImg from "../assets/contacts/gab.jpg";
-import ethanImg from "../assets/contacts/ethan.jpg";
-import laloImg from "../assets/contacts/lalo.jpg";
+import { useLanguage } from "../autres/Language.jsx";
+import "../../static/css/Index.css";
+import "../../static/css/Contacts.css";
+import jolanImg from "../../static/assets/contacts/jolan.png";
+import gabImg from "../../static/assets/contacts/gab.jpg";
+import ethanImg from "../../static/assets/contacts/ethan.jpg";
+import laloImg from "../../static/assets/contacts/lalo.jpg";
 
 /**
  * Composant ContactCard

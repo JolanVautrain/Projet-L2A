@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import Statistics from "./Statistics.jsx";
-import { LanguageSelector, useLanguage } from "./Language.jsx";
-import "../css/Index.css";
-import "../css/Account.css";
-import LoginModal from "./LoginModal.jsx";
-import RegisterModal from "./RegisterModal.jsx";
+import { LanguageSelector, useLanguage } from "../autres/Language.jsx";
+import "../../static/css/Index.css";
+import "../../static/css/Account.css";
+import LoginModal from "../accueil/modals/LoginModal.jsx";
+import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 
 /**
  * Composant Account

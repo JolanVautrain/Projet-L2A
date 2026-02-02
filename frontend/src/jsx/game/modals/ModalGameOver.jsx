@@ -1,6 +1,6 @@
-import "../css/ModalGameOver.css";
+import "../../../static/css/ModalGameOver.css";
 import PropTypes from "prop-types";
-import { useLanguage } from "./Language.jsx";
+import { useLanguage } from "../../autres/Language.jsx";
 
 function ModalGameOver({ isOpen, score, stage, onReplay, onReturnHome }) {
   const { t } = useLanguage();

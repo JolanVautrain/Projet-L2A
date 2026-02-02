@@ -14,9 +14,15 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 try:
-    from api import admin, auth, db, scores, users, utils, game  # type: ignore
+    from core import admin, db, utils  # type: ignore
+    from pages.accueil import auth, game  # type: ignore
+    from pages.classement import scores  # type: ignore
+    from pages.compte import users  # type: ignore
 except Exception:  # pragma: no cover - fallback for package-style import
-    from .api import admin, auth, db, scores, users, utils, game  # type: ignore
+    from .core import admin, db, utils  # type: ignore
+    from .pages.accueil import auth, game  # type: ignore
+    from .pages.classement import scores  # type: ignore
+    from .pages.compte import users  # type: ignore
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -39,12 +45,12 @@ CORS(
     },
 )
 
-# Register blueprints implemented in backend/api/*
+# Register blueprints - organized by page
 app.register_blueprint(auth.bp)
-app.register_blueprint(scores.bp)
-app.register_blueprint(admin.bp)
-app.register_blueprint(users.bp)
 app.register_blueprint(game.bp)
+app.register_blueprint(scores.bp)
+app.register_blueprint(users.bp)
+app.register_blueprint(admin.bp)
 
 # Ensure database schema exists
 db.check_and_recreate_schema()

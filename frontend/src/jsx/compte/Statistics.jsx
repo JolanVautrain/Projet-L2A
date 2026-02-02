@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import "../css/Statistics.css";
-import { useLanguage } from "./Language.jsx";
+import "../../static/css/Statistics.css";
+import { useLanguage } from "../autres/Language.jsx";
 
 function Statistics({ user }) {
   const [stats, setStats] = useState(null);

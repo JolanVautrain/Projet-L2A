@@ -2,11 +2,12 @@
 
 from flask import Blueprint, jsonify, request
 
-from . import db, utils
+from ...core import db, utils
 
 bp = Blueprint("game", __name__)
 
 players = []
+
 
 @bp.route("/api/game/input", methods=["POST"])
 @utils.handle_db_errors
@@ -36,9 +37,12 @@ def waitForGame():
 
     username = data.get("username")
     if username in players:
-        return utils.make_response({"Error": username+' already waiting in lobby'},status=400)
+        return utils.make_response(
+            {"Error": username + " already waiting in lobby"}, status=400
+        )
     players.append(username)
-    return utils.make_response({"Success": username+' waiting in lobby'})
+    return utils.make_response({"Success": username + " waiting in lobby"})
+
 
 @bp.route("/api/game/lobby/players", methods=["GET"])
 def getPlayers():

@@ -1,10 +1,10 @@
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import LoginModal from "./LoginModal.jsx";
-import RegisterModal from "./RegisterModal.jsx";
-import { useLanguage } from "./Language.jsx";
-import "../css/Accueil.css";
+import LoginModal from "./modals/LoginModal.jsx";
+import RegisterModal from "./modals/RegisterModal.jsx";
+import { useLanguage } from "../autres/Language.jsx";
+import "../../static/css/Accueil.css";
 
 /**
  * Composant Accueil

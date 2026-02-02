@@ -7,7 +7,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useState } from "react";
-import { useLanguage } from "./Language.jsx";
+import { useLanguage } from "./autres/Language.jsx";
 
 /**
  * Rend une route protégée qui nécessite une authentification.
@@ -31,13 +31,13 @@ RequireAuth.propTypes = {
 };
 
 // Importation des composants de l'application
-import Accueil from "./Accueil";
-import Leaderboard from "./Leaderboard";
-import Account from "./Account";
-import Contacts from "./Contacts";
-import PageNotFound from "./PageNotFound";
-import Game from "./Game.jsx";
-import GameWaitingRoom from "./GameWaitingRoom.jsx";
+import Accueil from "./accueil/Accueil";
+import Leaderboard from "./classement/Leaderboard";
+import Account from "./compte/Account";
+import Contacts from "./contacts/Contacts";
+import PageNotFound from "./autres/PageNotFound";
+import Game from "./game/Game.jsx";
+import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
 
 /**
  * Composant principal de l'application.

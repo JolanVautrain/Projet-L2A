@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "./Language.jsx";
-import "../css/Index.css";
+import { useLanguage } from "../autres/Language.jsx";
+import "../../static/css/Index.css";
 
 const GameWaitingRoom = () => {
   const [loadingGame, setLoadingGame] = useState(true);

@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import fr from '../locales/fr.json';
-import en from '../locales/en.json';
+import fr from '../../static/locales/fr.json';
+import en from '../../static/locales/en.json';
 import PropTypes from 'prop-types';
 
 const LanguageContext = createContext();

@@ -1,0 +1,1 @@
+"""Leaderboard pages module."""

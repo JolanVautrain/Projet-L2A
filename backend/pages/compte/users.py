@@ -4,7 +4,7 @@ from typing import List
 
 from flask import Blueprint, request
 
-from . import db, utils
+from ...core import db, utils
 
 bp = Blueprint("users", __name__)
 

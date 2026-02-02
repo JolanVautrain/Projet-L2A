@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import Blueprint, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from . import db, utils
+from ...core import db, utils
 
 bp = Blueprint("auth", __name__)
 

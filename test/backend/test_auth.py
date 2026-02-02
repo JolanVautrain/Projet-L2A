@@ -224,7 +224,7 @@ def test_register_handles_integrity_error(
                 pass
 
     monkeypatch.setattr(
-        "backend.api.auth.db.get_db_cursor", fake_get_db_cursor
+        "backend.pages.accueil.auth.db.get_db_cursor", fake_get_db_cursor
     )
 
     rv = client.post(

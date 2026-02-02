@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ModalGameOver from "./ModalGameOver.jsx";
-import { useLanguage } from "./Language.jsx";
-import "../css/Index.css";
-import "../css/Game.css";
+import ModalGameOver from "./modals/ModalGameOver.jsx";
+import { useLanguage } from "../autres/Language.jsx";
+import "../../static/css/Index.css";
+import "../../static/css/Game.css";
 
 // État du jeu (module global pour persister entre les rendus)
 let score = 0;
@@ -22,10 +22,10 @@ let showGameOverModalCallback = null; // Callback pour afficher la modal Game Ov
  * @return {void}
  */
 function preload() {
-  this.load.image("sky", "src/assets/sky.png");
-  this.load.image("ground", "src/assets/platform.png");
-  this.load.image("obstacle", "src/assets/bomb.png"); // reuse bomb asset
-  this.load.spritesheet("dude", "src/assets/dude.png", {
+  this.load.image("sky", "src/static/assets/sky.png");
+  this.load.image("ground", "src/static/assets/platform.png");
+  this.load.image("obstacle", "src/static/assets/bomb.png"); // reuse bomb asset
+  this.load.spritesheet("dude", "src/static/assets/dude.png", {
     frameWidth: 32,
     frameHeight: 48,
   });
