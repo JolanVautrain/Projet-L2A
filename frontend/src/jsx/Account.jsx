@@ -23,6 +23,8 @@ function Account({ user, setUser }) {
   const [awardXpLoading, setAwardXpLoading] = useState(false);
   const [removeXpLoading, setRemoveXpLoading] = useState(false);
   const [deleteHistoryLoading, setDeleteHistoryLoading] = useState(false);
+  const [setAdminLoading, setSetAdminLoading] = useState(false);
+  const [removeAdminLoading, setRemoveAdminLoading] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,11 +36,11 @@ function Account({ user, setUser }) {
 
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
-    if (user === "admin") {
+    if (user) {
       (async () => {
         try {
           const res = await fetch(`${apiBase}/api/admin/users`, {
-            headers: { "X-Admin-User": "admin" },
+            headers: { "X-Admin-User": user },
           });
           if (res.ok) {
             const data = await res.json();
@@ -183,7 +185,7 @@ function Account({ user, setUser }) {
           </p>
           <Statistics user={user} />
           <LanguageSelector />
-          {user === "admin" && (
+          {(user === "admin" || allUsers.find(u => u.username === user)?.is_admin) && (
             <div className="admin-tools">
               <h2
                 className="admin-tools__title"
@@ -223,6 +225,7 @@ function Account({ user, setUser }) {
                           <th>Parties</th>
                           <th>Meilleur</th>
                           <th>Total</th>
+                          <th>Admin</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -251,6 +254,7 @@ function Account({ user, setUser }) {
                               <td>{u.totalGames ?? 0}</td>
                               <td>{u.bestScore ?? 0}</td>
                               <td>{u.totalScore ?? 0}</td>
+                              <td>{u.is_admin ? "✓" : "-"}</td>
                             </tr>
                           ))}
                       </tbody>
@@ -418,6 +422,114 @@ function Account({ user, setUser }) {
                     <p className="admin-action__desc">
                       {t("account.deleteUserDesc") ||
                         "Supprime l'utilisateur et les données associées."}
+                    </p>
+                    <hr />
+                  </div>
+
+                  <div className="admin-action">
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                      {selectedUser && selectedUser !== "admin" && !allUsers.find(u => u.username === selectedUser)?.is_admin && (
+                        <button
+                          className="btn primary"
+                          disabled={setAdminLoading}
+                          onClick={() => {
+                            if (
+                              selectedUser &&
+                              confirm(
+                                t("account.confirmSetAdmin").replace(
+                                  "{username}",
+                                  selectedUser
+                                ) || `Donner les droits administrateur à ${selectedUser}?`
+                              )
+                            ) {
+                              setSetAdminLoading(true);
+                              fetch(
+                                `${apiBase}/api/admin/set-admin/${selectedUser}`,
+                                {
+                                  method: "POST",
+                                  headers: { "X-Admin-User": "admin" },
+                                }
+                              )
+                                .then((res) => {
+                                  if (!res.ok) throw new Error("Erreur serveur");
+                                  const updated = allUsers.map(u =>
+                                    u.username === selectedUser
+                                      ? { ...u, is_admin: true }
+                                      : u
+                                  );
+                                  setAllUsers(updated);
+                                  alert(
+                                    t("account.setAdminSuccess").replace(
+                                      "{username}",
+                                      selectedUser
+                                    ) || `${selectedUser} est maintenant administrateur.`
+                                  );
+                                })
+                                .catch((e) =>
+                                  alert(t("common.failedPrefix") + e.message)
+                                )
+                                .finally(() => setSetAdminLoading(false));
+                            }
+                          }}
+                        >
+                          {setAdminLoading
+                            ? t("common.saving")
+                            : t("account.setAdmin") || "Donner droits admin"}
+                        </button>
+                      )}
+                      {selectedUser && selectedUser !== "admin" && allUsers.find(u => u.username === selectedUser)?.is_admin && (
+                        <button
+                          className="btn warning"
+                          disabled={removeAdminLoading}
+                          onClick={() => {
+                            if (
+                              selectedUser &&
+                              confirm(
+                                t("account.confirmRemoveAdmin").replace(
+                                  "{username}",
+                                  selectedUser
+                                ) || `Retirer les droits administrateur à ${selectedUser}?`
+                              )
+                            ) {
+                              setRemoveAdminLoading(true);
+                              fetch(
+                                `${apiBase}/api/admin/remove-admin/${selectedUser}`,
+                                {
+                                  method: "POST",
+                                  headers: { "X-Admin-User": "admin" },
+                                }
+                              )
+                                .then((res) => {
+                                  if (!res.ok) throw new Error("Erreur serveur");
+                                  const updated = allUsers.map(u =>
+                                    u.username === selectedUser
+                                      ? { ...u, is_admin: false }
+                                      : u
+                                  );
+                                  setAllUsers(updated);
+                                  alert(
+                                    t("account.removeAdminSuccess").replace(
+                                      "{username}",
+                                      selectedUser
+                                    ) || `${selectedUser} n'est plus administrateur.`
+                                  );
+                                })
+                                .catch((e) =>
+                                  alert(t("common.failedPrefix") + e.message)
+                                )
+                                .finally(() => setRemoveAdminLoading(false));
+                            }
+                          }}
+                        >
+                          {removeAdminLoading
+                            ? t("common.saving")
+                            : t("account.removeAdmin") || "Retirer droits admin"}
+                        </button>
+                      )}
+                    </div>
+                    <p className="admin-action__desc">
+                      {t("account.adminManagementDesc") ||
+                        "Gérer les droits administrateur de cet utilisateur."}
                     </p>
                   </div>
                 </div>

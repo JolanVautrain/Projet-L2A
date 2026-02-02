@@ -98,7 +98,7 @@ def connect_to_database() -> Any:
         raise
 
 
-def initialize_database(init_conn=None,init_cur=None) -> None:
+def initialize_database(init_conn=None, init_cur=None) -> None:
     try:
         if not init_conn or not init_cur:
             init_conn = connect_to_database()
@@ -107,7 +107,8 @@ def initialize_database(init_conn=None,init_cur=None) -> None:
             """CREATE TABLE IF NOT EXISTS users (
             username varchar(100) PRIMARY KEY,
             password varchar(1000) NOT NULL,
-            language varchar(10) DEFAULT 'fr'
+            language varchar(10) DEFAULT 'fr',
+            is_admin boolean DEFAULT false
             );"""
         )
         init_cur.execute("SELECT COUNT(*) FROM users")
@@ -193,7 +194,7 @@ def check_and_recreate_schema() -> None:
         "user_profiles",
         "user_xp_history",
         "game_sessions",
-        "user_inputs"
+        "user_inputs",
     ]
     try:
         with get_db_connection() as conn, get_db_cursor(conn) as cur:
@@ -209,6 +210,21 @@ def check_and_recreate_schema() -> None:
             logger.info(
                 "All required tables present: %s", ", ".join(required_tables)
             )
+            # Check if is_admin column exists and add it if missing
+            try:
+                with get_db_connection() as conn, get_db_cursor(conn) as cur:
+                    cur.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name='users' AND column_name='is_admin'"
+                    )
+                    if not cur.fetchone():
+                        logger.info("Adding is_admin column to users table")
+                        cur.execute(
+                            "ALTER TABLE users ADD COLUMN is_admin boolean DEFAULT false"
+                        )
+                        conn.commit()
+            except psycopg2.Error as err:
+                logger.debug("Could not check/add is_admin column: %s", err)
             return
 
         logger.warning("Missing tables detected: %s", ", ".join(missing))

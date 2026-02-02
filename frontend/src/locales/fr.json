@@ -102,6 +102,13 @@
     "deleteXpHistorySuccess": "Historique XP supprimé pour {username}."
     ,"deleteXpHistoryDesc": "Supprime toutes les entrées d'historique XP pour l'utilisateur sélectionné."
     ,"deleteUserDesc": "Supprime l'utilisateur et toutes les données associées (irréversible)."
+    ,"setAdmin": "Donner droits administrateur"
+    ,"removeAdmin": "Retirer droits administrateur"
+    ,"confirmSetAdmin": "Donner les droits administrateur à {username} ?"
+    ,"confirmRemoveAdmin": "Retirer les droits administrateur à {username} ?"
+    ,"setAdminSuccess": "{username} est maintenant administrateur."
+    ,"removeAdminSuccess": "{username} n'est plus administrateur."
+    ,"adminManagementDesc": "Gérer les droits administrateur de cet utilisateur."
   },
   "statistics": {
     "title": "Vos statistiques",

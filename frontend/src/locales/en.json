@@ -96,6 +96,14 @@
     "deleteXpHistory": "Delete XP history",
     "confirmDeleteXpHistory": "Delete XP history for {username}?",
     "deleteXpHistorySuccess": "XP history deleted for {username}."
+    ,"deleteUserDesc": "Delete the user and all associated data (irreversible)."
+    ,"setAdmin": "Grant administrator rights"
+    ,"removeAdmin": "Remove administrator rights"
+    ,"confirmSetAdmin": "Grant administrator rights to {username}?"
+    ,"confirmRemoveAdmin": "Remove administrator rights from {username}?"
+    ,"setAdminSuccess": "{username} is now an administrator."
+    ,"removeAdminSuccess": "{username} is no longer an administrator."
+    ,"adminManagementDesc": "Manage administrator rights for this user."
   },
   "statistics": {
     "title": "Your Statistics",

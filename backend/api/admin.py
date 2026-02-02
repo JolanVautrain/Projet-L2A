@@ -52,8 +52,12 @@ def delete_user_xp_history(username: str):
 @utils.handle_db_errors
 @utils.require_admin
 def list_all_users():
-    rows = db.query_fetchall("SELECT username FROM users ORDER BY username")
-    return utils.make_response([{"username": r[0]} for r in rows])
+    rows = db.query_fetchall(
+        "SELECT username, is_admin FROM users ORDER BY username"
+    )
+    return utils.make_response(
+        [{"username": r[0], "is_admin": r[1] or False} for r in rows]
+    )
 
 
 @bp.route("/api/admin/reset-user/<username>", methods=["POST"])
@@ -97,6 +101,40 @@ def delete_user(username: str):
             {"error": "forbidden", "message": "cannot delete admin user"},
             403,
         )
-
     db.exec_commit("DELETE FROM users WHERE username = %s", (username,))
+    return utils.make_response({"ok": True})
+
+
+@bp.route("/api/admin/set-admin/<username>", methods=["POST"])
+@utils.handle_db_errors
+@utils.require_admin
+def set_admin(username: str):
+    username = username.strip()
+    if username.lower() == "admin":
+        return utils.make_response(
+            {"error": "already_admin", "message": "user is already admin"},
+            400,
+        )
+    db.exec_commit(
+        "UPDATE users SET is_admin = true WHERE username = %s", (username,)
+    )
+    return utils.make_response({"ok": True})
+
+
+@bp.route("/api/admin/remove-admin/<username>", methods=["POST"])
+@utils.handle_db_errors
+@utils.require_admin
+def remove_admin(username: str):
+    username = username.strip()
+    if username.lower() == "admin":
+        return utils.make_response(
+            {
+                "error": "forbidden",
+                "message": "cannot remove admin status from the original admin user",
+            },
+            403,
+        )
+    db.exec_commit(
+        "UPDATE users SET is_admin = false WHERE username = %s", (username,)
+    )
     return utils.make_response({"ok": True})

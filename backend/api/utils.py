@@ -40,9 +40,26 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
             return f(*args, **kwargs)
 
         user = request.headers.get("X-Admin-User")
-        if user != "admin":
+        if not user:
             return make_response({"error": "unauthorized"}, 401)
-        return f(*args, **kwargs)
+
+        # Check if user is the original admin user
+        if user == "admin":
+            return f(*args, **kwargs)
+
+        # Check if user has admin privileges in database
+        try:
+            from . import db
+
+            row = db.query_fetchone(
+                "SELECT is_admin FROM users WHERE username = %s", (user,)
+            )
+            if row and row[0]:  # User exists and has is_admin = true
+                return f(*args, **kwargs)
+        except Exception as err:
+            logging.exception("Error checking admin status: %s", err)
+
+        return make_response({"error": "unauthorized"}, 401)
 
     return wrapper
 
