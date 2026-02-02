@@ -38,66 +38,70 @@ function Account({ user, setUser }) {
     ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000`
     : "";
 
+  // Fonction pour charger et enrichir les utilisateurs
+  const loadAdminUsers = async (currentUser) => {
+    try {
+      const res = await fetch(`${apiBase}/api/admin/users`, {
+        headers: { "X-Admin-User": currentUser },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Enrichir chaque utilisateur avec XP et stats (parallèle)
+        const enriched = await Promise.all(
+          data.map(async (u) => {
+            try {
+              const [xpRes, statsRes] = await Promise.all([
+                fetch(`${apiBase}/api/user/xp/${u.username}`),
+                fetch(`${apiBase}/api/user/stats/${u.username}`),
+              ]);
+              const xpJson =
+                xpRes && xpRes.ok
+                  ? await xpRes.json()
+                  : { xp: 0, level: 1 };
+              const statsJson =
+                statsRes && statsRes.ok
+                  ? await statsRes.json()
+                  : {
+                      totalGames: 0,
+                      totalScore: 0,
+                      bestScore: 0,
+                      averageScore: 0,
+                    };
+              return {
+                ...u,
+                xp: xpJson.xp || 0,
+                level: xpJson.level || 1,
+                totalGames: statsJson.totalGames || 0,
+                totalScore: statsJson.totalScore || 0,
+                bestScore: statsJson.bestScore || 0,
+                averageScore: statsJson.averageScore || 0,
+              };
+            } catch {
+              return {
+                ...u,
+                xp: 0,
+                level: 1,
+                totalGames: 0,
+                totalScore: 0,
+                bestScore: 0,
+                averageScore: 0,
+              };
+            }
+          })
+        );
+        setAllUsers(enriched);
+        if (enriched.length > 0 && !selectedUser) setSelectedUser(enriched[0].username);
+        return enriched;
+      }
+    } catch (err) {
+      console.warn("Failed to load users", err);
+    }
+  };
+
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
     if (user) {
-      (async () => {
-        try {
-          const res = await fetch(`${apiBase}/api/admin/users`, {
-            headers: { "X-Admin-User": user },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            // Enrichir chaque utilisateur avec XP et stats (parallèle)
-            const enriched = await Promise.all(
-              data.map(async (u) => {
-                try {
-                  const [xpRes, statsRes] = await Promise.all([
-                    fetch(`${apiBase}/api/user/xp/${u.username}`),
-                    fetch(`${apiBase}/api/user/stats/${u.username}`),
-                  ]);
-                  const xpJson =
-                    xpRes && xpRes.ok
-                      ? await xpRes.json()
-                      : { xp: 0, level: 1 };
-                  const statsJson =
-                    statsRes && statsRes.ok
-                      ? await statsRes.json()
-                      : {
-                          totalGames: 0,
-                          totalScore: 0,
-                          bestScore: 0,
-                          averageScore: 0,
-                        };
-                  return {
-                    ...u,
-                    xp: xpJson.xp || 0,
-                    level: xpJson.level || 1,
-                    totalGames: statsJson.totalGames || 0,
-                    totalScore: statsJson.totalScore || 0,
-                    bestScore: statsJson.bestScore || 0,
-                    averageScore: statsJson.averageScore || 0,
-                  };
-                } catch {
-                  return {
-                    ...u,
-                    xp: 0,
-                    level: 1,
-                    totalGames: 0,
-                    totalScore: 0,
-                    bestScore: 0,
-                    averageScore: 0,
-                  };
-                }
-              })
-            );
-            setAllUsers(enriched);
-            if (enriched.length > 0) setSelectedUser(enriched[0].username);
-          }
-        } catch (err) {
-          console.warn("Failed to load users", err);
-        }
-      })();
+      loadAdminUsers(user);
     }
   }, [user, apiBase]);
   // Gère la déconnexion de l'utilisateur
@@ -132,7 +136,7 @@ function Account({ user, setUser }) {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Admin-User": "admin",
+            "X-Admin-User": user,
           },
           body: JSON.stringify({
             username: selectedUser,
@@ -149,6 +153,8 @@ function Account({ user, setUser }) {
                 .replace("{username}", selectedUser)
                 .replace("{xp}", xp)
             );
+            // Rafraîchir la liste des utilisateurs après succès
+            loadAdminUsers(user);
           })
           .catch((e) => alert(t("common.failedPrefix") + e.message))
           .finally(() => setAwardXpLoading(false));
