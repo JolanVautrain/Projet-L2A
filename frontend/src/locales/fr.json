@@ -214,7 +214,31 @@
     "connectionError": "Erreur de connexion. Réessayez.",
     "noAccount": "Pas de compte ? S'inscrire",
     "accountBanned": "Votre compte a été banni pour {duration}.",
-    "banReason": "Raison"
+    "banReason": "Raison",
+    "forgotPassword": "Mot de passe oublié"
+  },
+  "forgotPassword": {
+    "title": "Réinitialiser votre mot de passe",
+    "username": "Nom d'utilisateur",
+    "recoveryCode": "Code de récupération",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "resetPassword": "Réinitialiser",
+    "resetting": "Réinitialisation...",
+    "backToLogin": "Retour à la connexion",
+    "usernamePlaceholder": "Votre pseudo",
+    "recoveryCodePlaceholder": "Saisissez votre code",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 4 caractères.",
+    "allFieldsRequired": "Tous les champs sont obligatoires.",
+    "resetSuccess": "Mot de passe réinitialisé avec succès. Redirection à la connexion...",
+    "error_invalid_code": "Code invalide ou déjà utilisé.",
+    "error_user_not_found": "Utilisateur non trouvé.",
+    "error_weak_password": "Le mot de passe est trop faible.",
+    "error_missing_fields": "Tous les champs sont obligatoires.",
+    "downloadJson": "Télécharger (JSON)",
+    "importJson": "Importer un fichier JSON",
+    "downloadNotice": "Téléchargez ce fichier et conservez-le en lieu sûr."
   },
   "registerModal": {
     "title": "Créer un compte",

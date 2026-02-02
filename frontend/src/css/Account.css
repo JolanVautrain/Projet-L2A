@@ -323,3 +323,27 @@ form label {
 .account__notice{ margin-top:50px }
 .account__login-btn{ margin-top:12px }
 .account__logout{ margin-top:16px }
+/* Recovery codes section */
+.recovery-codes-section {
+  margin: 24px 0;
+  padding: 16px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.08), rgba(29, 78, 216, 0.05));
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.recovery-codes-section h3 {
+  margin: 0 0 12px 0;
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.new-recovery-code-alert code {
+  display: block;
+  padding: 12px;
+  margin: 8px 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  user-select: all;
+}

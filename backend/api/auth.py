@@ -1,5 +1,7 @@
 """Authentication endpoints."""
 
+import hashlib
+import secrets
 import psycopg2  # type: ignore
 from datetime import datetime
 from flask import Blueprint, request
@@ -131,3 +133,124 @@ def register_user():
             return utils.make_response(
                 {"success": False, "message": "user already exists"}, 409
             )
+
+
+@bp.route("/api/user/generate-recovery-code", methods=["POST"])
+@utils.handle_db_errors
+def generate_recovery_code():
+    """Generate a new recovery code for logged-in user (requires X-Admin-User header with username)"""
+    user = request.headers.get("X-Admin-User")
+    if not user:
+        return utils.make_response({"error": "unauthorized"}, 401)
+
+    # Mark all previous codes as used to keep only one active
+    db.exec_commit(
+        "UPDATE recovery_codes SET used = true WHERE username = %s AND used = false",
+        (user,),
+    )
+
+    # Generate random code
+    code = secrets.token_urlsafe(24)  # 32 bytes -> ~32 chars
+    code_hash = hashlib.sha256(code.encode()).hexdigest()
+
+    # Store in database
+    db.exec_commit(
+        """INSERT INTO recovery_codes (username, code_hash)
+           VALUES (%s, %s)""",
+        (user, code_hash),
+    )
+
+    return utils.make_response(
+        {
+            "recovery_code": code,
+            "message": "Save this code in a safe place. It can only be used once.",
+        }
+    )
+
+
+@bp.route("/api/user/get-recovery-codes", methods=["GET"])
+@utils.handle_db_errors
+def get_recovery_codes():
+    """Get count and status of recovery codes for logged-in user"""
+    user = request.headers.get("X-Admin-User")
+    if not user:
+        return utils.make_response({"error": "unauthorized"}, 401)
+
+    rows = db.query_fetchall(
+        "SELECT COUNT(*) as total, SUM(CASE WHEN used=false THEN 1 ELSE 0 END) as available FROM recovery_codes WHERE username = %s",
+        (user,),
+    )
+    total, available = rows[0] if rows else (0, 0)
+    return utils.make_response(
+        {"total": int(total or 0), "available": int(available or 0)}
+    )
+
+
+@bp.route("/api/auth/reset-password-with-code", methods=["POST"])
+@utils.handle_db_errors
+def reset_password_with_code():
+    """Reset password using username + recovery code (public endpoint, no auth required)"""
+    data = request.get_json()
+    if not data:
+        return utils.make_response({"error": "invalid_request"}, 400)
+
+    username = data.get("username", "").strip()
+    code = data.get("recovery_code", "").strip()
+    new_password = data.get("new_password", "").strip()
+
+    if not username or not code or not new_password:
+        return utils.make_response(
+            {
+                "error": "missing_fields",
+                "message": "username, recovery_code, and new_password required",
+            },
+            400,
+        )
+
+    if len(new_password) < 4:
+        return utils.make_response(
+            {
+                "error": "weak_password",
+                "message": "password must be at least 4 characters",
+            },
+            400,
+        )
+
+    code_hash = hashlib.sha256(code.encode()).hexdigest()
+
+    # Check if user exists and code is valid
+    row = db.query_fetchone(
+        """SELECT rc.id FROM recovery_codes rc
+           JOIN users u ON rc.username = u.username
+           WHERE u.username = %s AND rc.code_hash = %s AND rc.used = false
+           LIMIT 1""",
+        (username, code_hash),
+    )
+
+    if not row:
+        return utils.make_response(
+            {
+                "error": "invalid_code",
+                "message": "Invalid or already used recovery code",
+            },
+            400,
+        )
+
+    code_id = row[0]
+
+    # Update password
+    hashed_pw = generate_password_hash(new_password)
+    db.exec_commit(
+        "UPDATE users SET password = %s WHERE username = %s",
+        (hashed_pw, username),
+    )
+
+    # Mark code as used
+    db.exec_commit(
+        "UPDATE recovery_codes SET used = true WHERE id = %s",
+        (code_id,),
+    )
+
+    return utils.make_response(
+        {"ok": True, "message": "Password reset successfully"}
+    )

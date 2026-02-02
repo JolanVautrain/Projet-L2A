@@ -209,7 +209,31 @@
     "connectionError": "Connection error. Please try again.",
     "noAccount": "No account? Register",
     "accountBanned": "Your account has been banned for {duration}.",
-    "banReason": "Reason"
+    "banReason": "Reason",
+    "forgotPassword": "Forgot password"
+  },
+  "forgotPassword": {
+    "title": "Reset your password",
+    "username": "Username",
+    "recoveryCode": "Recovery code",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "resetPassword": "Reset",
+    "resetting": "Resetting...",
+    "backToLogin": "Back to login",
+    "usernamePlaceholder": "Your username",
+    "recoveryCodePlaceholder": "Enter your code",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordTooShort": "Password must be at least 4 characters long.",
+    "allFieldsRequired": "All fields are required.",
+    "resetSuccess": "Password reset successfully. Redirecting to login...",
+    "error_invalid_code": "Invalid or already used code.",
+    "error_user_not_found": "User not found.",
+    "error_weak_password": "Password is too weak.",
+    "error_missing_fields": "All fields are required.",
+    "downloadJson": "Download (JSON)",
+    "importJson": "Import JSON file",
+    "downloadNotice": "Download this file and keep it in a safe place."
   },
   "registerModal": {
     "title": "Create an account",

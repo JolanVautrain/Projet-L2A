@@ -218,6 +218,7 @@ def set_user_language():
     )
     return utils.make_response({"language": language})
 
+
 @bp.route("/api/user/delete-user/<username>", methods=["DELETE", "POST"])
 @utils.handle_db_errors
 def delete_user(username: str):
@@ -230,6 +231,7 @@ def delete_user(username: str):
     db.exec_commit("DELETE FROM users WHERE username = %s", (username,))
     return utils.make_response({"ok": True})
 
+
 @bp.route("/api/user/reset-sessions/<username>", methods=["POST"])
 @utils.handle_db_errors
 def reset_user_sessions(username: str):
@@ -239,3 +241,19 @@ def reset_user_sessions(username: str):
     )
     db.exec_commit("DELETE FROM highscores WHERE username = %s", (username,))
     return utils.make_response({"ok": True})
+
+
+@bp.route("/api/user/is-admin", methods=["GET"])
+@utils.handle_db_errors
+def is_admin_user():
+    user = request.headers.get("X-Admin-User")
+    if not user:
+        return utils.make_response({"error": "unauthorized"}, 401)
+
+    row = db.query_fetchone(
+        "SELECT is_admin FROM users WHERE username = %s", (user,)
+    )
+    if not row:
+        return utils.make_response({"is_admin": False})
+
+    return utils.make_response({"is_admin": bool(row[0])})

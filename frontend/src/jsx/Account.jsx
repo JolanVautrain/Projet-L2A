@@ -32,6 +32,10 @@ function Account({ user, setUser }) {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [recoveryCodesLoading, setRecoveryCodesLoading] = useState(false);
+  const [newRecoveryCode, setNewRecoveryCode] = useState(null);
+  const [showNewCode, setShowNewCode] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
   const apiBase = globalThis?.window
@@ -44,6 +48,10 @@ function Account({ user, setUser }) {
       const res = await fetch(`${apiBase}/api/admin/users`, {
         headers: { "X-Admin-User": currentUser },
       });
+        // Silently ignore 401 (user not admin)
+        if (res.status === 401) {
+          return;
+        }
       if (res.ok) {
         const data = await res.json();
         // Enrichir chaque utilisateur avec XP et stats (parallèle)
@@ -100,10 +108,73 @@ function Account({ user, setUser }) {
 
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
-    if (user) {
-      loadAdminUsers(user);
-    }
+    if (!user) return;
+
+    const checkAdmin = async () => {
+      try {
+        if (user === "admin") {
+          setIsAdmin(true);
+          loadAdminUsers(user);
+          return;
+        }
+        const res = await fetch(`${apiBase}/api/user/is-admin`, {
+          headers: { "X-Admin-User": user },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const adminFlag = Boolean(data.is_admin);
+          setIsAdmin(adminFlag);
+          if (adminFlag) {
+            loadAdminUsers(user);
+          } else {
+            setAllUsers([]);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to check admin status", err);
+      }
+    };
+
+    checkAdmin();
   }, [user, apiBase]);
+
+
+  const handleGenerateRecoveryCode = async () => {
+    setRecoveryCodesLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/api/user/generate-recovery-code`, {
+        method: "POST",
+        headers: { "X-Admin-User": user },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNewRecoveryCode(data.recovery_code || data.code);
+        setShowNewCode(true);
+      } else {
+        alert("Erreur lors de la génération du code");
+      }
+    } catch (err) {
+      alert("Erreur: " + err.message);
+    } finally {
+      setRecoveryCodesLoading(false);
+    }
+  };
+  
+  const handleDownloadRecoveryCode = () => {
+    if (!newRecoveryCode) return;
+    const payload = { username: user, recovery_code: newRecoveryCode };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `recovery_${user}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
   // Gère la déconnexion de l'utilisateur
   const handleLogout = () => {
     setUser(null);
@@ -195,7 +266,61 @@ function Account({ user, setUser }) {
           </p>
           <Statistics user={user} />
           <LanguageSelector />
-          {(user === "admin" || allUsers.find(u => u.username === user)?.is_admin) && (
+          
+          {/* Codes de récupération */}
+          <div className="recovery-codes-section">
+            <h3>Codes de récupération</h3>
+            <button
+              onClick={handleGenerateRecoveryCode}
+              disabled={recoveryCodesLoading}
+              className="btn primary"
+              style={{ marginTop: "8px" }}
+            >
+              {recoveryCodesLoading ? "Génération..." : "Générer un nouveau code"}
+            </button>
+            
+            {showNewCode && newRecoveryCode && (
+              <div className="new-recovery-code-alert" style={{
+                background: "linear-gradient(180deg, rgba(59, 130, 246, 0.15), rgba(29, 78, 216, 0.10))",
+                border: "1px solid rgba(59, 130, 246, 0.35)",
+                borderRadius: "10px",
+                padding: "16px",
+                marginTop: "12px",
+                textAlign: "center"
+              }}>
+                <p style={{ fontSize: "0.9rem", margin: "0 0 8px 0" }}>
+                  Votre nouveau code de récupération (à noter en sûr place) :
+                </p>
+                <code style={{
+                  fontSize: "1.1rem",
+                  fontWeight: "bold",
+                  color: "#60a5fa",
+                  wordBreak: "break-all"
+                }}>
+                  {newRecoveryCode}
+                </code>
+                <p style={{ fontSize: "0.85rem", color: "#999", margin: "8px 0 0 0" }}>
+                  {t("forgotPassword.downloadNotice") || "Ce code ne s'affichera qu'une seule fois. À utiliser sur la page de connexion si vous oubliez votre mot de passe."}
+                </p>
+                <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "8px" }}>
+                  <button
+                    onClick={handleDownloadRecoveryCode}
+                    className="btn"
+                  >
+                    {t("forgotPassword.downloadJson") || "Télécharger (JSON)"}
+                  </button>
+                  <button
+                    onClick={() => setShowNewCode(false)}
+                    className="btn"
+                  >
+                    {t("common.close") || "Fermer"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {isAdmin && (
             <div className="admin-tools">
               <h2
                 className="admin-tools__title"

@@ -3,6 +3,7 @@ import "../css/LoginModal.css";
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "./Language.jsx";
+import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
 
 /** 
  * Composant LoginModal
@@ -14,6 +15,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { t } = useLanguage();
 
   /**
@@ -149,9 +151,22 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
             >
               {t('loginModal.noAccount')}
             </button>
+            <button
+              type="button"
+              className="btn ghost forgot-password-btn"
+              onClick={() => setShowForgotPassword(true)}
+            >
+              {t('loginModal.forgotPassword')}
+            </button>
           </div>
         </form>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onBackToLogin={() => setShowForgotPassword(false)}
+      />
     </div>,
     document.body
   );
