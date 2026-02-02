@@ -53,10 +53,18 @@ def delete_user_xp_history(username: str):
 @utils.require_admin
 def list_all_users():
     rows = db.query_fetchall(
-        "SELECT username, is_admin FROM users ORDER BY username"
+        "SELECT username, is_admin, banned_until, ban_reason FROM users ORDER BY username"
     )
     return utils.make_response(
-        [{"username": r[0], "is_admin": r[1] or False} for r in rows]
+        [
+            {
+                "username": r[0],
+                "is_admin": r[1] or False,
+                "banned_until": r[2].isoformat() if r[2] else None,
+                "ban_reason": r[3],
+            }
+            for r in rows
+        ]
     )
 
 
@@ -136,5 +144,76 @@ def remove_admin(username: str):
         )
     db.exec_commit(
         "UPDATE users SET is_admin = false WHERE username = %s", (username,)
+    )
+    return utils.make_response({"ok": True})
+
+
+@bp.route("/api/admin/ban-user/<username>", methods=["POST"])
+@utils.handle_db_errors
+@utils.require_admin
+def ban_user(username: str):
+    username = username.strip()
+    if username.lower() == "admin":
+        return utils.make_response(
+            {"error": "forbidden", "message": "cannot ban the admin user"},
+            403,
+        )
+
+    data = request.get_json() or {}
+    duration_hours = data.get("duration_hours")  # None for permanent
+    reason = data.get("reason", "No reason provided").strip()
+
+    if duration_hours is not None:
+        # Temporary ban
+        try:
+            duration_hours = int(duration_hours)
+            if duration_hours <= 0:
+                return utils.make_response(
+                    {
+                        "error": "invalid_duration",
+                        "message": "duration must be positive",
+                    },
+                    400,
+                )
+        except (ValueError, TypeError):
+            return utils.make_response(
+                {
+                    "error": "invalid_duration",
+                    "message": "duration must be an integer",
+                },
+                400,
+            )
+
+        db.exec_commit(
+            """UPDATE users 
+               SET banned_until = CURRENT_TIMESTAMP + INTERVAL '%s hours',
+                   ban_reason = %s
+               WHERE username = %s""",
+            (duration_hours, reason, username),
+        )
+    else:
+        # Permanent ban
+        db.exec_commit(
+            """UPDATE users 
+               SET banned_until = NULL,
+                   ban_reason = %s
+               WHERE username = %s""",
+            (f"[PERMANENT] {reason}", username),
+        )
+
+    return utils.make_response({"ok": True})
+
+
+@bp.route("/api/admin/unban-user/<username>", methods=["POST"])
+@utils.handle_db_errors
+@utils.require_admin
+def unban_user(username: str):
+    username = username.strip()
+    db.exec_commit(
+        """UPDATE users 
+           SET banned_until = NULL,
+               ban_reason = NULL
+           WHERE username = %s""",
+        (username,),
     )
     return utils.make_response({"ok": True})

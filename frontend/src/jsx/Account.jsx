@@ -25,6 +25,10 @@ function Account({ user, setUser }) {
   const [deleteHistoryLoading, setDeleteHistoryLoading] = useState(false);
   const [setAdminLoading, setSetAdminLoading] = useState(false);
   const [removeAdminLoading, setRemoveAdminLoading] = useState(false);
+  const [banUserLoading, setBanUserLoading] = useState(false);
+  const [unbanUserLoading, setUnbanUserLoading] = useState(false);
+  const [banDuration, setBanDuration] = useState("");
+  const [banReason, setBanReason] = useState("");
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -226,6 +230,7 @@ function Account({ user, setUser }) {
                           <th>Meilleur</th>
                           <th>Total</th>
                           <th>Admin</th>
+                          <th>Banni</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -255,6 +260,7 @@ function Account({ user, setUser }) {
                               <td>{u.bestScore ?? 0}</td>
                               <td>{u.totalScore ?? 0}</td>
                               <td>{u.is_admin ? "✓" : "-"}</td>
+                              <td>{u.banned_until ? "✓" : "-"}</td>
                             </tr>
                           ))}
                       </tbody>
@@ -530,6 +536,164 @@ function Account({ user, setUser }) {
                     <p className="admin-action__desc">
                       {t("account.adminManagementDesc") ||
                         "Gérer les droits administrateur de cet utilisateur."}
+                    </p>
+                    <hr />
+                  </div>
+
+                  <div className="admin-action">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <input
+                          type="number"
+                          placeholder={t("account.banDurationPlaceholder") || "Durée en heures (vide = permanent)"}
+                          value={banDuration}
+                          onChange={(e) => setBanDuration(e.target.value)}
+                          min="1"
+                          style={{
+                            padding: "10px 14px",
+                            borderRadius: "10px",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            background: "rgba(255,255,255,0.02)",
+                            color: "inherit",
+                            flex: 1,
+                            minWidth: "150px",
+                          }}
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("account.banReasonPlaceholder") || "Raison du bannissement..."}
+                          value={banReason}
+                          onChange={(e) => setBanReason(e.target.value)}
+                          style={{
+                            padding: "10px 14px",
+                            borderRadius: "10px",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            background: "rgba(255,255,255,0.02)",
+                            color: "inherit",
+                            flex: 1,
+                            minWidth: "200px",
+                          }}
+                        />
+                      </div>
+                      {selectedUser && selectedUser !== "admin" && !allUsers.find(u => u.username === selectedUser)?.banned_until && (
+                        <button
+                          className="btn danger"
+                          disabled={banUserLoading}
+                          onClick={() => {
+                            if (selectedUser && banReason.trim()) {
+                              const durationHours = banDuration ? parseInt(banDuration) : null;
+                              if (durationHours !== null && durationHours <= 0) {
+                                alert(t("account.invalidDuration") || "La durée doit être positive");
+                                return;
+                              }
+                              const banType = durationHours ? `${durationHours}h` : "permanent";
+                              if (
+                                confirm(
+                                  t("account.confirmBanUser").replace("{username}", selectedUser).replace("{duration}", banType) ||
+                                  `Bannir ${selectedUser} pour ${banType}?`
+                                )
+                              ) {
+                                setBanUserLoading(true);
+                                fetch(
+                                  `${apiBase}/api/admin/ban-user/${selectedUser}`,
+                                  {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      "X-Admin-User": user,
+                                    },
+                                    body: JSON.stringify({
+                                      duration_hours: durationHours,
+                                      reason: banReason.trim(),
+                                    }),
+                                  }
+                                )
+                                  .then((res) => {
+                                    if (!res.ok) throw new Error("Erreur serveur");
+                                    const updated = allUsers.map(u =>
+                                      u.username === selectedUser
+                                        ? {
+                                            ...u,
+                                            banned_until: durationHours
+                                              ? new Date(Date.now() + durationHours * 3600000).toISOString()
+                                              : new Date(8640000000000000).toISOString(), // Very far in future for permanent
+                                          }
+                                        : u
+                                    );
+                                    setAllUsers(updated);
+                                    setBanDuration("");
+                                    setBanReason("");
+                                    alert(
+                                      t("account.banUserSuccess").replace("{username}", selectedUser) ||
+                                      `${selectedUser} a été banni.`
+                                    );
+                                  })
+                                  .catch((e) =>
+                                    alert(t("common.failedPrefix") + e.message)
+                                  )
+                                  .finally(() => setBanUserLoading(false));
+                              }
+                            } else {
+                              alert(t("account.banReasonRequired") || "La raison du bannissement est requise");
+                            }
+                          }}
+                        >
+                          {banUserLoading
+                            ? t("common.saving")
+                            : t("account.banUser") || "Bannir"}
+                        </button>
+                      )}
+                      {selectedUser && allUsers.find(u => u.username === selectedUser)?.banned_until && (
+                        <button
+                          className="btn warning"
+                          disabled={unbanUserLoading}
+                          onClick={() => {
+                            if (
+                              selectedUser &&
+                              confirm(
+                                t("account.confirmUnbanUser").replace("{username}", selectedUser) ||
+                                `Débannir ${selectedUser}?`
+                              )
+                            ) {
+                              setUnbanUserLoading(true);
+                              fetch(
+                                `${apiBase}/api/admin/unban-user/${selectedUser}`,
+                                {
+                                  method: "POST",
+                                  headers: { "X-Admin-User": user },
+                                }
+                              )
+                                .then((res) => {
+                                  if (!res.ok) throw new Error("Erreur serveur");
+                                  const updated = allUsers.map(u =>
+                                    u.username === selectedUser
+                                      ? { ...u, banned_until: null, ban_reason: null }
+                                      : u
+                                  );
+                                  setAllUsers(updated);
+                                  setBanDuration("");
+                                  setBanReason("");
+                                  alert(
+                                    t("account.unbanUserSuccess").replace("{username}", selectedUser) ||
+                                    `${selectedUser} a été débanni.`
+                                  );
+                                })
+                                .catch((e) =>
+                                  alert(t("common.failedPrefix") + e.message)
+                                )
+                                .finally(() => setUnbanUserLoading(false));
+                            }
+                          }}
+                        >
+                          {unbanUserLoading
+                            ? t("common.saving")
+                            : t("account.unbanUser") || "Débannir"}
+                        </button>
+                      )}
+                    </div>
+                    <p className="admin-action__desc">
+                      {t("account.banManagementDesc") ||
+                        "Bannir temporairement ou définitivement cet utilisateur."}
                     </p>
                   </div>
                 </div>

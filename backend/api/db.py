@@ -108,7 +108,9 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             username varchar(100) PRIMARY KEY,
             password varchar(1000) NOT NULL,
             language varchar(10) DEFAULT 'fr',
-            is_admin boolean DEFAULT false
+            is_admin boolean DEFAULT false,
+            banned_until TIMESTAMP NULL,
+            ban_reason TEXT NULL
             );"""
         )
         init_cur.execute("SELECT COUNT(*) FROM users")
@@ -223,8 +225,34 @@ def check_and_recreate_schema() -> None:
                             "ALTER TABLE users ADD COLUMN is_admin boolean DEFAULT false"
                         )
                         conn.commit()
+
+                    # Check and add banned_until column
+                    cur.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name='users' AND column_name='banned_until'"
+                    )
+                    if not cur.fetchone():
+                        logger.info(
+                            "Adding banned_until column to users table"
+                        )
+                        cur.execute(
+                            "ALTER TABLE users ADD COLUMN banned_until TIMESTAMP NULL"
+                        )
+                        conn.commit()
+
+                    # Check and add ban_reason column
+                    cur.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name='users' AND column_name='ban_reason'"
+                    )
+                    if not cur.fetchone():
+                        logger.info("Adding ban_reason column to users table")
+                        cur.execute(
+                            "ALTER TABLE users ADD COLUMN ban_reason TEXT NULL"
+                        )
+                        conn.commit()
             except psycopg2.Error as err:
-                logger.debug("Could not check/add is_admin column: %s", err)
+                logger.debug("Could not check/add columns: %s", err)
             return
 
         logger.warning("Missing tables detected: %s", ", ".join(missing))

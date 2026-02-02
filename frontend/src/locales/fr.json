@@ -109,6 +109,17 @@
     ,"setAdminSuccess": "{username} est maintenant administrateur."
     ,"removeAdminSuccess": "{username} n'est plus administrateur."
     ,"adminManagementDesc": "Gérer les droits administrateur de cet utilisateur."
+    ,"banUser": "Bannir l'utilisateur"
+    ,"unbanUser": "Débannir l'utilisateur"
+    ,"confirmBanUser": "Bannir {username} pour {duration} ?"
+    ,"confirmUnbanUser": "Débannir {username} ?"
+    ,"banUserSuccess": "{username} a été banni."
+    ,"unbanUserSuccess": "{username} a été débanni."
+    ,"banManagementDesc": "Bannir temporairement ou définitivement cet utilisateur."
+    ,"banDurationPlaceholder": "Durée en heures (vide = permanent)"
+    ,"banReasonPlaceholder": "Raison du bannissement..."
+    ,"banReasonRequired": "La raison du bannissement est requise"
+    ,"invalidDuration": "La durée doit être positive"
   },
   "statistics": {
     "title": "Vos statistiques",
@@ -201,7 +212,9 @@
     "incorrectUsername": "Nom d'utilisateur incorrect.",
     "incorrectPassword": "Mot de passe incorrect.",
     "connectionError": "Erreur de connexion. Réessayez.",
-    "noAccount": "Pas de compte ? S'inscrire"
+    "noAccount": "Pas de compte ? S'inscrire",
+    "accountBanned": "Votre compte a été banni pour {duration}.",
+    "banReason": "Raison"
   },
   "registerModal": {
     "title": "Créer un compte",

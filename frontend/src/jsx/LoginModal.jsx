@@ -54,6 +54,23 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
       .then((data) => {
         if (!data.userExist) {
           setError(t("loginModal.incorrectUsername"));
+        } else if (data.banned) {
+          // User is banned
+          const bannedUntil = data.banned_until ? new Date(data.banned_until) : null;
+          const now = new Date();
+          let duration = "permanent";
+          
+          if (bannedUntil && bannedUntil.toString() !== "Invalid Date") {
+            if (bannedUntil.getTime() !== new Date(8640000000000000).getTime()) {
+              // Temporary ban - calculate remaining hours
+              const hours = Math.ceil((bannedUntil - now) / (1000 * 60 * 60));
+              duration = `${Math.max(1, hours)}h`;
+            }
+          }
+          
+          const baseMessage = t("loginModal.accountBanned");
+          const banMessage = `${baseMessage.replace("{duration}", duration)}\n${t("loginModal.banReason")}: ${data.ban_reason || t("common.noData")}`;
+          setError(banMessage);
         } else if (data.passwordIsCorrect === false) {
           setError(t("loginModal.incorrectPassword"));
         } else {

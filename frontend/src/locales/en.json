@@ -104,6 +104,17 @@
     ,"setAdminSuccess": "{username} is now an administrator."
     ,"removeAdminSuccess": "{username} is no longer an administrator."
     ,"adminManagementDesc": "Manage administrator rights for this user."
+    ,"banUser": "Ban user"
+    ,"unbanUser": "Unban user"
+    ,"confirmBanUser": "Ban {username} for {duration}?"
+    ,"confirmUnbanUser": "Unban {username}?"
+    ,"banUserSuccess": "{username} has been banned."
+    ,"unbanUserSuccess": "{username} has been unbanned."
+    ,"banManagementDesc": "Temporarily or permanently ban this user."
+    ,"banDurationPlaceholder": "Duration in hours (empty = permanent)"
+    ,"banReasonPlaceholder": "Ban reason..."
+    ,"banReasonRequired": "Ban reason is required"
+    ,"invalidDuration": "Duration must be positive"
   },
   "statistics": {
     "title": "Your Statistics",
@@ -196,7 +207,9 @@
     "incorrectUsername": "Incorrect username.",
     "incorrectPassword": "Incorrect password.",
     "connectionError": "Connection error. Please try again.",
-    "noAccount": "No account? Register"
+    "noAccount": "No account? Register",
+    "accountBanned": "Your account has been banned for {duration}.",
+    "banReason": "Reason"
   },
   "registerModal": {
     "title": "Create an account",
