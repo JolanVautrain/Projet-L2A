@@ -4,7 +4,7 @@
 
 // Constantes de balancement de difficulté
 const BASE_OBSTACLE_SPEED = 200;
-const SPEED_INCREMENT = 30; // Au lieu de 200 (exponentiel), on ajoute 30 par stage
+const SPEED_INCREMENT = 150; // Au lieu de 200 (exponentiel), on ajoute 30 par stage
 const MAX_SPAWN_RATE = 4000; // Minimum 4 secondes entre les obstacles
 const MIN_SPAWN_RATE = 1000; // Minimum 1 seconde
 
@@ -63,20 +63,31 @@ export function spawnObstacle(scene) {
   // Calcul de la vitesse: linéaire et équilibrée + boost optionnel
   const obstacleSpeed = -(BASE_OBSTACLE_SPEED + (internalStage - 1) * SPEED_INCREMENT + speedBoost);
 
-  // Spawner plusieurs bombes avec hauteurs aléatoires
+  // Spawner plusieurs bombes avec hauteurs aléatoires - PLUS DE BOMBES EN BAS
   const heightLevels = [
-    120,  // Haut (premier quartier)
-    250,  // Moyen-haut (demi-hauteur)
+    480,  // Très bas (plateforme - bonus difficulty)
+    450,  // Bas (plateforme)
     380,  // Moyen-bas (trois quarts)
-    500   // Bas (plateforme)
+    250,  // Moyen-haut (demi-hauteur)
+    120   // Haut (premier quartier)
   ];
+  
+  // Pondérer vers les hauteurs basses (70% de chance pour bas/moyen-bas)
+  const selectHeight = () => {
+    const rand = Math.random();
+    if (rand < 0.35) return heightLevels[0]; // 35% très bas
+    if (rand < 0.70) return heightLevels[1]; // 35% bas
+    if (rand < 0.85) return heightLevels[2]; // 15% moyen-bas
+    if (rand < 0.95) return heightLevels[3]; // 10% moyen-haut
+    return heightLevels[4]; // 5% haut
+  };
   
   // Sélectionner des hauteurs aléatoires uniques pour cette vague
   const selectedHeights = [];
   for (let i = 0; i < bombeCount; i++) {
     let randomHeight;
     do {
-      randomHeight = heightLevels[Math.floor(Math.random() * heightLevels.length)];
+      randomHeight = selectHeight();
     } while (selectedHeights.includes(randomHeight)); // Éviter les doublons
     selectedHeights.push(randomHeight);
   }

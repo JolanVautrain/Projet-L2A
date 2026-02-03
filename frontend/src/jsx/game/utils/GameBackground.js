@@ -3,12 +3,16 @@
  */
 
 let backgroundLayers = [];
+let buildingContainers = [];
+let buildingScrollX = 0;
 
 /**
  * Crée le système d'arrière-plan avec thème pixel cyberpunk
  */
 export function createBackgroundSystem(scene) {
   backgroundLayers = [];
+  buildingContainers = [];
+  buildingScrollX = 0;
   
   // Fond noir avec grille de scanlines
   const background = scene.add.rectangle(400, 300, 800, 600, 0x0a0e16);
@@ -29,9 +33,8 @@ export function createBackgroundSystem(scene) {
   const distantStructures = createDistantPixelLayer(scene);
   backgroundLayers.push({ graphics: distantStructures, speed: 0.15, type: 'distant' });
   
-  // Calque 2: Bâtiments pixelisés
-  const buildings = createPixelBuildingsLayer(scene);
-  backgroundLayers.push({ graphics: buildings, speed: 0.5, type: 'buildings' });
+  // Calque 2: Bâtiments pixelisés (avec défilement continu)
+  createContinuousBuildingsLayer(scene);
   
   // Calque 3: Structures au premier plan
   const structures = createPixelStructuresLayer(scene);
@@ -70,37 +73,53 @@ function createDistantPixelLayer(scene) {
 }
 
 /**
- * Crée des bâtiments pixelisés avec style cyberpunk amélioré
+ * Crée des bâtiments pixelisés avec style cyberpunk amélioré (continus)
  */
-function createPixelBuildingsLayer(scene) {
+function createContinuousBuildingsLayer(scene) {
   const container = scene.add.container(0, 0);
   container.setDepth(-70);
+  buildingContainers = [];
   
-  for (let i = 0; i < 16; i++) {
-    const x = i * 100;
-    const height = 80 + Math.random() * 120;
+  // Créer plusieurs blocs de bâtiments pour un défilement continu
+  for (let block = 0; block < 3; block++) {
+    const blockX = block * 800;
+    createBuildingBlock(scene, container, blockX);
+  }
+  
+  backgroundLayers.push({ graphics: container, speed: 0.5, type: 'buildings' });
+}
+
+/**
+ * Crée un bloc de bâtiments
+ */
+function createBuildingBlock(scene, container, blockOffsetX) {
+  // 10 bâtiments par bloc pour remplir la largeur
+  for (let i = 0; i < 10; i++) {
+    const x = blockOffsetX + i * 80;
+    const height = 80 + Math.random() * 140;
+    
+    const graphics = scene.add.graphics();
     
     // Bâtiment principal
-    const graphics = scene.add.graphics();
     graphics.fillStyle(0x1a1a2e, 1);
-    graphics.fillRect(x + 10, 400 - height, 80, height);
+    graphics.fillRect(0, 400 - height, 70, height);
     
-    // Contour magenta cyberpunk - double ligne pour effet tech
+    // Contour magenta cyberpunk
     graphics.lineStyle(2, 0xff00ff, 0.9);
-    graphics.strokeRect(x + 10, 400 - height, 80, height);
+    graphics.strokeRect(0, 400 - height, 70, height);
     graphics.lineStyle(1, 0x00ffff, 0.5);
-    graphics.strokeRect(x + 12, 402 - height, 76, height - 4);
+    graphics.strokeRect(2, 402 - height, 66, height - 4);
     
-    // Fenêtres illuminées avec détails supplémentaires
-    const windowsPerRow = 4;
-    const windowRows = Math.floor(height / 15);
+    // Fenêtres illuminées - MAINTENANT CORRIGES
+    const windowsPerRow = 3;
+    const windowRows = Math.floor((height - 20) / 18);
     
     for (let row = 0; row < windowRows; row++) {
       for (let col = 0; col < windowsPerRow; col++) {
-        const wx = x + 18 + col * 16;
-        const wy = 408 - height + row * 15 + 6;
+        const wx = 8 + col * 18;
+        const wy = 410 - height + 10 + row * 18;
         
-        // Fenêtre noire
+        // Fenêtre noire (limite à 8x8)
         graphics.fillStyle(0x0a0e16, 1);
         graphics.fillRect(wx, wy, 8, 8);
         
@@ -108,7 +127,7 @@ function createPixelBuildingsLayer(scene) {
         graphics.lineStyle(1, 0x00ffff, 0.8);
         graphics.strokeRect(wx, wy, 8, 8);
         
-        // Lumière blanche intérieure (brille la nuit)
+        // Lumière blanche intérieure
         graphics.fillStyle(0xffffff, 0.7);
         graphics.fillRect(wx + 1, wy + 1, 3, 3);
         graphics.fillStyle(0x00ffff, 0.5);
@@ -116,26 +135,26 @@ function createPixelBuildingsLayer(scene) {
       }
     }
     
-    // Antennes / Détails techniques sur les toits
+    // Antennes sur les toits
     if (Math.random() > 0.5) {
       graphics.lineStyle(1, 0x00ff00, 0.8);
       const roofY = 400 - height;
       graphics.beginPath();
-      graphics.moveTo(x + 25, roofY);
-      graphics.lineTo(x + 25, roofY - 15);
+      graphics.moveTo(18, roofY);
+      graphics.lineTo(18, roofY - 15);
       graphics.strokePath();
       
       // Signal radar
       graphics.lineStyle(1, 0xff00ff, 0.6);
       graphics.beginPath();
-      graphics.arc(x + 25, roofY - 15, 3, 0, Math.PI * 2);
+      graphics.arc(18, roofY - 15, 3, 0, Math.PI * 2);
       graphics.strokePath();
     }
     
+    graphics.setPosition(x, 0);
     container.add(graphics);
+    buildingContainers.push(graphics);
   }
-  
-  return container;
 }
 
 /**
@@ -150,28 +169,28 @@ function createPixelStructuresLayer(scene) {
     
     const graphics = scene.add.graphics();
     
-    // Structure métallique pixelisée
+    // Structure métallique pixelisée - RAPPROCHÉE DU SOL
     graphics.fillStyle(0x333333, 0.9);
-    graphics.fillRect(x + 20, 380, 12, 80);
-    graphics.fillRect(x + 60, 380, 12, 80);
-    graphics.fillRect(x + 20, 380, 52, 8);
-    graphics.fillRect(x + 20, 452, 52, 8);
+    graphics.fillRect(x + 20, 500, 12, 60);
+    graphics.fillRect(x + 60, 500, 12, 60);
+    graphics.fillRect(x + 20, 500, 52, 8);
+    graphics.fillRect(x + 20, 552, 52, 8);
     
     // Barre de néon magenta
     graphics.fillStyle(0xff00ff, 0.9);
-    graphics.fillRect(x + 35, 415, 20, 3);
+    graphics.fillRect(x + 35, 530, 20, 3);
     
     // Détails cyan
     graphics.lineStyle(1, 0x00ffff, 0.7);
-    graphics.strokeRect(x + 20, 380, 52, 80);
+    graphics.strokeRect(x + 20, 500, 52, 60);
     
     // Câbles pixelisés
     graphics.lineStyle(1, 0x666666, 0.8);
     graphics.beginPath();
-    graphics.moveTo(x + 26, 380);
-    graphics.lineTo(x + 22, 350);
-    graphics.moveTo(x + 66, 380);
-    graphics.lineTo(x + 70, 350);
+    graphics.moveTo(x + 26, 500);
+    graphics.lineTo(x + 22, 480);
+    graphics.moveTo(x + 66, 500);
+    graphics.lineTo(x + 70, 480);
     graphics.strokePath();
     
     container.add(graphics);
@@ -188,10 +207,17 @@ export function updateBackgroundParallax() {
     if (layer.graphics && layer.graphics.x !== undefined) {
       layer.graphics.x -= layer.speed;
       
-      // Créer un effet de défilement infini en pré-chargeant le prochain bloc
-      // avant que l'utilisateur ne le voit (1600 = double de la largeur)
-      if (layer.graphics.x <= -1600) {
-        layer.graphics.x += 1600;
+      // Créer un effet de défilement infini
+      if (layer.type === 'buildings') {
+        // Pour les bâtiments, recréer le cycle tous les 2400 pixels
+        if (layer.graphics.x <= -2400) {
+          layer.graphics.x += 2400;
+        }
+      } else {
+        // Pour les autres calques
+        if (layer.graphics.x <= -1600) {
+          layer.graphics.x += 1600;
+        }
       }
     }
   });

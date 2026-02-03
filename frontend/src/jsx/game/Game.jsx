@@ -42,6 +42,9 @@ function preload() {
 function create() {
   gameScene = this;
   
+  // IMPORTANT: Initialiser le timer de la partie
+  this.startTime = Date.now();
+  
   score = 0;
   gameOver = false;
   currentSessionId = Math.random().toString(36).slice(2);

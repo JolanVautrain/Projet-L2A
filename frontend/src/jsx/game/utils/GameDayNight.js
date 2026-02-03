@@ -10,9 +10,9 @@ let moonSprite = null;
 let nightLights = [];
 let isNightTime = false;
 
-const CYCLE_DURATION = 30000; // 30 secondes pour un cycle complet
-const SUN_DURATION = 15000; // Le soleil dure 15 secondes (0-15s)
-const MOON_DURATION = 15000; // La lune dure 15 secondes (15-30s)
+const CYCLE_DURATION = 120000; // 120 secondes pour un cycle complet
+const SUN_DURATION = 60000; // Le soleil dure 60 secondes (0-60s)
+const MOON_DURATION = 60000; // La lune dure 60 secondes (60-120s)
 const SKY_CENTER_X = 400;
 const SKY_CENTER_Y = 350; // Centre de la trajectoire circulaire
 const ORBIT_RADIUS = 300; // Rayon de l'orbite circulaire
@@ -71,7 +71,7 @@ export function updateDayNightCycle(scene) {
   const cyclePosition = elapsed % CYCLE_DURATION;
   
   if (cyclePosition < SUN_DURATION) {
-    // Phase du soleil (0-15s)
+    // Phase du soleil (0-60s)
     isNightTime = false;
     const sunProgress = cyclePosition / SUN_DURATION; // 0 à 1
     
@@ -102,7 +102,7 @@ export function updateDayNightCycle(scene) {
     nightLights.forEach(light => light.sprite.setAlpha(0));
     
   } else {
-    // Phase de la lune (20-40s) avec phases lunaires
+    // Phase de la lune (60-120s) avec phases lunaires
     isNightTime = true;
     const moonProgress = (cyclePosition - SUN_DURATION) / MOON_DURATION; // 0 à 1
     
@@ -137,9 +137,11 @@ export function updateDayNightCycle(scene) {
 }
 
 /**
- * Met à jour la phase lunaire avec des croissants et demi-lunes visuels
+ * Met à jour la phase lunaire avec des styles visuels différents par phase
  */
 function updateMoonPhase(moonSprite, progress) {
+  console.log('[GameDayNight] Mise à jour phase lunaire - progress:', progress);
+  
   // Déterminer la phase actuelle
   let currentPhase = MOON_PHASES[0];
   for (let phase of MOON_PHASES) {
@@ -149,158 +151,59 @@ function updateMoonPhase(moonSprite, progress) {
     }
   }
   
+  console.log('[GameDayNight] Phase lunaire actuelle:', currentPhase.name);
+  
   // Calculer la progression dans cette phase
   const phaseProgress = (progress - currentPhase.start) / (currentPhase.end - currentPhase.start);
-  const scene = moonSprite.scene;
   
   // Nouvelle lune : cercle noir quasi invisible
   if (currentPhase.name === 'new') {
     moonSprite.setAlpha(0.05);
     moonSprite.setFillStyle(0x0a0e16);
+    moonSprite.setScale(1);
   }
   // Premier croissant : croissant de lune croissante
   else if (currentPhase.name === 'waxing_crescent') {
     moonSprite.setAlpha(0.5 + phaseProgress * 0.2);
     moonSprite.setFillStyle(0xf0f0f0);
-    drawCrescentMoon(scene, moonSprite, false, phaseProgress);
+    moonSprite.setScale(0.7 + phaseProgress * 0.2);
   }
   // Premier quartier : demi-lune
   else if (currentPhase.name === 'first_quarter') {
     moonSprite.setAlpha(0.85);
     moonSprite.setFillStyle(0xf0f0f0);
-    drawHalfMoon(scene, moonSprite, false, phaseProgress);
+    moonSprite.setScale(0.9 + phaseProgress * 0.05);
   }
   // Gibbeuse croissante : presque pleine
   else if (currentPhase.name === 'waxing_gibbous') {
     moonSprite.setAlpha(0.9 + phaseProgress * 0.1);
     moonSprite.setFillStyle(0xffffff);
-    drawGibbousMoon(scene, moonSprite, false, phaseProgress);
+    moonSprite.setScale(0.95 + phaseProgress * 0.05);
   }
   // Pleine lune : totalement illuminée
   else if (currentPhase.name === 'full') {
     moonSprite.setAlpha(1);
     moonSprite.setFillStyle(0xffffff);
+    moonSprite.setScale(1);
   }
   // Gibbeuse décroissante
   else if (currentPhase.name === 'waning_gibbous') {
     moonSprite.setAlpha(0.95 - phaseProgress * 0.1);
     moonSprite.setFillStyle(0xffffff);
-    drawGibbousMoon(scene, moonSprite, true, phaseProgress);
+    moonSprite.setScale(0.95 + (1 - phaseProgress) * 0.05);
   }
   // Dernier quartier : demi-lune autre côté
   else if (currentPhase.name === 'last_quarter') {
     moonSprite.setAlpha(0.8);
     moonSprite.setFillStyle(0xf0f0f0);
-    drawHalfMoon(scene, moonSprite, true, phaseProgress);
+    moonSprite.setScale(0.9 + (1 - phaseProgress) * 0.05);
   }
   // Dernier croissant : fin du cycle
   else if (currentPhase.name === 'waning_crescent') {
     moonSprite.setAlpha(0.4 - phaseProgress * 0.2);
     moonSprite.setFillStyle(0xf0f0f0);
-    drawCrescentMoon(scene, moonSprite, true, phaseProgress);
+    moonSprite.setScale(0.7 + (1 - phaseProgress) * 0.2);
   }
-}
-
-/**
- * Dessine un croissant lunaire avec ombre parfaitement alignée
- */
-function drawCrescentMoon(scene, moonSprite, isWaning, progress) {
-  const x = moonSprite.x;
-  const y = moonSprite.y;
-  const radius = 35;
-  
-  // Créer les ombres si elles n'existent pas
-  if (!moonSprite._shadowCache) {
-    moonSprite._shadowCache = {
-      crescentShadow: scene.make.graphics({ x: 0, y: 0, add: false }),
-      halfMoonShadow: scene.make.graphics({ x: 0, y: 0, add: false }),
-      gibbousShadow: scene.make.graphics({ x: 0, y: 0, add: false })
-    };
-    moonSprite._shadowCache.crescentShadow.setDepth(-88);
-    moonSprite._shadowCache.halfMoonShadow.setDepth(-88);
-    moonSprite._shadowCache.gibbousShadow.setDepth(-88);
-  }
-  
-  const shadow = moonSprite._shadowCache.crescentShadow;
-  shadow.clear();
-  
-  // Position d'ombre pour créer l'effet croissant (suit exactement la lune)
-  const shadowOffset = isWaning ? 35 - progress * 70 : -35 + progress * 70;
-  const shadowX = x + shadowOffset;
-  
-  // Dessiner le cercle d'ombre au-dessus du sprite de lune
-  shadow.fillStyle(0x0a0e16, 1);
-  shadow.beginPath();
-  shadow.arc(shadowX, y, radius, 0, Math.PI * 2);
-  shadow.fill();
-  
-  shadow.setAlpha(moonSprite.alpha * 0.95);
-}
-
-/**
- * Dessine une demi-lune avec ombre parfaitement alignée
- */
-function drawHalfMoon(scene, moonSprite, isRight, progress) {
-  const x = moonSprite.x;
-  const y = moonSprite.y;
-  const radius = 35;
-  
-  if (!moonSprite._shadowCache) {
-    moonSprite._shadowCache = {
-      crescentShadow: scene.make.graphics({ x: 0, y: 0, add: false }),
-      halfMoonShadow: scene.make.graphics({ x: 0, y: 0, add: false }),
-      gibbousShadow: scene.make.graphics({ x: 0, y: 0, add: false })
-    };
-    moonSprite._shadowCache.crescentShadow.setDepth(-88);
-    moonSprite._shadowCache.halfMoonShadow.setDepth(-88);
-    moonSprite._shadowCache.gibbousShadow.setDepth(-88);
-  }
-  
-  const shadow = moonSprite._shadowCache.halfMoonShadow;
-  shadow.clear();
-  
-  // Ombre rectangulaire pour créer la demi-lune (parfaitement alignée)
-  const shadowX = isRight ? x + radius * 0.4 : x - radius * 0.4;
-  
-  shadow.fillStyle(0x0a0e16, 1);
-  shadow.fillRect(shadowX - radius * 0.6, y - radius, radius * 1.2, radius * 2);
-  
-  shadow.setAlpha(moonSprite.alpha * 0.92);
-}
-
-/**
- * Dessine une gibbeuse lunaire avec ombre parfaitement alignée
- */
-function drawGibbousMoon(scene, moonSprite, isWaning, progress) {
-  const x = moonSprite.x;
-  const y = moonSprite.y;
-  const radius = 35;
-  
-  if (!moonSprite._shadowCache) {
-    moonSprite._shadowCache = {
-      crescentShadow: scene.make.graphics({ x: 0, y: 0, add: false }),
-      halfMoonShadow: scene.make.graphics({ x: 0, y: 0, add: false }),
-      gibbousShadow: scene.make.graphics({ x: 0, y: 0, add: false })
-    };
-    moonSprite._shadowCache.crescentShadow.setDepth(-88);
-    moonSprite._shadowCache.halfMoonShadow.setDepth(-88);
-    moonSprite._shadowCache.gibbousShadow.setDepth(-88);
-  }
-  
-  const shadow = moonSprite._shadowCache.gibbousShadow;
-  shadow.clear();
-  
-  // Petite ombre pour gibbeuse (parfaitement alignée)
-  const shadowOffset = isWaning ? 20 + progress * 15 : -20 - progress * 15;
-  const shadowX = x + shadowOffset;
-  const shadowRadius = radius * (0.15 + progress * 0.2);
-  
-  shadow.fillStyle(0x0a0e16, 1);
-  shadow.beginPath();
-  shadow.arc(shadowX, y, shadowRadius, 0, Math.PI * 2);
-  shadow.fill();
-  
-  shadow.setAlpha(moonSprite.alpha * 0.8);
 }
 
 /**
@@ -357,9 +260,9 @@ let stars = [];
 let lightningActive = false;
 
 const WEATHER_CHECK_INTERVAL = 3000;
-const RAIN_CHANCE = 0.15;
-const RAIN_DURATION = 20000; // 20 secondes
-const CLOUD_DURATION = 30000; // 30 secondes
+const RAIN_CHANCE = 0.05; // 5% de chance
+const RAIN_DURATION = 60000; // 1 minute (60 secondes)
+const CLOUD_DURATION = 60000; // 1 minute (60 secondes)
 let rainStartTime = 0;
 
 /**
@@ -383,12 +286,14 @@ export function updateWeatherSystem(scene) {
     if (!rainActive && Math.random() < RAIN_CHANCE) {
       rainActive = true;
       rainStartTime = now;
+      console.log('[GameDayNight] Événement météo déclenché (5% chance)');
       createRain(scene);
     }
   }
   
   if (rainActive && now - rainStartTime > RAIN_DURATION) {
     rainActive = false;
+    console.log('[GameDayNight] Fin de l\'événement météo après 1 minute');
     clearRain();
   }
   
