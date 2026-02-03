@@ -6,8 +6,8 @@ import "../../static/css/Index.css";
 import "../../static/css/Game.css";
 
 // Import des modules de jeu
-import { initDayNightSystem, updateDayNightCycle, resetDayNight, initWeatherSystem, updateWeatherSystem, addNightStars, removeNightStars, addSunGlow, isNight } from "./utils/GameDayNight.js";
-import { createBackgroundSystem, updateBackgroundParallax, getBackgroundLayers, updateStarsVisibility } from "./utils/GameBackground.js";
+import { initDayNightSystem, updateDayNightCycle, resetDayNight, initWeatherSystem, updateWeatherSystem, addNightStars, removeNightStars, addSunGlow, isNight, getTimeOfDay, getSunProgress, getMoonProgress } from "./utils/GameDayNight.js";
+import { createBackgroundSystem, updateBackgroundParallax, getBackgroundLayers, updateStarsVisibility, updateSkyGradient } from "./utils/GameBackground.js";
 import { initObstacles, spawnObstacle, recycleObstacles, updateStage, getStage, resetObstacles, getObstacles } from "./utils/GameObstacles.js";
 import { initPhysics, handleJump, toggleInvincible, getInvincibility, getPlayer, getPlatforms, resetPhysicsState, setupCollisions } from "./utils/GamePhysics.js";
 import { initControls, getCursors, isJumpRequested } from "./utils/GameControls.js";
@@ -92,8 +92,15 @@ function update() {
   updateWeatherSystem(gameScene);
   updateParticles(this.game.loop.delta / 1000); // Convertir en secondes
   
-  // Mettre à jour la visibilité des étoiles selon le cycle jour/nuit
-  updateStarsVisibility(isNight());
+  // Mettre à jour la visibilité des étoiles et le dégradé du ciel
+  const nightTime = isNight();
+  updateStarsVisibility(nightTime, gameScene);
+  
+  // Mettre à jour le dégradé du ciel selon l'heure
+  const timeOfDay = getTimeOfDay();
+  const sunProg = getSunProgress();
+  const moonProg = getMoonProgress();
+  updateSkyGradient(timeOfDay, sunProg, moonProg);
 
   // Gérer le saut
   if (isJumpRequested()) {

@@ -393,6 +393,66 @@ export function isNight() {
 }
 
 /**
+ * Retourne le moment de la journée pour les dégradés
+ */
+export function getTimeOfDay() {
+  if (!startTime) return 'day';
+  
+  const elapsed = Date.now() - startTime;
+  const cyclePosition = elapsed % CYCLE_DURATION;
+  
+  if (cyclePosition < SUN_DURATION) {
+    const sunProgress = cyclePosition / SUN_DURATION;
+    
+    if (sunProgress < 0.15) {
+      return 'sunrise';
+    } else if (sunProgress > 0.85) {
+      return 'sunset';
+    }
+    return 'day';
+  } else {
+    const moonProgress = (cyclePosition - SUN_DURATION) / MOON_DURATION;
+    
+    if (moonProgress < 0.15) {
+      return 'moonrise';
+    } else if (moonProgress > 0.85) {
+      return 'moonset';
+    }
+    return 'night';
+  }
+}
+
+/**
+ * Retourne la progression du soleil (0-1)
+ */
+export function getSunProgress() {
+  if (!startTime) return 0;
+  
+  const elapsed = Date.now() - startTime;
+  const cyclePosition = elapsed % CYCLE_DURATION;
+  
+  if (cyclePosition < SUN_DURATION) {
+    return cyclePosition / SUN_DURATION;
+  }
+  return 0;
+}
+
+/**
+ * Retourne la progression de la lune (0-1)
+ */
+export function getMoonProgress() {
+  if (!startTime) return 0;
+  
+  const elapsed = Date.now() - startTime;
+  const cyclePosition = elapsed % CYCLE_DURATION;
+  
+  if (cyclePosition >= SUN_DURATION) {
+    return (cyclePosition - SUN_DURATION) / MOON_DURATION;
+  }
+  return 0;
+}
+
+/**
  * Système de pluie et nuages aléatoires
  */
 let rainActive = false;

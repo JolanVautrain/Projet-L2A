@@ -6,6 +6,10 @@ let backgroundLayers = [];
 let buildingContainers = [];
 let buildingScrollX = 0;
 let starsLayer = null;
+let shootingStars = [];
+let comets = [];
+let mountainsLayer = null;
+let skyGradient = null;
 
 /**
  * Crée le système d'arrière-plan avec thème pixel cyberpunk amélioré
@@ -14,10 +18,15 @@ export function createBackgroundSystem(scene) {
   backgroundLayers = [];
   buildingContainers = [];
   buildingScrollX = 0;
+  shootingStars = [];
+  comets = [];
   
   // Fond dégradé cyberpunk (sera géré par le cycle jour/nuit)
   const background = scene.add.rectangle(400, 300, 800, 600, 0x0a0e16);
   background.setDepth(-100);
+  
+  // Créer le dégradé du ciel (calque séparé pour les transitions)
+  skyGradient = createSkyGradient(scene);
   
   // Créer une couche d'étoiles (visible la nuit)
   starsLayer = createStarsLayer(scene);
@@ -31,84 +40,247 @@ export function createBackgroundSystem(scene) {
     scanlines.lineTo(800, y);
     scanlines.strokePath();
   }
-  scanlines.setDepth(-98);
+  scanlines.setDepth(-97);
   
-  // Calque 1: Horizon et montagnes lointaines
+  // Calque 1: Montagnes lointaines (AVANT les autres calques)
+  mountainsLayer = createMountainsLayer(scene);
+  backgroundLayers.push({ graphics: mountainsLayer, speed: 0.03, type: 'mountains' });
+  
+  // Calque 2: Horizon avec lueur
   const horizonLayer = createHorizonLayer(scene);
   backgroundLayers.push({ graphics: horizonLayer, speed: 0.05, type: 'horizon' });
   
-  // Calque 2: Structures éloignées pixelisées
+  // Calque 3: Structures éloignées pixelisées
   const distantStructures = createDistantPixelLayer(scene);
   backgroundLayers.push({ graphics: distantStructures, speed: 0.15, type: 'distant' });
   
-  // Calque 3: Bâtiments pixelisés (avec défilement continu)
+  // Calque 4: Bâtiments pixelisés (avec défilement continu)
   createContinuousBuildingsLayer(scene);
   
-  // Calque 4: Structures au premier plan
+  // Calque 5: Structures au premier plan
   const structures = createPixelStructuresLayer(scene);
   backgroundLayers.push({ graphics: structures, speed: 0.8, type: 'structures' });
   
-  // Calque 5: Sol avec détails
+  // Calque 6: Sol avec détails
   createGroundDetails(scene);
 }
 
 /**
- * Crée une couche d'étoiles pour la nuit
+ * Crée le dégradé du ciel pour les transitions jour/nuit
  */
-function createStarsLayer(scene) {
+function createSkyGradient(scene) {
   const container = scene.add.container(0, 0);
-  container.setDepth(-95);
-  container.setAlpha(0); // Invisible au départ (jour)
+  container.setDepth(-99);
   
-  // Créer des étoiles avec différentes tailles et luminosités
-  for (let i = 0; i < 80; i++) {
-    const x = Math.random() * 800;
-    const y = Math.random() * 400; // Seulement dans la partie haute du ciel
-    const size = Math.random() < 0.8 ? 1 : 2;
-    const alpha = 0.3 + Math.random() * 0.7;
-    
-    const star = scene.add.circle(x, y, size, 0xffffff);
-    star.setAlpha(alpha);
-    star._baseAlpha = alpha;
-    star._twinkleSpeed = 0.5 + Math.random() * 2;
-    container.add(star);
+  // Créer plusieurs bandes pour simuler un dégradé
+  const bands = [];
+  const bandCount = 12;
+  const bandHeight = 50;
+  
+  for (let i = 0; i < bandCount; i++) {
+    const band = scene.add.rectangle(400, i * bandHeight + bandHeight/2, 800, bandHeight + 2, 0x1a2634);
+    band.setAlpha(1);
+    bands.push(band);
+    container.add(band);
   }
+  
+  container._bands = bands;
+  return container;
+}
+
+/**
+ * Met à jour le dégradé du ciel selon l'heure
+ */
+export function updateSkyGradient(timeOfDay, sunProgress, moonProgress) {
+  if (!skyGradient || !skyGradient._bands) return;
+  
+  const bands = skyGradient._bands;
+  
+  if (timeOfDay === 'day') {
+    // Journée - ciel bleu cyberpunk
+    bands.forEach((band, i) => {
+      const t = i / bands.length;
+      // Dégradé du haut (plus clair) vers le bas (plus foncé)
+      const color = lerpColor(0x2a4a6a, 0x1a2634, t);
+      band.setFillStyle(color, 1);
+    });
+  } else if (timeOfDay === 'sunrise') {
+    // Lever du soleil - dégradé orange/rose/bleu
+    bands.forEach((band, i) => {
+      const t = i / bands.length;
+      let color;
+      if (t < 0.3) {
+        color = lerpColor(0x4a3a6a, 0xff9966, t / 0.3);
+      } else if (t < 0.6) {
+        color = lerpColor(0xff9966, 0xff6633, (t - 0.3) / 0.3);
+      } else {
+        color = lerpColor(0xff6633, 0x1a0a16, (t - 0.6) / 0.4);
+      }
+      band.setFillStyle(color, 1);
+    });
+  } else if (timeOfDay === 'sunset') {
+    // Coucher du soleil - dégradé orange/rouge/violet
+    bands.forEach((band, i) => {
+      const t = i / bands.length;
+      let color;
+      if (t < 0.25) {
+        color = lerpColor(0x1a2634, 0xff6633, t / 0.25);
+      } else if (t < 0.5) {
+        color = lerpColor(0xff6633, 0xff4400, (t - 0.25) / 0.25);
+      } else if (t < 0.75) {
+        color = lerpColor(0xff4400, 0x6a2a4a, (t - 0.5) / 0.25);
+      } else {
+        color = lerpColor(0x6a2a4a, 0x0a0616, (t - 0.75) / 0.25);
+      }
+      band.setFillStyle(color, 1);
+    });
+  } else if (timeOfDay === 'night') {
+    // Nuit - ciel sombre avec légère teinte bleue
+    bands.forEach((band, i) => {
+      const t = i / bands.length;
+      const color = lerpColor(0x0a1020, 0x050810, t);
+      band.setFillStyle(color, 1);
+    });
+  } else if (timeOfDay === 'moonrise') {
+    // Lever de lune - transition nuit
+    bands.forEach((band, i) => {
+      const t = i / bands.length;
+      const color = lerpColor(0x0a0616, 0x050810, t);
+      band.setFillStyle(color, 1);
+    });
+  } else if (timeOfDay === 'moonset') {
+    // Coucher de lune - vers l'aube
+    bands.forEach((band, i) => {
+      const t = i / bands.length;
+      let color;
+      if (t < 0.5) {
+        color = lerpColor(0x1a1030, 0x2a1a40, t / 0.5);
+      } else {
+        color = lerpColor(0x2a1a40, 0x0a0616, (t - 0.5) / 0.5);
+      }
+      band.setFillStyle(color, 1);
+    });
+  }
+}
+
+/**
+ * Crée les montagnes en arrière-plan (plus visible)
+ */
+function createMountainsLayer(scene) {
+  const container = scene.add.container(0, 0);
+  container.setDepth(-88); // Entre le ciel et les autres éléments
+  
+  const graphics = scene.add.graphics();
+  
+  // Montagnes lointaines - couche 1 (la plus éloignée)
+  graphics.fillStyle(0x0a1525, 0.9);
+  graphics.beginPath();
+  graphics.moveTo(-100, 550);
+  graphics.lineTo(50, 420);
+  graphics.lineTo(150, 480);
+  graphics.lineTo(250, 380);
+  graphics.lineTo(350, 450);
+  graphics.lineTo(450, 350);
+  graphics.lineTo(550, 420);
+  graphics.lineTo(650, 360);
+  graphics.lineTo(750, 400);
+  graphics.lineTo(850, 340);
+  graphics.lineTo(950, 420);
+  graphics.lineTo(950, 550);
+  graphics.closePath();
+  graphics.fill();
+  
+  // Montagnes plus proches - couche 2
+  graphics.fillStyle(0x0f1a2a, 0.95);
+  graphics.beginPath();
+  graphics.moveTo(-50, 550);
+  graphics.lineTo(80, 450);
+  graphics.lineTo(180, 500);
+  graphics.lineTo(280, 420);
+  graphics.lineTo(380, 480);
+  graphics.lineTo(480, 400);
+  graphics.lineTo(580, 460);
+  graphics.lineTo(680, 390);
+  graphics.lineTo(780, 450);
+  graphics.lineTo(880, 400);
+  graphics.lineTo(900, 550);
+  graphics.closePath();
+  graphics.fill();
+  
+  // Contour lumineux sur les crêtes
+  graphics.lineStyle(1, 0x2a4a6a, 0.4);
+  graphics.beginPath();
+  graphics.moveTo(-50, 550);
+  graphics.lineTo(80, 450);
+  graphics.lineTo(180, 500);
+  graphics.lineTo(280, 420);
+  graphics.lineTo(380, 480);
+  graphics.lineTo(480, 400);
+  graphics.lineTo(580, 460);
+  graphics.lineTo(680, 390);
+  graphics.lineTo(780, 450);
+  graphics.lineTo(880, 400);
+  graphics.strokePath();
+  
+  container.add(graphics);
   
   return container;
 }
 
 /**
- * Crée l'horizon avec des montagnes/collines lointaines
+ * Crée une couche d'étoiles améliorée pour la nuit avec étoiles filantes
+ */
+function createStarsLayer(scene) {
+  const container = scene.add.container(0, 0);
+  container.setDepth(-94);
+  container.setAlpha(0); // Invisible au départ (jour)
+  
+  // Créer des étoiles avec différentes tailles et luminosités
+  for (let i = 0; i < 120; i++) {
+    const x = Math.random() * 800;
+    const y = Math.random() * 350; // Seulement dans la partie haute du ciel
+    const size = Math.random() < 0.7 ? 1 : (Math.random() < 0.9 ? 2 : 3);
+    const alpha = 0.3 + Math.random() * 0.7;
+    
+    // Couleurs variées pour les étoiles
+    const colors = [0xffffff, 0xffffcc, 0xccccff, 0xffcccc, 0xccffff];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    
+    const star = scene.add.circle(x, y, size, color);
+    star.setAlpha(alpha);
+    star._baseAlpha = alpha;
+    star._twinkleSpeed = 0.5 + Math.random() * 3;
+    star._twinklePhase = Math.random() * Math.PI * 2;
+    container.add(star);
+  }
+  
+  // Stocker la scène pour créer des étoiles filantes
+  container._scene = scene;
+  
+  return container;
+}
+
+/**
+ * Crée l'horizon avec lueur (sans les montagnes qui sont dans un calque séparé)
  */
 function createHorizonLayer(scene) {
   const container = scene.add.container(0, 0);
-  container.setDepth(-85);
+  container.setDepth(-84);
   
   const graphics = scene.add.graphics();
   
-  // Montagnes lointaines - silhouettes sombres
-  graphics.fillStyle(0x0f1520, 0.8);
-  
-  // Montagne 1
-  graphics.beginPath();
-  graphics.moveTo(0, 500);
-  graphics.lineTo(100, 380);
-  graphics.lineTo(200, 450);
-  graphics.lineTo(300, 350);
-  graphics.lineTo(400, 420);
-  graphics.lineTo(500, 360);
-  graphics.lineTo(600, 400);
-  graphics.lineTo(700, 340);
-  graphics.lineTo(800, 400);
-  graphics.lineTo(800, 500);
-  graphics.closePath();
-  graphics.fill();
-  
   // Ligne de lueur à l'horizon
-  graphics.lineStyle(2, 0xff00ff, 0.3);
+  graphics.lineStyle(3, 0xff00ff, 0.2);
   graphics.beginPath();
-  graphics.moveTo(0, 500);
-  graphics.lineTo(800, 500);
+  graphics.moveTo(0, 520);
+  graphics.lineTo(800, 520);
+  graphics.strokePath();
+  
+  // Seconde ligne de lueur plus subtile
+  graphics.lineStyle(2, 0x00ffff, 0.15);
+  graphics.beginPath();
+  graphics.moveTo(0, 525);
+  graphics.lineTo(800, 525);
   graphics.strokePath();
   
   container.add(graphics);
@@ -641,7 +813,7 @@ function createGroundDetails(scene) {
  */
 export function updateBackgroundParallax() {
   backgroundLayers.forEach(layer => {
-    if (layer.graphics && layer.graphics.x !== undefined) {
+    if (layer.graphics?.x !== undefined) {
       layer.graphics.x -= layer.speed;
       
       // Créer un effet de défilement infini
@@ -650,30 +822,186 @@ export function updateBackgroundParallax() {
         if (layer.graphics.x <= -2400) {
           layer.graphics.x += 2400;
         }
-      } else {
-        // Pour les autres calques
-        if (layer.graphics.x <= -1600) {
-          layer.graphics.x += 1600;
+      } else if (layer.type === 'mountains') {
+        // Montagnes - cycle plus long
+        if (layer.graphics.x <= -200) {
+          layer.graphics.x += 200;
         }
+      } else if (layer.graphics.x <= -1600) {
+        // Pour les autres calques
+        layer.graphics.x += 1600;
       }
     }
   });
   
   // Faire scintiller les étoiles
   if (starsLayer && starsLayer.alpha > 0) {
+    const time = Date.now() / 1000;
     starsLayer.list.forEach(star => {
       if (star._baseAlpha && star._twinkleSpeed) {
-        const twinkle = Math.sin(Date.now() / 1000 * star._twinkleSpeed) * 0.3;
-        star.setAlpha(Math.max(0.1, star._baseAlpha + twinkle));
+        const twinkle = Math.sin(time * star._twinkleSpeed + (star._twinklePhase || 0)) * 0.4;
+        star.setAlpha(Math.max(0.1, Math.min(1, star._baseAlpha + twinkle)));
       }
     });
+  }
+  
+  // Mettre à jour les étoiles filantes
+  updateShootingStars();
+  
+  // Mettre à jour les comètes
+  updateComets();
+}
+
+/**
+ * Crée une étoile filante
+ */
+export function createShootingStar(scene) {
+  if (!scene || shootingStars.length >= 3) return; // Max 3 étoiles filantes à la fois
+  
+  const startX = Math.random() * 400 + 100;
+  const startY = Math.random() * 150 + 20;
+  const angle = Math.PI / 4 + Math.random() * Math.PI / 6; // Angle diagonal
+  const speed = 8 + Math.random() * 6;
+  const length = 30 + Math.random() * 40;
+  
+  const graphics = scene.add.graphics();
+  graphics.setDepth(-93);
+  
+  // Traînée de l'étoile filante
+  const gradient = [
+    { offset: 0, color: 0xffffff, alpha: 1 },
+    { offset: 0.3, color: 0xffffcc, alpha: 0.8 },
+    { offset: 0.7, color: 0xffff99, alpha: 0.4 },
+    { offset: 1, color: 0xffff00, alpha: 0 }
+  ];
+  
+  graphics.lineStyle(2, 0xffffff, 1);
+  graphics.beginPath();
+  graphics.moveTo(0, 0);
+  graphics.lineTo(-length, 0);
+  graphics.strokePath();
+  
+  graphics.lineStyle(1, 0xffffcc, 0.5);
+  graphics.beginPath();
+  graphics.moveTo(0, 0);
+  graphics.lineTo(-length * 1.5, 0);
+  graphics.strokePath();
+  
+  graphics.setPosition(startX, startY);
+  graphics.setRotation(angle);
+  
+  shootingStars.push({
+    graphics,
+    x: startX,
+    y: startY,
+    speed,
+    angle,
+    life: 1
+  });
+}
+
+/**
+ * Met à jour les étoiles filantes
+ */
+function updateShootingStars() {
+  for (let i = shootingStars.length - 1; i >= 0; i--) {
+    const star = shootingStars[i];
+    
+    // Déplacer l'étoile
+    star.x += Math.cos(star.angle) * star.speed;
+    star.y += Math.sin(star.angle) * star.speed;
+    star.life -= 0.02;
+    
+    star.graphics.setPosition(star.x, star.y);
+    star.graphics.setAlpha(star.life);
+    
+    // Supprimer si hors écran ou vie épuisée
+    if (star.x > 900 || star.y > 600 || star.life <= 0) {
+      star.graphics.destroy();
+      shootingStars.splice(i, 1);
+    }
+  }
+}
+
+/**
+ * Crée une comète
+ */
+export function createComet(scene) {
+  if (!scene || comets.length >= 1) return; // Max 1 comète à la fois
+  
+  const startX = -50;
+  const startY = Math.random() * 100 + 50;
+  const speed = 1.5 + Math.random();
+  
+  const container = scene.add.container(startX, startY);
+  container.setDepth(-92);
+  
+  // Corps de la comète
+  const body = scene.add.circle(0, 0, 6, 0x88ccff);
+  body.setAlpha(0.9);
+  
+  // Noyau brillant
+  const core = scene.add.circle(0, 0, 3, 0xffffff);
+  
+  // Queue de la comète
+  const tail = scene.add.graphics();
+  tail.fillStyle(0x6699cc, 0.3);
+  tail.beginPath();
+  tail.moveTo(-5, 0);
+  tail.lineTo(-80, -15);
+  tail.lineTo(-100, 0);
+  tail.lineTo(-80, 15);
+  tail.closePath();
+  tail.fill();
+  
+  tail.fillStyle(0x88bbee, 0.2);
+  tail.beginPath();
+  tail.moveTo(-3, 0);
+  tail.lineTo(-120, -8);
+  tail.lineTo(-150, 0);
+  tail.lineTo(-120, 8);
+  tail.closePath();
+  tail.fill();
+  
+  container.add(tail);
+  container.add(body);
+  container.add(core);
+  
+  comets.push({
+    container,
+    x: startX,
+    y: startY,
+    speed,
+    wobble: 0
+  });
+}
+
+/**
+ * Met à jour les comètes
+ */
+function updateComets() {
+  for (let i = comets.length - 1; i >= 0; i--) {
+    const comet = comets[i];
+    
+    // Déplacer la comète
+    comet.x += comet.speed;
+    comet.wobble += 0.05;
+    comet.y += Math.sin(comet.wobble) * 0.3;
+    
+    comet.container.setPosition(comet.x, comet.y);
+    
+    // Supprimer si hors écran
+    if (comet.x > 900) {
+      comet.container.destroy();
+      comets.splice(i, 1);
+    }
   }
 }
 
 /**
  * Met à jour la visibilité des étoiles selon le cycle jour/nuit
  */
-export function updateStarsVisibility(isNight) {
+export function updateStarsVisibility(isNight, scene) {
   if (starsLayer) {
     // Transition douce de l'opacité des étoiles
     const targetAlpha = isNight ? 1 : 0;
@@ -681,9 +1009,19 @@ export function updateStarsVisibility(isNight) {
     const diff = targetAlpha - currentAlpha;
     
     if (Math.abs(diff) > 0.01) {
-      starsLayer.setAlpha(currentAlpha + diff * 0.05);
+      starsLayer.setAlpha(currentAlpha + diff * 0.03);
     } else {
       starsLayer.setAlpha(targetAlpha);
+    }
+    
+    // Créer des étoiles filantes aléatoirement la nuit
+    if (isNight && scene && Math.random() < 0.005) { // 0.5% de chance par frame
+      createShootingStar(scene);
+    }
+    
+    // Créer des comètes rarement la nuit
+    if (isNight && scene && Math.random() < 0.0005) { // 0.05% de chance par frame
+      createComet(scene);
     }
   }
 }
@@ -700,4 +1038,23 @@ export function getBackgroundLayers() {
  */
 export function getStarsLayer() {
   return starsLayer;
+}
+
+/**
+ * Interpolation linéaire entre deux couleurs
+ */
+function lerpColor(color1, color2, t) {
+  const r1 = (color1 >> 16) & 0xff;
+  const g1 = (color1 >> 8) & 0xff;
+  const b1 = color1 & 0xff;
+  
+  const r2 = (color2 >> 16) & 0xff;
+  const g2 = (color2 >> 8) & 0xff;
+  const b2 = color2 & 0xff;
+  
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const b = Math.round(b1 + (b2 - b1) * t);
+  
+  return (r << 16) | (g << 8) | b;
 }
