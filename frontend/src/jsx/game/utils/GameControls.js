@@ -14,23 +14,10 @@ export function initControls(scene, onInvincibleToggleCallback = null) {
   cursors = scene.input.keyboard.createCursorKeys();
   onInvincibleToggle = onInvincibleToggleCallback;
   
-  // Ajouter la touche 4 pour le mode invincible (admin seulement)
-  scene.input.keyboard.on('keydown-FOUR', () => {
-    console.log('[GameControls] Touche 4 pressée');
-    if (onInvincibleToggle) {
-      console.log('[GameControls] Appel du callback invincibilité');
-      onInvincibleToggle();
-    }
-  });
-  
   // Ajouter la touche K pour le mode invincible (admin seulement)
   scene.input.keyboard.on('keydown-K', () => {
-    console.log('[GameControls] Touche K pressée');
     if (onInvincibleToggle) {
-      console.log('[GameControls] Appel du callback invincibilité via K');
       onInvincibleToggle();
-    } else {
-      console.log('[GameControls] ATTENTION: onInvincibleToggle est null!');
     }
   });
 }
