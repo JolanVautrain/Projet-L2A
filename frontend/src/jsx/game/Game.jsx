@@ -91,12 +91,6 @@ function update() {
   updateDayNightCycle(gameScene);
   updateWeatherSystem(gameScene);
   updateParticles(this.game.loop.delta / 1000); // Convertir en secondes
-  
-  // Ajouter des traînées holographiques du joueur
-  if (player && Math.random() < 0.4) {
-    updatePlayerHologram(gameScene, player.x, player.y);
-    createTrail(gameScene, player.x, player.y, 0x00ffff);
-  }
 
   // Gérer le saut
   if (isJumpRequested()) {
@@ -104,7 +98,6 @@ function update() {
       try {
         // Effet de particules au saut
         createDustCloud(gameScene, player.x, player.y + 25, 0x00ffff);
-        createTrail(gameScene, player.x, player.y, 0x00ffff);
         
         fetch("/api/game/input", {
           method: "POST",

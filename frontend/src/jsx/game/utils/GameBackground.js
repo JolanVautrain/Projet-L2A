@@ -77,7 +77,7 @@ function createDistantPixelLayer(scene) {
  */
 function createContinuousBuildingsLayer(scene) {
   const container = scene.add.container(0, 0);
-  container.setDepth(-70);
+  container.setDepth(-10); // Augmenté pour être AU-DESSUS du sol
   buildingContainers = [];
   
   // Créer plusieurs blocs de bâtiments pour un défilement continu
@@ -90,70 +90,202 @@ function createContinuousBuildingsLayer(scene) {
 }
 
 /**
- * Crée un bloc de bâtiments
+ * Crée un bloc de bâtiments avec grande variété
  */
 function createBuildingBlock(scene, container, blockOffsetX) {
-  // 10 bâtiments par bloc pour remplir la largeur
-  for (let i = 0; i < 10; i++) {
-    const x = blockOffsetX + i * 80;
-    const height = 80 + Math.random() * 140;
+  // Plus de bâtiments (15 par bloc) pour une ville plus dense
+  for (let i = 0; i < 15; i++) {
+    const x = blockOffsetX + i * 53; // Plus dense
+    
+    // Types de bâtiments variés
+    const buildingType = Math.floor(Math.random() * 4);
+    const height = 250 + Math.random() * 250; // BEAUCOUP PLUS HAUT (150-400 au lieu de 60-240)
     
     const graphics = scene.add.graphics();
+    const baseY = 568; // Position du sol
+    const topY = baseY - height;
     
-    // Bâtiment principal
-    graphics.fillStyle(0x1a1a2e, 1);
-    graphics.fillRect(0, 400 - height, 70, height);
-    
-    // Contour magenta cyberpunk
-    graphics.lineStyle(2, 0xff00ff, 0.9);
-    graphics.strokeRect(0, 400 - height, 70, height);
-    graphics.lineStyle(1, 0x00ffff, 0.5);
-    graphics.strokeRect(2, 402 - height, 66, height - 4);
-    
-    // Fenêtres illuminées - MAINTENANT CORRIGES
-    const windowsPerRow = 3;
-    const windowRows = Math.floor((height - 20) / 18);
-    
-    for (let row = 0; row < windowRows; row++) {
-      for (let col = 0; col < windowsPerRow; col++) {
-        const wx = 8 + col * 18;
-        const wy = 410 - height + 10 + row * 18;
-        
-        // Fenêtre noire (limite à 8x8)
-        graphics.fillStyle(0x0a0e16, 1);
-        graphics.fillRect(wx, wy, 8, 8);
-        
-        // Cadre cyan
-        graphics.lineStyle(1, 0x00ffff, 0.8);
-        graphics.strokeRect(wx, wy, 8, 8);
-        
-        // Lumière blanche intérieure
-        graphics.fillStyle(0xffffff, 0.7);
-        graphics.fillRect(wx + 1, wy + 1, 3, 3);
-        graphics.fillStyle(0x00ffff, 0.5);
-        graphics.fillRect(wx + 4, wy + 4, 2, 2);
-      }
-    }
-    
-    // Antennes sur les toits
-    if (Math.random() > 0.5) {
-      graphics.lineStyle(1, 0x00ff00, 0.8);
-      const roofY = 400 - height;
-      graphics.beginPath();
-      graphics.moveTo(18, roofY);
-      graphics.lineTo(18, roofY - 15);
-      graphics.strokePath();
-      
-      // Signal radar
-      graphics.lineStyle(1, 0xff00ff, 0.6);
-      graphics.beginPath();
-      graphics.arc(18, roofY - 15, 3, 0, Math.PI * 2);
-      graphics.strokePath();
+    if (buildingType === 0) {
+      // Bâtiment style "gratte-ciel" - haute tour
+      createSkyscraper(graphics, 0, topY, 50, height);
+    } else if (buildingType === 1) {
+      // Bâtiment style "résidentiel" - petit immeuble
+      createResidentialBuilding(graphics, 0, topY, 50, height);
+    } else if (buildingType === 2) {
+      // Bâtiment style "usine" - structure industrielle
+      createIndustrialBuilding(graphics, 0, topY, 50, height);
+    } else {
+      // Bâtiment style "commercial" - façade commerciale
+      createCommercialBuilding(graphics, 0, topY, 50, height);
     }
     
     graphics.setPosition(x, 0);
     container.add(graphics);
     buildingContainers.push(graphics);
+  }
+}
+
+/**
+ * Crée un gratte-ciel hautain
+ */
+function createSkyscraper(graphics, x, y, width, height) {
+  // Corps principal - bleu-gris foncé
+  graphics.fillStyle(0x0f1a2e, 1);
+  graphics.fillRect(x, y, width, height);
+  
+  // Contour magenta
+  graphics.lineStyle(2, 0xff00ff, 0.9);
+  graphics.strokeRect(x, y, width, height);
+  
+  // Bandes de contraste
+  graphics.fillStyle(0x1a3a52, 1);
+  graphics.fillRect(x + 2, y + 5, width - 4, 4);
+  graphics.fillRect(x + 2, y + height / 2, width - 4, 4);
+  
+  // Fenêtres nombreuses
+  const windowsPerRow = Math.floor(width / 12);
+  const windowRows = Math.floor((height - 20) / 15);
+  
+  for (let row = 0; row < windowRows; row++) {
+    for (let col = 0; col < windowsPerRow; col++) {
+      const wx = x + 4 + col * 12;
+      const wy = y + 10 + row * 15;
+      
+      graphics.fillStyle(0x00ffff, 0.6);
+      graphics.fillRect(wx, wy, 6, 6);
+      
+      // Certaines fenêtres sont éteintes
+      if (Math.random() > 0.3) {
+        graphics.fillStyle(0xffffff, 0.8);
+        graphics.fillRect(wx + 1, wy + 1, 2, 2);
+      }
+    }
+  }
+}
+
+/**
+ * Crée un immeuble résidentiel
+ */
+function createResidentialBuilding(graphics, x, y, width, height) {
+  // Corps principal - rouge-marron
+  graphics.fillStyle(0x2d1f1f, 1);
+  graphics.fillRect(x, y, width, height);
+  
+  // Contour cyan
+  graphics.lineStyle(2, 0x00ffff, 0.8);
+  graphics.strokeRect(x, y, width, height);
+  
+  // Fenêtres côte à côte
+  const windowsPerRow = 3;
+  const windowRows = Math.floor((height - 20) / 20);
+  
+  for (let row = 0; row < windowRows; row++) {
+    for (let col = 0; col < windowsPerRow; col++) {
+      const wx = x + 6 + col * 14;
+      const wy = y + 10 + row * 20;
+      
+      graphics.fillStyle(0x0a0e16, 1);
+      graphics.fillRect(wx, wy, 10, 10);
+      
+      // Cadre jaune pour les fenêtres
+      graphics.lineStyle(1, 0xffff00, 0.7);
+      graphics.strokeRect(wx, wy, 10, 10);
+      
+      // Lumière intérieure
+      if (Math.random() > 0.4) {
+        graphics.fillStyle(0xffffff, 0.9);
+        graphics.fillRect(wx + 2, wy + 2, 6, 6);
+      }
+    }
+  }
+  
+  // Porte en bas
+  graphics.fillStyle(0x8b4513, 1);
+  graphics.fillRect(x + 18, y + height - 12, 14, 12);
+  graphics.lineStyle(1, 0xffff00, 0.7);
+  graphics.strokeRect(x + 18, y + height - 12, 14, 12);
+}
+
+/**
+ * Crée un bâtiment industriel
+ */
+function createIndustrialBuilding(graphics, x, y, width, height) {
+  // Corps principal - gris métallique
+  graphics.fillStyle(0x4a4a4a, 1);
+  graphics.fillRect(x, y, width, height);
+  
+  // Contour vert néon
+  graphics.lineStyle(2, 0x00ff00, 0.9);
+  graphics.strokeRect(x, y, width, height);
+  
+  // Petites fenêtres de contrôle
+  const windowCount = 4;
+  for (let i = 0; i < windowCount; i++) {
+    const wy = y + 20 + i * (height - 40) / windowCount;
+    graphics.fillStyle(0x0a0e16, 1);
+    graphics.fillRect(x + width - 12, wy, 8, 8);
+    graphics.lineStyle(1, 0x00ff00, 0.8);
+    graphics.strokeRect(x + width - 12, wy, 8, 8);
+  }
+  
+  // Tuyaux
+  graphics.lineStyle(2, 0x666666, 0.8);
+  graphics.beginPath();
+  graphics.moveTo(x + width / 3, y);
+  graphics.lineTo(x + width / 3, y - 20);
+  graphics.strokePath();
+  
+  graphics.beginPath();
+  graphics.moveTo(x + 2 * width / 3, y);
+  graphics.lineTo(x + 2 * width / 3, y - 15);
+  graphics.strokePath();
+  
+  // Grille métallique
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const gx = x + 4 + col * 14;
+      const gy = y + 20 + row * 25;
+      graphics.lineStyle(1, 0x888888, 0.5);
+      graphics.strokeRect(gx, gy, 10, 10);
+    }
+  }
+}
+
+/**
+ * Crée un bâtiment commercial
+ */
+function createCommercialBuilding(graphics, x, y, width, height) {
+  // Corps principal - bleu clair
+  graphics.fillStyle(0x1a3a52, 1);
+  graphics.fillRect(x, y, width, height);
+  
+  // Contour magenta-rose
+  graphics.lineStyle(2, 0xff1493, 0.9);
+  graphics.strokeRect(x, y, width, height);
+  
+  // Grandes vitres commerciales
+  const storeCount = 2;
+  const storeHeight = Math.min(40, height / 3);
+  
+  for (let i = 0; i < storeCount; i++) {
+    const gy = y + 5 + i * (height / storeCount);
+    
+    // Vitrine grande
+    graphics.fillStyle(0x00ffff, 0.3);
+    graphics.fillRect(x + 2, gy, width - 4, storeHeight - 2);
+    
+    // Cadre vitrine
+    graphics.lineStyle(2, 0x00ffff, 0.8);
+    graphics.strokeRect(x + 2, gy, width - 4, storeHeight - 2);
+    
+    // Divisions verticales
+    for (let j = 1; j < 3; j++) {
+      graphics.lineStyle(1, 0x00ffff, 0.5);
+      graphics.beginPath();
+      graphics.moveTo(x + 2 + j * (width - 4) / 3, gy);
+      graphics.lineTo(x + 2 + j * (width - 4) / 3, gy + storeHeight - 2);
+      graphics.strokePath();
+    }
   }
 }
 

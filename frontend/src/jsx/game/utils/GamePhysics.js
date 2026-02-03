@@ -63,19 +63,52 @@ export function initPhysics(scene, onAdminModeChange = null) {
   
   // Détecte si l'utilisateur est admin
   const username = localStorage.getItem("user");
-  const adminUsers = localStorage.getItem("adminUsers");
-  isAdminMode = adminUsers && adminUsers.includes(username);
+  
+  // Vérifier si admin directement via le backend
+  if (username) {
+    fetch(`http://localhost:5000/api/admin/check/${username}`)
+      .then(r => r.json())
+      .then(data => {
+        isAdminMode = data.isAdmin === true;
+        
+        if (isAdminMode && !invincibleStar) {
+          invincibleStar = scene.add.graphics();
+          drawPixelStar(invincibleStar, 50, 100, 20);
+          invincibleStar.setDepth(10);
+          invincibleStar.setAlpha(0);
+        }
+      })
+      .catch(err => {
+        // Fallback: vérifier adminUsers dans localStorage
+        const adminUsersStr = localStorage.getItem("adminUsers");
+        
+        let adminList = [];
+        if (adminUsersStr) {
+          try {
+            adminList = JSON.parse(adminUsersStr);
+            if (!Array.isArray(adminList)) {
+              adminList = [adminUsersStr];
+            }
+          } catch (e) {
+            adminList = adminUsersStr.split(',').map(u => u.trim());
+          }
+        }
+        
+        isAdminMode = username && adminList.includes(username);
+        
+        if (isAdminMode && !invincibleStar) {
+          invincibleStar = scene.add.graphics();
+          drawPixelStar(invincibleStar, 50, 100, 20);
+          invincibleStar.setDepth(10);
+          invincibleStar.setAlpha(0);
+        }
+      });
+  } else {
+    isAdminMode = false;
+  }
   
   if (onAdminModeChange) {
     onAdminModeChange(isAdminMode);
-  }
-  
-  // Créer l'étoile d'invincibilité pixelisée (invisible par défaut)
-  if (isAdminMode && !invincibleStar) {
-    invincibleStar = scene.add.graphics();
-    drawPixelStar(invincibleStar, 50, 100, 20);
-    invincibleStar.setDepth(10);
-    invincibleStar.setAlpha(0);
   }
 }
 

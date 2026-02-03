@@ -9,6 +9,19 @@ from . import db, utils
 bp = Blueprint("admin", __name__)
 
 
+@bp.route("/api/admin/check/<username>", methods=["GET"])
+@utils.handle_db_errors
+def check_admin(username: str):
+    """Vérifie si un utilisateur est admin (endpoint public pour le frontend)."""
+    username = username.strip()
+    row = db.query_fetchone(
+        "SELECT is_admin FROM users WHERE username = %s", (username,)
+    )
+    if not row:
+        return utils.make_response({"isAdmin": False})
+    return utils.make_response({"isAdmin": row[0] or False})
+
+
 @bp.route("/api/admin/reset-test", methods=["POST"])
 @utils.handle_db_errors
 def reset_test_account():
