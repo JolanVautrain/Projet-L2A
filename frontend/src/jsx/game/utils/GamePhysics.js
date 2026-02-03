@@ -144,24 +144,13 @@ export function handleJump(onJumpInput = null) {
  * Bascule le mode invincible (admin seulement)
  */
 export function toggleInvincible() {
-  console.log('[GamePhysics] toggleInvincible appelée');
-  console.log('[GamePhysics] isAdminMode:', isAdminMode);
-  
   if (!isAdminMode) {
-    console.log('[GamePhysics] ATTENTION: Mode admin désactivé!');
     return false;
   }
-  
   isInvincible = !isInvincible;
-  console.log('[GamePhysics] Invincibilité basculée à:', isInvincible);
-  
   if (invincibleStar) {
     invincibleStar.setAlpha(isInvincible ? 1 : 0);
-    console.log('[GamePhysics] Étoile invincibilité alpha:', isInvincible ? 1 : 0);
-  } else {
-    console.log('[GamePhysics] ATTENTION: invincibleStar est null!');
   }
-  
   return isInvincible;
 }
 

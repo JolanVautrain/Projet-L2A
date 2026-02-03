@@ -10,7 +10,7 @@ const BASE_OBSTACLE_SPEED = 200;
 const SPEED_INCREMENT = 150; // Au lieu de 200 (exponentiel), on ajoute 30 par stage
 const MAX_SPAWN_RATE = 4000; // Minimum 4 secondes entre les obstacles
 const MIN_SPAWN_RATE = 1000; // Minimum 1 seconde
-const NIGHT_DIFFICULTY_BOOST = 3; // Boost de +3 stages la nuit
+const NIGHT_DIFFICULTY_BOOST = 1; // Boost de +3 stages la nuit
 
 let lastSpawnTime = 0;
 let obstacles = null;
