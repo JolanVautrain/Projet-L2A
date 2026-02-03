@@ -7,7 +7,7 @@ import "../../static/css/Game.css";
 
 // Import des modules de jeu
 import { initDayNightSystem, updateDayNightCycle, resetDayNight, initWeatherSystem, updateWeatherSystem, addNightStars, removeNightStars, addSunGlow, isNight } from "./utils/GameDayNight.js";
-import { createBackgroundSystem, updateBackgroundParallax, getBackgroundLayers } from "./utils/GameBackground.js";
+import { createBackgroundSystem, updateBackgroundParallax, getBackgroundLayers, updateStarsVisibility } from "./utils/GameBackground.js";
 import { initObstacles, spawnObstacle, recycleObstacles, updateStage, getStage, resetObstacles, getObstacles } from "./utils/GameObstacles.js";
 import { initPhysics, handleJump, toggleInvincible, getInvincibility, getPlayer, getPlatforms, resetPhysicsState, setupCollisions } from "./utils/GamePhysics.js";
 import { initControls, getCursors, isJumpRequested } from "./utils/GameControls.js";
@@ -91,6 +91,9 @@ function update() {
   updateDayNightCycle(gameScene);
   updateWeatherSystem(gameScene);
   updateParticles(this.game.loop.delta / 1000); // Convertir en secondes
+  
+  // Mettre à jour la visibilité des étoiles selon le cycle jour/nuit
+  updateStarsVisibility(isNight());
 
   // Gérer le saut
   if (isJumpRequested()) {

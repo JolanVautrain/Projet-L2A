@@ -1,21 +1,28 @@
 /**
  * Gestion du cycle jour/nuit basé sur le temps
- * Le cycle complet dure 30 secondes avec trajectoire circulaire
+ * Le cycle complet dure 120 secondes avec trajectoire circulaire réaliste
+ * Le soleil et la lune disparaissent progressivement au niveau du sol
  */
 
 let startTime = 0;
 let skyTint = null;
 let sunSprite = null;
+let sunGlowSprite = null;
 let moonSprite = null;
+let moonGlowSprite = null;
 let nightLights = [];
 let isNightTime = false;
+let horizonMask = null;
 
 const CYCLE_DURATION = 120000; // 120 secondes pour un cycle complet
 const SUN_DURATION = 60000; // Le soleil dure 60 secondes (0-60s)
 const MOON_DURATION = 60000; // La lune dure 60 secondes (60-120s)
 const SKY_CENTER_X = 400;
-const SKY_CENTER_Y = 350; // Centre de la trajectoire circulaire
-const ORBIT_RADIUS = 300; // Rayon de l'orbite circulaire
+const SKY_CENTER_Y = 400; // Centre de la trajectoire (plus bas pour un meilleur effet)
+const ORBIT_RADIUS = 350; // Rayon de l'orbite circulaire (plus grand)
+const HORIZON_Y = 540; // Niveau du sol/horizon
+const SUN_RADIUS = 45; // Rayon du soleil
+const MOON_RADIUS = 38; // Rayon de la lune
 // Phases lunaires
 const MOON_PHASES = [
   { name: 'new', start: 0.0, end: 0.12 },
@@ -28,7 +35,7 @@ const MOON_PHASES = [
   { name: 'waning_crescent', start: 0.87, end: 1.0 }
 ];
 /**
- * Initialise le système jour/nuit
+ * Initialise le système jour/nuit avec animations réalistes
  */
 export function initDayNightSystem(scene) {
   startTime = Date.now();
@@ -37,32 +44,72 @@ export function initDayNightSystem(scene) {
   skyTint = scene.add.rectangle(400, 300, 800, 600, 0x1a2634);
   skyTint.setDepth(-100);
   
-  // Créer le soleil avec effet de glow (cercles concentriques)
-  // Cercle externe (glow)
-  const sunGlow = scene.add.circle(100, 500, 50, 0xffdd00);
-  sunGlow.setDepth(-90);
-  sunGlow.setAlpha(0.3);
+  // Créer le soleil avec effet de glow amélioré
+  // Halo externe (glow diffus)
+  const sunOuterGlow = scene.add.circle(100, 500, 80, 0xffdd00);
+  sunOuterGlow.setDepth(-91);
+  sunOuterGlow.setAlpha(0.15);
+  sunOuterGlow.name = 'sunOuterGlow';
+  
+  // Cercle externe (glow principal)
+  sunGlowSprite = scene.add.circle(100, 500, 60, 0xffdd00);
+  sunGlowSprite.setDepth(-90);
+  sunGlowSprite.setAlpha(0.4);
   
   // Cercle principal du soleil
-  sunSprite = scene.add.circle(100, 500, 40, 0xffdd00);
+  sunSprite = scene.add.circle(100, 500, SUN_RADIUS, 0xffdd00);
   sunSprite.setDepth(-89);
   
-  // Créer la lune (invisible au début)
-  // Cercle externe (glow)
-  const moonGlow = scene.add.circle(100, 500, 40, 0xf0f0f0);
-  moonGlow.setDepth(-90);
-  moonGlow.setAlpha(0);
+  // Stocker le glow externe dans le sprite
+  sunSprite._outerGlow = sunOuterGlow;
+  
+  // Créer la lune avec effet de glow amélioré
+  // Halo externe (glow diffus lunaire)
+  const moonOuterGlow = scene.add.circle(100, 500, 60, 0xaaccff);
+  moonOuterGlow.setDepth(-91);
+  moonOuterGlow.setAlpha(0);
+  moonOuterGlow.name = 'moonOuterGlow';
+  
+  // Cercle externe (glow principal)
+  moonGlowSprite = scene.add.circle(100, 500, 50, 0xf0f0f0);
+  moonGlowSprite.setDepth(-90);
+  moonGlowSprite.setAlpha(0);
   
   // Cercle principal de la lune
-  moonSprite = scene.add.circle(100, 500, 35, 0xf0f0f0);
+  moonSprite = scene.add.circle(100, 500, MOON_RADIUS, 0xf0f0f0);
   moonSprite.setDepth(-89);
   moonSprite.setAlpha(0);
+  
+  // Stocker le glow externe dans le sprite
+  moonSprite._outerGlow = moonOuterGlow;
   
   nightLights = [];
 }
 
 /**
- * Met à jour le cycle jour/nuit basé sur le temps écoulé avec trajectoires circulaires
+ * Calcule la visibilité d'un astre au niveau de l'horizon
+ * Retourne un facteur de 0 (caché) à 1 (totalement visible)
+ */
+function calculateHorizonVisibility(y, radius) {
+  const topEdge = y - radius;
+  const bottomEdge = y + radius;
+  
+  // Si l'astre est totalement au-dessus de l'horizon
+  if (bottomEdge <= HORIZON_Y) {
+    return 1;
+  }
+  // Si l'astre est totalement sous l'horizon
+  if (topEdge >= HORIZON_Y) {
+    return 0;
+  }
+  // Partiellement visible - calculer le pourcentage visible
+  const visibleHeight = HORIZON_Y - topEdge;
+  const totalHeight = radius * 2;
+  return Math.max(0, Math.min(1, visibleHeight / totalHeight));
+}
+
+/**
+ * Met à jour le cycle jour/nuit avec animations réalistes de lever/coucher
  */
 export function updateDayNightCycle(scene) {
   if (!startTime || !skyTint) return;
@@ -75,50 +122,111 @@ export function updateDayNightCycle(scene) {
     isNightTime = false;
     const sunProgress = cyclePosition / SUN_DURATION; // 0 à 1
     
-    // Trajectoire circulaire : bas-gauche → haut → bas-droite
+    // Trajectoire circulaire améliorée : lever à gauche → zénith → coucher à droite
+    // Utilise une demi-ellipse pour un mouvement plus naturel
     const angle = Math.PI + (sunProgress * Math.PI); // De π à 2π
     const sunX = SKY_CENTER_X + Math.cos(angle) * ORBIT_RADIUS;
-    const sunY = SKY_CENTER_Y + Math.sin(angle) * ORBIT_RADIUS;
+    // La trajectoire Y est aplatie pour simuler la perspective
+    const sunY = SKY_CENTER_Y + Math.sin(angle) * (ORBIT_RADIUS * 0.7);
     
-    // Transition de couleur : jaune jour → orange crépuscule
-    const sunColor = sunProgress > 0.9 ? 0xff9900 : 0xffdd00;
+    // Calculer la visibilité au niveau de l'horizon
+    const visibility = calculateHorizonVisibility(sunY, SUN_RADIUS);
     
-    // Interpolation de couleur du ciel
-    const skyProgress = sunProgress > 0.85 ? (sunProgress - 0.85) / 0.15 : 0;
-    let skyColor = 0x1a2634; // Bleu cyberpunk jour
-    if (skyProgress > 0) {
-      const r = Math.floor(26 + (255 - 26) * skyProgress);
-      const g = Math.floor(38 + (100 - 38) * skyProgress);
-      const b = Math.floor(52 + (0 - 52) * skyProgress);
-      skyColor = (r << 16) | (g << 8) | b;
+    // Transition de couleur basée sur la hauteur du soleil
+    let sunColor;
+    let glowIntensity;
+    if (sunProgress < 0.15) {
+      // Lever du soleil - orange/rouge
+      sunColor = 0xff6633;
+      glowIntensity = 0.6;
+    } else if (sunProgress > 0.85) {
+      // Coucher du soleil - orange/rouge
+      sunColor = 0xff4400;
+      glowIntensity = 0.7;
+    } else {
+      // Journée - jaune vif
+      sunColor = 0xffdd00;
+      glowIntensity = 0.4;
+    }
+    
+    // Couleur du ciel dynamique selon la position du soleil
+    let skyColor;
+    if (sunProgress < 0.1) {
+      // Aube - orange rosé
+      const t = sunProgress / 0.1;
+      skyColor = lerpColor(0x1a0a16, 0xff9966, t);
+    } else if (sunProgress < 0.2) {
+      // Transition vers le jour
+      const t = (sunProgress - 0.1) / 0.1;
+      skyColor = lerpColor(0xff9966, 0x1a2634, t);
+    } else if (sunProgress > 0.9) {
+      // Crépuscule avancé - orange vers nuit
+      const t = (sunProgress - 0.9) / 0.1;
+      skyColor = lerpColor(0xff6633, 0x0a0e16, t);
+    } else if (sunProgress > 0.8) {
+      // Début crépuscule
+      const t = (sunProgress - 0.8) / 0.1;
+      skyColor = lerpColor(0x1a2634, 0xff6633, t);
+    } else {
+      // Journée
+      skyColor = 0x1a2634;
     }
     
     skyTint.setFillStyle(skyColor, 1);
-    sunSprite.setPosition(sunX, sunY);
+    
+    // Positionner le soleil et ses glows
+    sunSprite.setPosition(sunX, Math.min(sunY, HORIZON_Y - 5));
     sunSprite.setFillStyle(sunColor);
-    sunSprite.setAlpha(1);
+    sunSprite.setAlpha(visibility);
+    sunSprite.setScale(1 + (1 - visibility) * 0.3); // Effet d'aplatissement à l'horizon
+    
+    if (sunGlowSprite) {
+      sunGlowSprite.setPosition(sunX, Math.min(sunY, HORIZON_Y - 5));
+      sunGlowSprite.setFillStyle(sunColor);
+      sunGlowSprite.setAlpha(visibility * glowIntensity);
+      sunGlowSprite.setScale(1 + (1 - visibility) * 0.5);
+    }
+    
+    if (sunSprite._outerGlow) {
+      sunSprite._outerGlow.setPosition(sunX, Math.min(sunY, HORIZON_Y - 5));
+      sunSprite._outerGlow.setFillStyle(sunColor);
+      sunSprite._outerGlow.setAlpha(visibility * glowIntensity * 0.4);
+      sunSprite._outerGlow.setScale(1 + (1 - visibility) * 0.6);
+    }
+    
+    // Cacher la lune
     moonSprite.setAlpha(0);
+    if (moonGlowSprite) moonGlowSprite.setAlpha(0);
+    if (moonSprite._outerGlow) moonSprite._outerGlow.setAlpha(0);
     
     nightLights.forEach(light => light.sprite.setAlpha(0));
     
   } else {
-    // Phase de la lune (60-120s) avec phases lunaires
+    // Phase de la lune (60-120s) avec animations réalistes
     isNightTime = true;
     const moonProgress = (cyclePosition - SUN_DURATION) / MOON_DURATION; // 0 à 1
     
-    // Trajectoire circulaire : bas-gauche → haut → bas-droite
+    // Trajectoire circulaire de la lune
     const angle = Math.PI + (moonProgress * Math.PI);
     const moonX = SKY_CENTER_X + Math.cos(angle) * ORBIT_RADIUS;
-    const moonY = SKY_CENTER_Y + Math.sin(angle) * ORBIT_RADIUS;
+    const moonY = SKY_CENTER_Y + Math.sin(angle) * (ORBIT_RADIUS * 0.7);
     
-    // Transition de couleur : orange nuit → bleu nuit
-    const skyTransition = moonProgress > 0.3 ? Math.min(1, (moonProgress - 0.3) / 0.4) : 0;
-    let skyColor = 0xff6400; // Orange début nuit
-    if (skyTransition > 0) {
-      const r = Math.floor(255 - (255 - 10) * skyTransition);
-      const g = Math.floor(100 - (100 - 14) * skyTransition);
-      const b = Math.floor(0 + (22 - 0) * skyTransition);
-      skyColor = (r << 16) | (g << 8) | b;
+    // Calculer la visibilité au niveau de l'horizon
+    const visibility = calculateHorizonVisibility(moonY, MOON_RADIUS);
+    
+    // Couleur du ciel nocturne
+    let skyColor;
+    if (moonProgress < 0.15) {
+      // Début de nuit - transition depuis le crépuscule
+      const t = moonProgress / 0.15;
+      skyColor = lerpColor(0x0a0e16, 0x050810, t);
+    } else if (moonProgress > 0.85) {
+      // Fin de nuit - vers l'aube
+      const t = (moonProgress - 0.85) / 0.15;
+      skyColor = lerpColor(0x050810, 0x1a0a16, t);
+    } else {
+      // Pleine nuit
+      skyColor = 0x050810;
     }
     
     skyTint.setFillStyle(skyColor, 1);
@@ -126,8 +234,28 @@ export function updateDayNightCycle(scene) {
     // Appliquer la phase lunaire
     updateMoonPhase(moonSprite, moonProgress);
     
-    moonSprite.setPosition(moonX, moonY);
+    // Positionner la lune et ses glows
+    moonSprite.setPosition(moonX, Math.min(moonY, HORIZON_Y - 5));
+    moonSprite.setAlpha(moonSprite.alpha * visibility);
+    moonSprite.setScale((moonSprite.scaleX || 1) * (1 + (1 - visibility) * 0.2));
+    
+    if (moonGlowSprite) {
+      moonGlowSprite.setPosition(moonX, Math.min(moonY, HORIZON_Y - 5));
+      moonGlowSprite.setFillStyle(0xaaccff);
+      moonGlowSprite.setAlpha(visibility * 0.3);
+      moonGlowSprite.setScale(1 + (1 - visibility) * 0.3);
+    }
+    
+    if (moonSprite._outerGlow) {
+      moonSprite._outerGlow.setPosition(moonX, Math.min(moonY, HORIZON_Y - 5));
+      moonSprite._outerGlow.setAlpha(visibility * 0.15);
+      moonSprite._outerGlow.setScale(1 + (1 - visibility) * 0.4);
+    }
+    
+    // Cacher le soleil
     sunSprite.setAlpha(0);
+    if (sunGlowSprite) sunGlowSprite.setAlpha(0);
+    if (sunSprite._outerGlow) sunSprite._outerGlow.setAlpha(0);
     
     // Lumières nocturnes scintillantes
     nightLights.forEach(light => {
@@ -137,11 +265,28 @@ export function updateDayNightCycle(scene) {
 }
 
 /**
+ * Interpolation linéaire entre deux couleurs
+ */
+function lerpColor(color1, color2, t) {
+  const r1 = (color1 >> 16) & 0xff;
+  const g1 = (color1 >> 8) & 0xff;
+  const b1 = color1 & 0xff;
+  
+  const r2 = (color2 >> 16) & 0xff;
+  const g2 = (color2 >> 8) & 0xff;
+  const b2 = color2 & 0xff;
+  
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const b = Math.round(b1 + (b2 - b1) * t);
+  
+  return (r << 16) | (g << 8) | b;
+}
+
+/**
  * Met à jour la phase lunaire avec des styles visuels différents par phase
  */
 function updateMoonPhase(moonSprite, progress) {
-  console.log('[GameDayNight] Mise à jour phase lunaire - progress:', progress);
-  
   // Déterminer la phase actuelle
   let currentPhase = MOON_PHASES[0];
   for (let phase of MOON_PHASES) {
@@ -150,8 +295,6 @@ function updateMoonPhase(moonSprite, progress) {
       break;
     }
   }
-  
-  console.log('[GameDayNight] Phase lunaire actuelle:', currentPhase.name);
   
   // Calculer la progression dans cette phase
   const phaseProgress = (progress - currentPhase.start) / (currentPhase.end - currentPhase.start);
@@ -286,14 +429,12 @@ export function updateWeatherSystem(scene) {
     if (!rainActive && Math.random() < RAIN_CHANCE) {
       rainActive = true;
       rainStartTime = now;
-      console.log('[GameDayNight] Événement météo déclenché (5% chance)');
       createRain(scene);
     }
   }
   
   if (rainActive && now - rainStartTime > RAIN_DURATION) {
     rainActive = false;
-    console.log('[GameDayNight] Fin de l\'événement météo après 1 minute');
     clearRain();
   }
   
