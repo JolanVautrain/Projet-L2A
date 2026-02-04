@@ -1,67 +1,64 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../autres/Language.jsx";
-import "../../static/css/Index.css";
+
+const MIN_PLAYERS = 2;
+const WS_URL = "ws://localhost:3001";
 
 const GameWaitingRoom = () => {
-  const [loadingGame, setLoadingGame] = useState(true);
   const [playerCount, setPlayerCount] = useState(0);
   const navigate = useNavigate();
+  const wsRef = useRef(null);
   const username = localStorage.getItem("user");
 
-  try {
-    fetch("/api/game/lobby", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username }),
-    });
-  } catch (e) {
-    console.warn("Error while stocking inputs", e);
-  }
-
   useEffect(() => {
-    if (!loadingGame) return;
+    if (!username) {
+      navigate("/");
+      return;
+    }
 
-    let intervalId;
-    let aborted = false;
+    const ws = new WebSocket(WS_URL);
+    wsRef.current = ws;
 
-    const fetchPlayers = async () => {
-      try {
-        const res = await fetch("/api/game/lobby/players");
-        if (!res.ok) return;
-        const data = await res.json();
-        const count = data.count;
-        if (aborted) return;
+    ws.onopen = () => {
+      console.log("Connected to lobby WS");
+      ws.send(JSON.stringify({ type: "join", username }));
+    };
 
-        setPlayerCount(count);
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
 
-        if (count >= 2) {
-          setLoadingGame(false);
+      switch (msg.type) {
+        case "player_count":
+          setPlayerCount(msg.count);
+          break;
+
+        case "start_game":
+          console.log("Game starting!");
           navigate("/game");
+          break;
 
-          clearInterval(intervalId);
-        }
-      } catch (err) {
-        console.warn("Failed to fetch lobby players", err);
+        default:
+          console.warn("Unknown message", msg);
       }
     };
 
-    // initial check immediately
-    fetchPlayers();
+    ws.onerror = (err) => {
+      console.error("WebSocket error", err);
+    };
 
-    // poll every 1s
-    intervalId = setInterval(fetchPlayers, 1000);
+    ws.onclose = () => {
+      console.log("Lobby WS closed");
+    };
 
     return () => {
-      aborted = true;
-      clearInterval(intervalId);
+      ws.close();
     };
-  }, [loadingGame]);
+  }, [navigate, username]);
 
   return (
     <div className="lobby-overlay">
       <h2>Waiting for players...</h2>
-      <p>Player {playerCount} / 2</p>
+      <p>Players: {playerCount} / {MIN_PLAYERS}</p>
     </div>
   );
 };
