@@ -1,4 +1,3 @@
-// server.js
 import WebSocket, { WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({ port: 3001 });
@@ -19,7 +18,7 @@ wss.on("connection", (ws) => {
   let username = null;
 
   ws.on("message", (raw) => {
-    const msg = JSON.parse(raw.toString()); // important: raw is a Buffer
+    const msg = JSON.parse(raw.toString());
 
     if (msg.type === "join") {
       username = msg.username;
@@ -32,6 +31,13 @@ wss.on("connection", (ws) => {
       if (players.size >= MIN_PLAYERS) {
         broadcast({ type: "start_game" });
       }
+    } else if (msg.type === "input") {
+      let username = msg.username;
+      let input = msg.input
+
+      console.log("Input:", input,"username:",username);
+
+      broadcast({ type: "input", input: input, username: username });
     }
   });
 

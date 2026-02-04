@@ -6,14 +6,74 @@ import "../../static/css/Index.css";
 import "../../static/css/Game.css";
 
 // Import des modules de jeu
-import { initDayNightSystem, updateDayNightCycle, resetDayNight, initWeatherSystem, updateWeatherSystem, addNightStars, removeNightStars, addSunGlow, isNight, getTimeOfDay, getSunProgress, getMoonProgress } from "./utils/GameDayNight.js";
-import { createBackgroundSystem, updateBackgroundParallax, getBackgroundLayers, updateStarsVisibility, updateSkyGradient } from "./utils/GameBackground.js";
-import { initObstacles, spawnObstacle, recycleObstacles, updateStage, getStage, resetObstacles, getObstacles } from "./utils/GameObstacles.js";
-import { initPhysics, handleJump, toggleInvincible, getInvincibility, getPlayer, getPlatforms, resetPhysicsState, setupCollisions } from "./utils/GamePhysics.js";
-import { initControls, getCursors, isJumpRequested } from "./utils/GameControls.js";
-import { calculateXPReward, checkAchievements } from "./utils/GameGamification.js";
-import { initParticles, updateParticles, createExplosion, createScorePopup, createElectricSpark, createDustCloud, createTrail, createShockWave } from "./utils/GameParticles.js";
-import { initEnhancements, createImpactEffect, addPlayerTrail, addVignette, clearEnhancements, createEnergyAura, updatePlayerHologram } from "./utils/GameEnhancements.js";
+import {
+  initDayNightSystem,
+  updateDayNightCycle,
+  resetDayNight,
+  initWeatherSystem,
+  updateWeatherSystem,
+  addNightStars,
+  removeNightStars,
+  addSunGlow,
+  isNight,
+  getTimeOfDay,
+  getSunProgress,
+  getMoonProgress,
+} from "./utils/GameDayNight.js";
+import {
+  createBackgroundSystem,
+  updateBackgroundParallax,
+  getBackgroundLayers,
+  updateStarsVisibility,
+  updateSkyGradient,
+} from "./utils/GameBackground.js";
+import {
+  initObstacles,
+  spawnObstacle,
+  recycleObstacles,
+  updateStage,
+  getStage,
+  resetObstacles,
+  getObstacles,
+} from "./utils/GameObstacles.js";
+import {
+  initPhysics,
+  handleJump,
+  toggleInvincible,
+  getInvincibility,
+  getPlayer,
+  getPlatforms,
+  resetPhysicsState,
+  setupCollisions,
+} from "./utils/GamePhysics.js";
+import {
+  initControls,
+  getCursors,
+  isJumpRequested,
+} from "./utils/GameControls.js";
+import {
+  calculateXPReward,
+  checkAchievements,
+} from "./utils/GameGamification.js";
+import {
+  initParticles,
+  updateParticles,
+  createExplosion,
+  createScorePopup,
+  createElectricSpark,
+  createDustCloud,
+  createTrail,
+  createShockWave,
+} from "./utils/GameParticles.js";
+import {
+  initEnhancements,
+  createImpactEffect,
+  addPlayerTrail,
+  addVignette,
+  clearEnhancements,
+  createEnergyAura,
+  updatePlayerHologram,
+} from "./utils/GameEnhancements.js";
 
 // État du jeu
 let score = 0;
@@ -23,6 +83,20 @@ let processingDeath = false;
 let sessionPosted = false;
 let showGameOverModalCallback = null;
 let gameScene = null;
+let inputSocket = null;
+
+export function sendGameInput(type) {
+  const username = localStorage.getItem("user");
+  if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
+
+  inputSocket.send(
+    JSON.stringify({
+      type: "input",
+      username,
+      input: type,
+    })
+  );
+}
 
 /**
  * Précharge les assets Phaser
@@ -41,10 +115,10 @@ function preload() {
  */
 function create() {
   gameScene = this;
-  
+
   // IMPORTANT: Initialiser le timer de la partie
   this.startTime = Date.now();
-  
+
   score = 0;
   gameOver = false;
   currentSessionId = Math.random().toString(36).slice(2);
@@ -64,11 +138,15 @@ function create() {
   initEnhancements(this);
   addVignette(this);
   addNightStars(this); // Étoiles visibles dès le départ
-  
+
   setupCollisions(this);
 
   // Ajouter la collision avec les obstacles
-  this.physics.add.overlap(getPlayer(), getObstacles(), handleObstacleCollision);
+  this.physics.add.overlap(
+    getPlayer(),
+    getObstacles(),
+    handleObstacleCollision
+  );
 
   // Spawn first obstacle
   spawnObstacle(this);
@@ -91,11 +169,11 @@ function update() {
   updateDayNightCycle(gameScene);
   updateWeatherSystem(gameScene);
   updateParticles(this.game.loop.delta / 1000); // Convertir en secondes
-  
+
   // Mettre à jour la visibilité des étoiles et le dégradé du ciel
   const nightTime = isNight();
   updateStarsVisibility(nightTime, gameScene);
-  
+
   // Mettre à jour le dégradé du ciel selon l'heure
   const timeOfDay = getTimeOfDay();
   const sunProg = getSunProgress();
@@ -105,18 +183,8 @@ function update() {
   // Gérer le saut
   if (isJumpRequested()) {
     handleJump(() => {
-      try {
-        // Effet de particules au saut
-        createDustCloud(gameScene, player.x, player.y + 25, 0x00ffff);
-        
-        fetch("/api/game/input", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, input: "JUMP", date: Date.now() }),
-        });
-      } catch (e) {
-        console.warn("Error while stocking inputs", e);
-      }
+      createDustCloud(gameScene, player.x, player.y + 25, 0x00ffff);
+      sendGameInput("JUMP");
     });
   }
 
@@ -125,15 +193,13 @@ function update() {
   if (newStage !== getStage()) {
     updateStage(newStage);
     createScorePopup(gameScene, 400, 100, `Stage ${newStage}`);
-    globalThis.dispatchEvent(
-      new CustomEvent("stage-up", { detail: newStage })
-    );
+    globalThis.dispatchEvent(new CustomEvent("stage-up", { detail: newStage }));
   }
 
   // Recycler les obstacles et compter les points
   recycleObstacles(gameScene, () => {
     score += 10;
-    createScorePopup(gameScene, 400, 150, '+10');
+    createScorePopup(gameScene, 400, 150, "+10");
     globalThis.dispatchEvent(new CustomEvent("score-up", { detail: score }));
   });
 
@@ -155,7 +221,7 @@ function handleObstacleCollision(_player, _obstacle) {
     createShockWave(gameScene, _obstacle.x, _obstacle.y + 30);
     createImpactEffect(gameScene, _obstacle.x, _obstacle.y + 30);
     createEnergyAura(gameScene, _obstacle.x, _obstacle.y, 0x00ffff);
-    createScorePopup(gameScene, _obstacle.x, _obstacle.y, 'INVINCIBLE');
+    createScorePopup(gameScene, _obstacle.x, _obstacle.y, "INVINCIBLE");
     _obstacle.destroy();
     return;
   }
@@ -171,12 +237,14 @@ function handleObstacleCollision(_player, _obstacle) {
 
   gameOver = true;
   const finalScore = score;
-  const timerSeconds = Math.floor((Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000);
+  const timerSeconds = Math.floor(
+    (Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000
+  );
 
   if (currentSessionId && !sessionPosted) {
     sessionPosted = true;
     const username = localStorage.getItem("user");
-    
+
     if (username) {
       fetch("/api/score", {
         method: "POST",
@@ -192,19 +260,37 @@ function handleObstacleCollision(_player, _obstacle) {
         .then(() => {
           try {
             // Utiliser le nouveau système d'XP amélioré
-            const xpAmount = calculateXPReward(finalScore, getStage(), timerSeconds);
-            
+            const xpAmount = calculateXPReward(
+              finalScore,
+              getStage(),
+              timerSeconds
+            );
+
             // Vérifier les achievements
-            const userAchievementsStr = localStorage.getItem("userAchievements");
-            const userAchievements = userAchievementsStr ? JSON.parse(userAchievementsStr) : [];
-            const newAchievements = checkAchievements(finalScore, getStage(), timerSeconds, userAchievements);
-            
+            const userAchievementsStr =
+              localStorage.getItem("userAchievements");
+            const userAchievements = userAchievementsStr
+              ? JSON.parse(userAchievementsStr)
+              : [];
+            const newAchievements = checkAchievements(
+              finalScore,
+              getStage(),
+              timerSeconds,
+              userAchievements
+            );
+
             // Sauvegarder les nouveaux achievements
             if (newAchievements.length > 0) {
-              const updatedAchievements = [...userAchievements, ...newAchievements];
-              localStorage.setItem("userAchievements", JSON.stringify(updatedAchievements));
+              const updatedAchievements = [
+                ...userAchievements,
+                ...newAchievements,
+              ];
+              localStorage.setItem(
+                "userAchievements",
+                JSON.stringify(updatedAchievements)
+              );
             }
-            
+
             fetch("/api/user/xp", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -271,6 +357,20 @@ function Game() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:3001");
+    inputSocket = ws;
+
+    ws.onopen = () => console.log("WS connected");
+    ws.onerror = (e) => console.error("WS error", e);
+    ws.onclose = () => console.log("WS closed");
+
+    return () => {
+      ws.close();
+      inputSocket = null;
+    };
+  }, []);
+
   const handleReplay = () => {
     setShowGameOverModal(false);
     try {
@@ -306,9 +406,7 @@ function Game() {
   }, []);
 
   useEffect(() => {
-    globalThis.dispatchEvent(
-      new CustomEvent("score-up", { detail: score })
-    );
+    globalThis.dispatchEvent(new CustomEvent("score-up", { detail: score }));
   }, []);
 
   useEffect(() => {
