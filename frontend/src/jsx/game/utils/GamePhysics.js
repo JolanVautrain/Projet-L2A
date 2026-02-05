@@ -63,8 +63,21 @@ export function initPhysics(scene, onAdminModeChange = null) {
     frameRate: 20,
   });
 
+  scene.anims.create({
+    key: "run_opp",
+    frames: scene.anims.generateFrameNumbers("opponent", { start: 5, end: 8 }),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  scene.anims.create({
+    key: "idle_opp",
+    frames: [{ key: "opponent", frame: 4 }],
+    frameRate: 20,
+  });
+
   player.anims.play("run");
-  opponent.anims.play("run");
+  opponent.anims.play("run_opp");
   touchingGround = false;
   isInvincible = false;
   
