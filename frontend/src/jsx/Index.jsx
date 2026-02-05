@@ -38,6 +38,7 @@ import Contacts from "./contacts/Contacts";
 import PageNotFound from "./autres/PageNotFound";
 import Game from "./game/Game.jsx";
 import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
+import Regle from "./autres/regle";
 
 /**
  * Composant principal de l'application.
@@ -112,6 +113,7 @@ function App() {
             <NavLink to="/account">{t("account.title")}</NavLink>
           )}
           <NavLink to="/contacts">{t("common.contacts")}</NavLink>
+          <NavLink to="/regle">{t("rules.title")}</NavLink>
         </nav>
       </header>
       <Routes>
@@ -140,6 +142,7 @@ function App() {
         />
         <Route path="/lobby" element={<RequireAuth user={userState}><GameWaitingRoom /></RequireAuth>}/>
         <Route path="/*" element={<PageNotFound />} />
+        <Route path="/regle" element={<Regle />} />
       </Routes>
     </>
   );
