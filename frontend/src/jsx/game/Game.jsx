@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ModalGameOver from "./modals/ModalGameOver.jsx";
 import { useLanguage } from "../autres/Language.jsx";
+import GameOpponent from "./GameOpponent.jsx";
 import "../../static/css/Index.css";
 import "../../static/css/Game.css";
 
@@ -45,6 +46,7 @@ import {
   getPlatforms,
   resetPhysicsState,
   setupCollisions,
+  getOpponent,
 } from "./utils/GamePhysics.js";
 import {
   initControls,
@@ -105,6 +107,10 @@ function preload() {
   this.load.image("ground", "src/static/assets/platform.png");
   this.load.image("obstacle", "src/static/assets/bomb.png");
   this.load.spritesheet("dude", "src/static/assets/dude.png", {
+    frameWidth: 32,
+    frameHeight: 48,
+  });
+  this.load.spritesheet("opponent", "src/static/assets/opponent.png", {
     frameWidth: 32,
     frameHeight: 48,
   });
@@ -359,11 +365,32 @@ function Game() {
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:3001");
+    const user = localStorage.getItem("user");
     inputSocket = ws;
 
     ws.onopen = () => console.log("WS connected");
     ws.onerror = (e) => console.error("WS error", e);
     ws.onclose = () => console.log("WS closed");
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type !== "input") return;
+
+        const { input, username } = data;
+        if (username === user) return;
+
+        if (input === "JUMP") {
+          const opponent = getOpponent();
+          if (opponent) {
+            opponent.setVelocityY(-500);
+          }
+        }
+      } catch (err) {
+        console.error("Invalid WS message", event.data);
+      }
+    };
 
     return () => {
       ws.close();
@@ -467,37 +494,39 @@ function Game() {
   }, []);
 
   return (
-    <div className="game-wrap">
-      <div className="phaser-container" ref={gameContainer} />
+    <>
+      <div className="game-wrap">
+        <div className="phaser-container" ref={gameContainer} />
 
-      <div className="game-overlay">
-        <div className="game-info">
-          <div className="info-item">
-            <span className="info-label">{t("game.score")}</span>
-            <span className="info-value">{scoreDisplay}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">{t("game.stage")}</span>
-            <span className="info-value">{stage}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">{t("game.timer")}</span>
-            <span className="info-value">{timerSeconds}s</span>
+        <div className="game-overlay">
+          <div className="game-info">
+            <div className="info-item">
+              <span className="info-label">{t("game.score")}</span>
+              <span className="info-value">{scoreDisplay}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">{t("game.stage")}</span>
+              <span className="info-value">{stage}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">{t("game.timer")}</span>
+              <span className="info-value">{timerSeconds}s</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {showGameOverModal && (
-        <ModalGameOver
-          isOpen={true}
-          score={scoreDisplay}
-          stage={stage}
-          timerSeconds={timerSeconds}
-          onReplay={handleReplay}
-          onReturnHome={handleReturnHome}
-        />
-      )}
-    </div>
+        {showGameOverModal && (
+          <ModalGameOver
+            isOpen={true}
+            score={scoreDisplay}
+            stage={stage}
+            timerSeconds={timerSeconds}
+            onReplay={handleReplay}
+            onReturnHome={handleReturnHome}
+          />
+        )}
+      </div>
+    </>
   );
 }
 
