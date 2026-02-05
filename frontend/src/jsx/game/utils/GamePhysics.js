@@ -24,6 +24,7 @@ function drawPixelStar(graphics, cx, cy, size) {
 }
 
 let player = null;
+let opponent = null
 let platforms = null;
 let touchingGround = false;
 let isAdminMode = false;
@@ -43,6 +44,11 @@ export function initPhysics(scene, onAdminModeChange = null) {
   player.setCollideWorldBounds(true);
   player.setBounce(0);
 
+  // Opponent créé avec des graphics pixelisés
+  opponent = scene.physics.add.sprite(120, 450, "opponent");
+  opponent.setCollideWorldBounds(true);
+  opponent.setBounce(0);
+
   // Animations simplifiées pour le style pixel
   scene.anims.create({
     key: "run",
@@ -57,7 +63,21 @@ export function initPhysics(scene, onAdminModeChange = null) {
     frameRate: 20,
   });
 
+  scene.anims.create({
+    key: "run_opp",
+    frames: scene.anims.generateFrameNumbers("opponent", { start: 5, end: 8 }),
+    frameRate: 10,
+    repeat: -1,
+  });
+
+  scene.anims.create({
+    key: "idle_opp",
+    frames: [{ key: "opponent", frame: 4 }],
+    frameRate: 20,
+  });
+
   player.anims.play("run");
+  opponent.anims.play("run_opp");
   touchingGround = false;
   isInvincible = false;
   
@@ -169,6 +189,13 @@ export function getInvincibility() {
  */
 export function getPlayer() {
   return player;
+}
+
+/**
+ * Retourne le joueur
+ */
+export function getOpponent() {
+  return opponent;
 }
 
 /**
