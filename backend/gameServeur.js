@@ -31,13 +31,20 @@ wss.on("connection", (ws) => {
       if (players.size >= MIN_PLAYERS) {
         broadcast({ type: "start_game" });
       }
-    } else if (msg.type === "input") {
+    }
+    if (msg.type === "input") {
       let username = msg.username;
       let input = msg.input
 
       console.log("Input:", input,"username:",username);
 
       broadcast({ type: "input", input: input, username: username });
+    }
+    if (msg.type === "gameOver") {
+      let username = msg.username;
+      console.log("GameOver username:",username);
+
+      broadcast({ type: "gameOver", username: username });
     }
   });
 

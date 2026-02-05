@@ -14,6 +14,7 @@ const NIGHT_DIFFICULTY_BOOST = 1; // Boost de +3 stages la nuit
 
 let lastSpawnTime = 0;
 let obstacles = null;
+let obstaclesOpponent = null;
 let internalStage = 1;
 
 /**
@@ -21,6 +22,7 @@ let internalStage = 1;
  */
 export function initObstacles(scene) {
   obstacles = scene.physics.add.group();
+  obstaclesOpponent = scene.physics.add.group();
   lastSpawnTime = Date.now();
   internalStage = 1;
 }
@@ -75,21 +77,16 @@ export function spawnObstacle(scene) {
 
   // Spawner plusieurs bombes avec hauteurs aléatoires - PLUS DE BOMBES EN BAS
   const heightLevels = [
-    480,  // Très bas (plateforme - bonus difficulty)
-    450,  // Bas (plateforme)
-    380,  // Moyen-bas (trois quarts)
-    250,  // Moyen-haut (demi-hauteur)
-    120   // Haut (premier quartier)
+    540,  // Très bas (plateforme - bonus difficulty)
+    420,  // Bas (plateforme)
   ];
   
   // Pondérer vers les hauteurs basses (70% de chance pour bas/moyen-bas)
   const selectHeight = () => {
     const rand = Math.random();
-    if (rand < 0.35) return heightLevels[0]; // 35% très bas
-    if (rand < 0.70) return heightLevels[1]; // 35% bas
-    if (rand < 0.85) return heightLevels[2]; // 15% moyen-bas
-    if (rand < 0.95) return heightLevels[3]; // 10% moyen-haut
-    return heightLevels[4]; // 5% haut
+    if (rand < 0.5) return heightLevels[0]; // 35% très bas
+    if (rand < 1) return heightLevels[1]; // 35% bas
+    return heightLevels[0]; // 5% haut
   };
   
   // Sélectionner des hauteurs aléatoires uniques pour cette vague
@@ -108,12 +105,17 @@ export function spawnObstacle(scene) {
 
     // Utiliser l'asset bombe par défaut avec effet cyberpunk
     const obstacle = obstacles.create(x, y, "obstacle");
+    const obstacle2 = obstaclesOpponent.create(x, (300)-(600-y), "obstacle");
     obstacle.setVelocityX(obstacleSpeed);
     obstacle.setImmovable(true);
     obstacle.body.allowGravity = false;
+    obstacle2.setVelocityX(obstacleSpeed);
+    obstacle2.setImmovable(true);
+    obstacle2.body.allowGravity = false;
     
     // Teinte magenta cyberpunk
     obstacle.setTint(0xff00ff);
+    obstacle2.setTint(0xff00ff);
   });
   
   return true;
@@ -164,6 +166,7 @@ export function getObstacles() {
 export function resetObstacles() {
   if (obstacles) {
     obstacles.children.iterate((o) => o.destroy());
+    obstaclesOpponent.children.iterate((o) => o.destroy());
   }
   internalStage = 1;
   lastSpawnTime = Date.now();

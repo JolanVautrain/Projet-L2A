@@ -37,7 +37,8 @@ let invincibleStar = null;
 export function initPhysics(scene, onAdminModeChange = null) {
   // Ground
   platforms = scene.physics.add.staticGroup();
-  platforms.create(400, 568, "ground").setScale(2).refreshBody();
+  platforms.create(400, 600, "ground").setScale(2).refreshBody();
+  platforms.create(400, 300, "ground").setScale(2).refreshBody();
 
   // Player - créé avec des graphics pixelisés
   player = scene.physics.add.sprite(120, 450, "dude");
@@ -45,7 +46,7 @@ export function initPhysics(scene, onAdminModeChange = null) {
   player.setBounce(0);
 
   // Opponent créé avec des graphics pixelisés
-  opponent = scene.physics.add.sprite(120, 450, "opponent");
+  opponent = scene.physics.add.sprite(120, 200, "opponent");
   opponent.setCollideWorldBounds(true);
   opponent.setBounce(0);
 
@@ -232,6 +233,10 @@ export function resetPhysicsState() {
  */
 export function setupCollisions(scene, onTouchGround, onHitObstacle) {
   scene.physics.add.collider(player, platforms, () => {
+    handleTouchGround();
+    if (onTouchGround) onTouchGround();
+  });
+  scene.physics.add.collider(opponent, platforms, () => {
     handleTouchGround();
     if (onTouchGround) onTouchGround();
   });

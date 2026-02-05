@@ -75,6 +75,7 @@ import {
   createEnergyAura,
   updatePlayerHologram,
 } from "./utils/GameEnhancements.js";
+import ModalGameWon from "./modals/ModalGameWon.jsx";
 
 // État du jeu
 let score = 0;
@@ -83,6 +84,7 @@ let currentSessionId = null;
 let processingDeath = false;
 let sessionPosted = false;
 let showGameOverModalCallback = null;
+let showGameWonModalCallback = null;
 let gameScene = null;
 let inputSocket = null;
 
@@ -97,6 +99,13 @@ export function sendGameInput(type) {
       input: type,
     })
   );
+}
+
+export function sendGameOver() {
+  const username = localStorage.getItem("user");
+  if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
+
+  inputSocket.send(JSON.stringify({ type: "gameOver", username }));
 }
 
 /**
@@ -240,6 +249,8 @@ function handleObstacleCollision(_player, _obstacle) {
   if (processingDeath) return;
   processingDeath = true;
 
+  sendGameOver();
+
   gameOver = true;
   const finalScore = score;
   const timerSeconds = Math.floor(
@@ -359,12 +370,13 @@ function Game() {
   const [scoreDisplay, setScoreDisplay] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [showGameWonModal, setShowGameWonModal] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:3001");
-    const user = localStorage.getItem("user");
+    const username = localStorage.getItem("user");
     inputSocket = ws;
 
     ws.onopen = () => console.log("WS connected");
@@ -374,16 +386,93 @@ function Game() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        const input = data.input;
+        const usernameOpponent = data.username;
 
-        if (data.type !== "input") return;
+        if (data.type === "input") {
+          if (username == usernameOpponent) return;
+            if (input === "JUMP") {
+              const opponent = getOpponent();
+              if (opponent) {
+                opponent.setVelocityY(-500);
+              }
+            }
+        }
 
-        const { input, username } = data;
-        if (username === user) return;
+        if (data.type === "gameOver") {
+          const usernameOpponent = data.username;
+          if (username === usernameOpponent) return;
 
-        if (input === "JUMP") {
-          const opponent = getOpponent();
-          if (opponent) {
-            opponent.setVelocityY(-500);
+          gameOver = true;
+          const finalScore = score;
+          const timerSeconds = Math.floor(
+            (Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000
+          );
+
+          if (currentSessionId && !sessionPosted) {
+            sessionPosted = true;
+            if (username) {
+              fetch("/api/score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  username,
+                  score: finalScore,
+                  stage: getStage(),
+                  timer: timerSeconds,
+                }),
+              })
+                .then((r) => r.json())
+                .then(() => {
+                  try {
+                    // Utiliser le nouveau système d'XP amélioré
+                    const xpAmount = calculateXPReward(
+                      finalScore,
+                      getStage(),
+                      timerSeconds
+                    );
+
+                    // Vérifier les achievements
+                    const userAchievementsStr =
+                      localStorage.getItem("userAchievements");
+                    const userAchievements = userAchievementsStr
+                      ? JSON.parse(userAchievementsStr)
+                      : [];
+                    const newAchievements = checkAchievements(
+                      finalScore,
+                      getStage(),
+                      timerSeconds,
+                      userAchievements
+                    );
+
+                    // Sauvegarder les nouveaux achievements
+                    if (newAchievements.length > 0) {
+                      const updatedAchievements = [
+                        ...userAchievements,
+                        ...newAchievements,
+                      ];
+                      localStorage.setItem(
+                        "userAchievements",
+                        JSON.stringify(updatedAchievements)
+                      );
+                    }
+
+                    fetch("/api/user/xp", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ username, xp: xpAmount }),
+                    })
+                      .then((r) => r.json())
+                      .catch((err) => console.warn("Failed to award XP", err));
+                  } catch (e) {
+                    console.warn("Error while awarding XP", e);
+                  }
+                })
+                .catch((err) => console.warn("Failed to submit score", err));
+            }
+          }
+          if (showGameWonModalCallback) {
+            showGameWonModalCallback();
           }
         }
       } catch (err) {
@@ -399,6 +488,7 @@ function Game() {
 
   const handleReplay = () => {
     setShowGameOverModal(false);
+    setShowGameWonModal(false);
     try {
       gameScene.scene.resume();
     } catch (e) {
@@ -428,6 +518,17 @@ function Game() {
         console.warn("Failed to pause scene", e);
       }
       setShowGameOverModal(true);
+    };
+  }, []);
+
+  useEffect(() => {
+    showGameWonModalCallback = () => {
+      try {
+        gameScene.scene.pause();
+      } catch (e) {
+        console.warn("Failed to pause scene", e);
+      }
+      setShowGameWonModal(true);
     };
   }, []);
 
@@ -516,6 +617,16 @@ function Game() {
 
         {showGameOverModal && (
           <ModalGameOver
+            isOpen={true}
+            score={scoreDisplay}
+            stage={stage}
+            timerSeconds={timerSeconds}
+            onReplay={handleReplay}
+            onReturnHome={handleReturnHome}
+          />
+        )}
+        {showGameWonModal && (
+          <ModalGameWon
             isOpen={true}
             score={scoreDisplay}
             stage={stage}
