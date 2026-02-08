@@ -139,13 +139,13 @@ export function sendGameOver() {
  * Précharge les assets Phaser
  */
 function preload() {
-  this.load.image("ground", "src/static/assets/platform.png");
-  this.load.image("obstacle", "src/static/assets/bomb.png");
-  this.load.spritesheet("dude", "src/static/assets/dude.png", {
+  this.load.image("ground", "/assets/platform.png");
+  this.load.image("obstacle", "/assets/bomb.png");
+  this.load.spritesheet("dude", "/assets/dude.png", {
     frameWidth: 32,
     frameHeight: 48,
   });
-  this.load.spritesheet("opponent", "src/static/assets/opponent.png", {
+  this.load.spritesheet("opponent", "/assets/opponent.png", {
     frameWidth: 32,
     frameHeight: 48,
   });
