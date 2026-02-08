@@ -2,10 +2,10 @@
 
 import logging
 import sys
+import re
 from pathlib import Path
 
-from flask import Flask
-from flask_cors import CORS
+from flask import Flask, request
 from werkzeug.exceptions import HTTPException
 
 # Ensure local imports work whether run as a module or a script
@@ -21,27 +21,36 @@ from pages.compte import users  # type: ignore
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# CORS configuration for API routes
-CORS(
-    app,
-    resources={
-        r"/api/*": {
-            "origins": [
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://localhost:5000",
-                "http://127.0.0.1:5000",
-                "http://localhost:15256",
-                "http://127.0.0.1:15256",
-                "http://192.168.60.220:15256",
-                "*:15256",  # Accept any IP on port 15256
-            ],
-            "methods": ["GET", "POST", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "X-Admin-User"],
-            "supports_credentials": True,
-        }
-    },
-)
+
+# Manual CORS handling to avoid duplicate headers
+@app.after_request
+def after_request(response):
+    """Add CORS headers to response."""
+    origin = request.headers.get('Origin')
+    
+    # Check if origin is allowed
+    if origin:
+        # List of explicitly allowed origins
+        allowed_origins = [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:5000",
+            "http://127.0.0.1:5000",
+            "http://localhost:15256",
+            "http://127.0.0.1:15256",
+            "http://192.168.60.220:15256",
+            "http://100.95.91.54:15256",
+        ]
+        
+        # Check if origin is explicitly allowed or matches pattern
+        if origin in allowed_origins or re.match(r"^http://[^:]+:15256$", origin):
+            response.headers['Access-Control-Allow-Origin'] = origin
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-User'
+            response.headers['Access-Control-Max-Age'] = '1728000'
+    
+    return response
 
 # Register blueprints - organized by page
 app.register_blueprint(auth.bp)
