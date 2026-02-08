@@ -52,6 +52,7 @@ import {
   getCursors,
   isJumpRequested,
 } from "./utils/GameControls.js";
+import { getWebSocketUrl } from "../utils/wsClient.js";
 import {
   calculateXPReward,
   checkAchievements,
@@ -404,7 +405,8 @@ function Game() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    const ws = new WebSocket(import.meta.env.VITE_WS_URL || "ws://localhost:3001");
+    const wsUrl = getWebSocketUrl();
+    const ws = new WebSocket(wsUrl);
     const username = localStorage.getItem("user");
     inputSocket = ws;
 

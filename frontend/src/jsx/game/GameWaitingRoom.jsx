@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { getWebSocketUrl } from "../utils/wsClient.js";
 
 const MIN_PLAYERS = 2;
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
 
 const GameWaitingRoom = () => {
   const [playerCount, setPlayerCount] = useState(0);
@@ -16,7 +16,8 @@ const GameWaitingRoom = () => {
       return;
     }
 
-    const ws = new WebSocket(WS_URL);
+    const wsUrl = getWebSocketUrl();
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
