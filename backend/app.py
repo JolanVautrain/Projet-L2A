@@ -13,16 +13,10 @@ BASE_DIR = Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-try:
-    from core import admin, db, utils  # type: ignore
-    from pages.accueil import auth, game  # type: ignore
-    from pages.classement import scores  # type: ignore
-    from pages.compte import users  # type: ignore
-except Exception:  # pragma: no cover - fallback for package-style import
-    from .core import admin, db, utils  # type: ignore
-    from .pages.accueil import auth, game  # type: ignore
-    from .pages.classement import scores  # type: ignore
-    from .pages.compte import users  # type: ignore
+from core import admin, db, utils  # type: ignore
+from pages.accueil import auth, game  # type: ignore
+from pages.classement import scores  # type: ignore
+from pages.compte import users  # type: ignore
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -37,6 +31,10 @@ CORS(
                 "http://127.0.0.1:5173",
                 "http://localhost:5000",
                 "http://127.0.0.1:5000",
+                "http://localhost:15256",
+                "http://127.0.0.1:15256",
+                "http://192.168.60.220:15256",
+                "*:15256",  # Accept any IP on port 15256
             ],
             "methods": ["GET", "POST", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "X-Admin-User"],

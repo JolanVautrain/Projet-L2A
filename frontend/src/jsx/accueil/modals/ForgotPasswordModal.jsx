@@ -3,6 +3,7 @@ import "../../../static/css/LoginModal.css";
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
+import { apiUrl } from "../../utils/apiClient.js";
 
 /**
  * Composant ForgotPasswordModal
@@ -68,7 +69,7 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
     setLoading(true);
     setError("");
 
-    fetch("http://127.0.0.1:5000/api/auth/reset-password-with-code", {
+    fetch(apiUrl("/auth/reset-password-with-code"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

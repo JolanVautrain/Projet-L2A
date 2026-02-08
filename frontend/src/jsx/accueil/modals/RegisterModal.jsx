@@ -3,6 +3,7 @@ import "../../../static/css/LoginModal.css";
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
+import { apiUrl } from "../../utils/apiClient.js";
 
 /**
  * Simple Register modal. Posts to /api/register and calls afterRegister(username) on success.
@@ -31,7 +32,7 @@ function RegisterModal({ isOpen, onClose, afterRegister }) {
       return;
     }
     setLoading(true);
-    fetch("http://127.0.0.1:5000/api/register", {
+    fetch(apiUrl("/register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: u, password: p }),

@@ -14,9 +14,6 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./postgres-prod.conf:/etc/postgresql/postgresql.conf:ro
-    ports:
-      # PostgreSQL en interne seulement (pas d'exposition externe)
-      - "127.0.0.1:5432:5432"
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-l2a_user} -d ${POSTGRES_DB:-l2a_production}"]
@@ -31,6 +28,8 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+    networks:
+      - internal
 
   # ================= FLASK BACKEND =================
   backend:
@@ -49,10 +48,11 @@ services:
       FLASK_ENV: production
       FLASK_DEBUG: "0"
       SECRET_KEY: ${SECRET_KEY:-ChangeMeToASecureRandomKey}
+      PYTHONPATH: /app
     depends_on:
       db:
         condition: service_healthy
-    command: gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 2 --timeout 60 app:app
+    command: gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 2 --timeout 60 wsgi:app
     restart: unless-stopped
     deploy:
       resources:

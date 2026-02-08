@@ -4,6 +4,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
 import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
+import { apiUrl } from "../../utils/apiClient.js";
 
 /** 
  * Composant LoginModal
@@ -35,7 +36,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
     // Envoi de la requête de connexion au backend
     setLoading(true);
     setError("");
-    fetch("http://127.0.0.1:5000/api/login", {
+    fetch(apiUrl("/login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

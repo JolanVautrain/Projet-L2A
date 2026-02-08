@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import Statistics from "./Statistics.jsx";
 import { LanguageSelector, useLanguage } from "../autres/Language.jsx";
+import { getApiBaseUrl } from "../utils/apiClient.js";
 import "../../static/css/Index.css";
 import "../../static/css/Account.css";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
@@ -38,14 +39,12 @@ function Account({ user, setUser }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const apiBase = globalThis?.window
-    ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000`
-    : "";
+  const apiBase = getApiBaseUrl();
 
   // Fonction pour charger et enrichir les utilisateurs
   const loadAdminUsers = async (currentUser) => {
     try {
-      const res = await fetch(`${apiBase}/api/admin/users`, {
+      const res = await fetch(`${apiBase}/admin/users`, {
         headers: { "X-Admin-User": currentUser },
       });
         // Silently ignore 401 (user not admin)
@@ -59,8 +58,8 @@ function Account({ user, setUser }) {
           data.map(async (u) => {
             try {
               const [xpRes, statsRes] = await Promise.all([
-                fetch(`${apiBase}/api/user/xp/${u.username}`),
-                fetch(`${apiBase}/api/user/stats/${u.username}`),
+                fetch(`${apiBase}/user/xp/${u.username}`),
+                fetch(`${apiBase}/user/stats/${u.username}`),
               ]);
               const xpJson =
                 xpRes && xpRes.ok
@@ -117,7 +116,7 @@ function Account({ user, setUser }) {
           loadAdminUsers(user);
           return;
         }
-        const res = await fetch(`${apiBase}/api/user/is-admin`, {
+        const res = await fetch(`${apiBase}/user/is-admin`, {
           headers: { "X-Admin-User": user },
         });
         if (res.ok) {
@@ -142,7 +141,7 @@ function Account({ user, setUser }) {
   const handleGenerateRecoveryCode = async () => {
     setRecoveryCodesLoading(true);
     try {
-      const res = await fetch(`${apiBase}/api/user/generate-recovery-code`, {
+      const res = await fetch(`${apiBase}/user/generate-recovery-code`, {
         method: "POST",
         headers: { "X-Admin-User": user },
       });
@@ -203,7 +202,7 @@ function Account({ user, setUser }) {
       ) {
         setAwardXpLoading(true);
 
-        fetch(`${apiBase}/api/user/xp`, {
+        fetch(`${apiBase}/user/xp`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -425,7 +424,7 @@ function Account({ user, setUser }) {
                         ) {
                           setResetSessionsLoading(true);
                           fetch(
-                            `${apiBase}/api/admin/reset-sessions/${selectedUser}`,
+                            `${apiBase}/admin/reset-sessions/${selectedUser}`,
                             {
                               method: "POST",
                               headers: { "X-Admin-User": "admin" },
@@ -474,7 +473,7 @@ function Account({ user, setUser }) {
                         ) {
                           setDeleteHistoryLoading(true);
                           fetch(
-                            `${apiBase}/api/admin/delete-xp-history/${selectedUser}`,
+                            `${apiBase}/admin/delete-xp-history/${selectedUser}`,
                             {
                               method: "POST",
                               headers: { "X-Admin-User": "admin" },
@@ -526,7 +525,7 @@ function Account({ user, setUser }) {
                           )
                         ) {
                           fetch(
-                            `${apiBase}/api/admin/delete-user/${selectedUser}`,
+                            `${apiBase}/admin/delete-user/${selectedUser}`,
                             {
                               method: "DELETE",
                               headers: { "X-Admin-User": "admin" },
@@ -581,7 +580,7 @@ function Account({ user, setUser }) {
                             ) {
                               setSetAdminLoading(true);
                               fetch(
-                                `${apiBase}/api/admin/set-admin/${selectedUser}`,
+                                `${apiBase}/admin/set-admin/${selectedUser}`,
                                 {
                                   method: "POST",
                                   headers: { "X-Admin-User": "admin" },
@@ -630,7 +629,7 @@ function Account({ user, setUser }) {
                             ) {
                               setRemoveAdminLoading(true);
                               fetch(
-                                `${apiBase}/api/admin/remove-admin/${selectedUser}`,
+                                `${apiBase}/admin/remove-admin/${selectedUser}`,
                                 {
                                   method: "POST",
                                   headers: { "X-Admin-User": "admin" },
@@ -726,7 +725,7 @@ function Account({ user, setUser }) {
                               ) {
                                 setBanUserLoading(true);
                                 fetch(
-                                  `${apiBase}/api/admin/ban-user/${selectedUser}`,
+                                  `${apiBase}/admin/ban-user/${selectedUser}`,
                                   {
                                     method: "POST",
                                     headers: {
@@ -788,7 +787,7 @@ function Account({ user, setUser }) {
                             ) {
                               setUnbanUserLoading(true);
                               fetch(
-                                `${apiBase}/api/admin/unban-user/${selectedUser}`,
+                                `${apiBase}/admin/unban-user/${selectedUser}`,
                                 {
                                   method: "POST",
                                   headers: { "X-Admin-User": user },
@@ -850,7 +849,7 @@ function Account({ user, setUser }) {
                 confirm(
                   t("account.confirmDeleteUserFull").replace("{username}", user)
                 ) &&
-                  fetch(`${apiBase}/api/user/delete-user/${user}`, {
+                  fetch(`${apiBase}/user/delete-user/${user}`, {
                     method: "DELETE",
                     headers: { "X-Admin-User": "user" },
                   })
@@ -887,7 +886,7 @@ function Account({ user, setUser }) {
                     user
                   )
                 ) &&
-                  fetch(`${apiBase}/api/user/reset-sessions/${user}`, {
+                  fetch(`${apiBase}/user/reset-sessions/${user}`, {
                     method: "POST",
                     headers: { "X-Admin-User": "user" },
                   })
