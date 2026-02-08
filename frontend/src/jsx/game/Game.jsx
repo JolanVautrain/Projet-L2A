@@ -76,6 +76,7 @@ import {
   updatePlayerHologram,
 } from "./utils/GameEnhancements.js";
 import ModalGameWon from "./modals/ModalGameWon.jsx";
+import GameClientPrediction from "./utils/GameClientPrediction.js";
 
 // État du jeu
 let score = 0;
@@ -87,17 +88,42 @@ let showGameOverModalCallback = null;
 let showGameWonModalCallback = null;
 let gameScene = null;
 let inputSocket = null;
+let clientPrediction = null; // Système de prédiction client-side
 
+/**
+ * Envoyer un input avec prédiction client-side
+ * Le client applique immédiatement l'action et envoie au serveur
+ * Le serveur valide et envoie corrections si nécessaire
+ */
 export function sendGameInput(type) {
   const username = localStorage.getItem("user");
   if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
+  if (!clientPrediction) return;
 
-  inputSocket.send(
-    JSON.stringify({
-      type: "input",
-      username,
-      input: type,
-    })
+  const player = getPlayer();
+  if (!player) return;
+
+  // Créer une fonction locale pour appliquer l'action
+  const applyActionLocally = (inputType, playerState) => {
+    if (inputType === "JUMP") {
+      handleJump(); // Applique le saut localement TOUT DE SUITE
+    }
+  };
+
+  // Envoi avec prédiction: applique localement + envoie au serveur
+  clientPrediction.sendInputWithPrediction(
+    type,
+    {
+      x: player.x,
+      y: player.y,
+      velocityX: player.body?.velocity?.x || 0,
+      velocityY: player.body?.velocity?.y || 0,
+      jumping: player.body?.blocked?.down === false,
+      grounded: player.body?.blocked?.down === true,
+    },
+    applyActionLocally,
+    inputSocket,
+    username
   );
 }
 
@@ -152,6 +178,9 @@ function create() {
   initEnhancements(this);
   addVignette(this);
   addNightStars(this); // Étoiles visibles dès le départ
+
+  // ✨ Initialiser le système de prédiction client-side
+  clientPrediction = new GameClientPrediction();
 
   setupCollisions(this);
 
@@ -375,7 +404,7 @@ function Game() {
   const { t } = useLanguage();
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:3001");
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL || "ws://localhost:3001");
     const username = localStorage.getItem("user");
     inputSocket = ws;
 
@@ -386,19 +415,65 @@ function Game() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        const input = data.input;
-        const usernameOpponent = data.username;
 
-        if (data.type === "input") {
-          if (username == usernameOpponent) return;
-            if (input === "JUMP") {
-              const opponent = getOpponent();
-              if (opponent) {
-                opponent.setVelocityY(-500);
-              }
+        // ========== CONFIRMATION D'INPUT ==========
+        // Le serveur confirme que l'input a été reçu et validé
+        if (data.type === "input_ack") {
+          if (clientPrediction) {
+            if (data.valid) {
+              clientPrediction.confirmAction(data.sequence);
+              console.log(`✅ Input confirmé (seq: ${data.sequence})`);
+            } else {
+              console.warn(`❌ Input rejeté par le serveur (seq: ${data.sequence})`);
             }
+          }
+          return;
         }
 
+        // ========== CORRECTION D'ÉTAT ==========
+        // Le serveur corrige si désynchronisation détectée
+        if (data.type === "state_correction") {
+          if (clientPrediction) {
+            const player = getPlayer();
+            console.warn(`⚠️ Correction du serveur reçue`);
+            clientPrediction.processServerCorrection(
+              {
+                sequence: data.sequence || 0,
+                x: data.x,
+                y: data.y,
+                velocityX: data.velocityX,
+                velocityY: data.velocityY,
+                valid: true,
+              },
+              player,
+              null
+            );
+          }
+          return;
+        }
+
+        // ========== INPUT REÇU (adversaire) ==========
+        // Mise à jour de l'adversaire avec interpolation
+        if (data.type === "input") {
+          const usernameOpponent = data.username;
+          if (username === usernameOpponent) return; // C'est notre action, on ignore
+
+          // Mettre à jour l'état de l'adversaire dans la prédiction
+          if (clientPrediction && data.serverState) {
+            clientPrediction.updateOpponentState(usernameOpponent, data.serverState);
+          }
+
+          // Appliquer l'action immédiatement
+          if (data.input === "JUMP") {
+            const opponent = getOpponent();
+            if (opponent) {
+              opponent.setVelocityY(-500);
+            }
+          }
+          console.log(`📨 Action adversaire: ${usernameOpponent} ${data.input}`);
+        }
+
+        // ========== FIN DE PARTIE ==========
         if (data.type === "gameOver") {
           const usernameOpponent = data.username;
           if (username === usernameOpponent) return;

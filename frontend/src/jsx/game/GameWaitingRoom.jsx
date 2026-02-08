@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const MIN_PLAYERS = 2;
-const WS_URL = "ws://localhost:3001";
+const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
 
 const GameWaitingRoom = () => {
   const [playerCount, setPlayerCount] = useState(0);

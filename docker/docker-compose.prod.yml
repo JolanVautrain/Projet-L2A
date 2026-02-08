@@ -1,0 +1,121 @@
+name: projetl2a-prod
+
+services:
+  # ================= DATABASE =================
+  # PostgreSQL optimisé pour Raspberry Pi 4 2GB
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-l2a_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeInProduction!}
+      POSTGRES_DB: ${POSTGRES_DB:-l2a_production}
+      # Optimisation pour Raspberry Pi (2GB RAM)
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./postgres-prod.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      # PostgreSQL en interne seulement (pas d'exposition externe)
+      - "127.0.0.1:5432:5432"
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-l2a_user} -d ${POSTGRES_DB:-l2a_production}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ================= FLASK BACKEND =================
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/backend/Dockerfile
+      args:
+        - FLASK_ENV=production
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-l2a_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeInProduction!}
+      POSTGRES_DB: ${POSTGRES_DB:-l2a_production}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-l2a_user}:${POSTGRES_PASSWORD:-ChangeMeInProduction!}@db/${POSTGRES_DB:-l2a_production}
+      FLASK_ENV: production
+      FLASK_DEBUG: "0"
+      SECRET_KEY: ${SECRET_KEY:-ChangeMeToASecureRandomKey}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 2 --timeout 60 app:app
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    networks:
+      - internal
+
+  # ================= WEBSOCKET SERVER (Node.js) =================
+  ws-server:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ../backend/gameServeur.js:/app/gameServeur.js:ro
+      - ../backend/package.json:/app/package.json:ro
+      - node_modules:/app/node_modules
+    ports:
+      # WebSocket en interne seulement
+      - "127.0.0.1:3001:3001"
+    command: sh -c "npm install && node gameServeur.js"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    networks:
+      - internal
+
+  # ================= NGINX REVERSE PROXY =================
+  # Nginx pour servir le frontend et proxy vers le backend
+  nginx:
+    image: nginx:alpine
+    ports:
+      # PORT PRINCIPAL : 15256 pour l'accès externe
+      - "15256:80"
+    volumes:
+      - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ../frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+      - ws-server
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    networks:
+      - internal
+
+volumes:
+  db_data:
+    driver: local
+  node_modules:
+    driver: local
+
+networks:
+  internal:
+    driver: bridge

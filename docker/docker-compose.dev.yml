@@ -48,7 +48,7 @@ services:
       - ../backend:/app
     ports:
       - "3001:3001"
-    command: node gameServeur.js
+    command: sh -c "npm install && node gameServeur.js"
     depends_on:
       - backend
     restart: unless-stopped
