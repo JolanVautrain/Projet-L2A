@@ -2,7 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 
-from ...core import db, utils
+from core import db, utils
 
 bp = Blueprint("game", __name__)
 

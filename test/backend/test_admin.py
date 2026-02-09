@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from flask.testing import FlaskClient
 
-from backend.tests.conftest import TEST_PASSWORD
+from .conftest import TEST_PASSWORD
 
 
 def test_reset_test_account(client: FlaskClient):

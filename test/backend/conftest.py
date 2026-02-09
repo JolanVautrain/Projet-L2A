@@ -6,6 +6,7 @@ from typing import Any, Generator
 
 import psycopg2
 import pytest
+from flask import Flask
 from flask.testing import FlaskClient
 
 from backend.app import app as flask_app
@@ -30,10 +31,16 @@ def get_db_connection():
 
 
 @pytest.fixture
-def client() -> Generator[FlaskClient, None, None]:
-    """Fournit un client de test Flask."""
+def app() -> Flask:
+    """Fournit l'application Flask pour pytest-flask."""
     flask_app.config["TESTING"] = True
-    with flask_app.test_client() as test_client:
+    return flask_app
+
+
+@pytest.fixture
+def client(app: Flask) -> Generator[FlaskClient, None, None]:
+    """Fournit un client de test Flask."""
+    with app.test_client() as test_client:
         yield test_client
 
 

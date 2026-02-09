@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { useState } from "react";
 import { useLanguage } from "./autres/Language.jsx";
+import { getActiveUser, setActiveUser } from "./utils/userSession.js";
 
 /**
  * Rend une route protégée qui nécessite une authentification.
@@ -48,9 +49,7 @@ function App() {
   const { t, changeLanguage } = useLanguage();
 
   // État utilisateur (persisté dans le localStorage)
-  const [userState, setUserState] = useState(
-    () => localStorage.getItem("user") || null
-  );
+  const [userState, setUserState] = useState(() => getActiveUser());
   const navigate = useNavigate();
 
   /**
@@ -59,8 +58,7 @@ function App() {
    */
   const setUser = (value) => {
     setUserState(value);
-    if (value) localStorage.setItem("user", value);
-    else localStorage.removeItem("user");
+    setActiveUser(value);
   };
 
   // Après connexion, si un utilisateur est défini, charger sa langue depuis le backend

@@ -58,13 +58,15 @@ def exec_commit(sql: str, params: tuple[Any, ...] = ()) -> None:
 
 def load_default_users() -> List[tuple[str, str, str]]:
     base_dir = Path(__file__).resolve().parent.parent
-    db_init_path = base_dir / "db_init.json"
+    db_init_path = base_dir / "init_db" / "db_init.json"
 
+    logger.info("Looking for db_init.json at: %s", db_init_path)
     if db_init_path.exists():
         try:
             with open(db_init_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 users = data.get("users", [])
+                logger.info("Loaded %d users from db_init.json", len(users))
                 return [
                     (
                         u["username"],
@@ -75,6 +77,8 @@ def load_default_users() -> List[tuple[str, str, str]]:
                 ]
         except (json.JSONDecodeError, KeyError, TypeError) as e:
             logger.warning("Failed to load users from db_init.json: %s", e)
+    else:
+        logger.warning("db_init.json not found at: %s", db_init_path)
 
     return []
 
@@ -121,12 +125,15 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             users_count = 0
         if users_count == 0:
             default_users = load_default_users()
+            logger.info("Preparing to insert %d default users from db_init.json", len(default_users))
             for init_username, init_password, init_language in default_users:
                 init_cur.execute(
                     "INSERT INTO users (username, password, language) "
                     "VALUES (%s, %s, %s)",
                     (init_username, init_password, init_language),
                 )
+                logger.info("Inserted user: %s", init_username)
+            logger.info("Successfully inserted %d default users", len(default_users))
         init_cur.execute(
             """CREATE TABLE IF NOT EXISTS highscores (
             username varchar(100) PRIMARY KEY,

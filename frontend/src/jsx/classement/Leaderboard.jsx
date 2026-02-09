@@ -3,8 +3,7 @@ import PropTypes from "prop-types";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 import { useLanguage } from "../autres/Language.jsx";
-import "../../static/css/Index.css";
-import "../../static/css/Leaderboard.css";
+import { getApiBaseUrl } from "../utils/apiClient.js";
 
 // Small helpers to build scale functions used by charts
 const makeXFor = (xMin, xMax, width, margin) => {
@@ -62,8 +61,8 @@ const monotoneToBezier = (pts) => {
 };
 
 function Leaderboard({ user, setUser }) {
-  // Runtime API base: prefer same host on port 5000 (backend), useful during dev
-  const apiBase = globalThis?.window ? `${globalThis.window.location.protocol}//${globalThis.window.location.hostname}:5000` : '';
+  // Runtime API base: uses VITE_BACKEND_URL or constructs dynamically from window.location
+  const apiBase = getApiBaseUrl();
   const [scores, setScores] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +112,7 @@ function Leaderboard({ user, setUser }) {
       });
     // Charger XP / niveau du user connecté
     if (user) {
-      fetch(`${apiBase}/api/user/xp/${user}`)
+      fetch(`${apiBase}/user/xp/${user}`)
         .then((r) => {
           if (r.ok) {
             return r.json();
@@ -128,7 +127,7 @@ function Leaderboard({ user, setUser }) {
         })
         .catch(() => {})
       // Charger l'historique XP
-      fetch(`${apiBase}/api/user/xp/history/${user}?limit=100`)
+      fetch(`${apiBase}/user/xp/history/${user}?limit=100`)
         .then((r) => r.ok ? r.json() : [])
         .then((h) => { if (mounted) setXpHistory(h || []); })
         .catch(() => {});

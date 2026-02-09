@@ -4,7 +4,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoginModal from "./modals/LoginModal.jsx";
 import RegisterModal from "./modals/RegisterModal.jsx";
 import { useLanguage } from "../autres/Language.jsx";
-import "../../static/css/Accueil.css";
 
 /**
  * Composant Accueil

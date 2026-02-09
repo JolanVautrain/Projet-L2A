@@ -25,4 +25,5 @@ pylint==3.0.3
 isort==5.13.2
 black==23.12.1
 psycopg2-binary>=2.9.3
+gunicorn==21.2.0
 
