@@ -22,6 +22,11 @@ source .venv/bin/activate
 # recharger la page vscode
 CTRL + MAJ + P => Recharger la page/Reload the page
 ```
+## Développement
+
+Pour accéder au serveur de développpement, il faut passer par le docker nginx soit le l'url :
+
+http://localhost:15256/
 
 ## Lancer les tests localement
 
