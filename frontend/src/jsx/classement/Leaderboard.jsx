@@ -4,8 +4,6 @@ import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 import { useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
-import "../../static/css/Index.css";
-import "../../static/css/Leaderboard.css";
 
 // Small helpers to build scale functions used by charts
 const makeXFor = (xMin, xMax, width, margin) => {

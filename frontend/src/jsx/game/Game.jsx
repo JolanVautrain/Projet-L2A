@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ModalGameOver from "./modals/ModalGameOver.jsx";
 import { useLanguage } from "../autres/Language.jsx";
-import "../../static/css/Index.css";
-import "../../static/css/Game.css";
 
 // Import des modules de jeu
 import {

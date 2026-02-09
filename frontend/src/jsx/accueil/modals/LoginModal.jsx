@@ -1,5 +1,4 @@
 import { createPortal } from "react-dom";
-import "../../../static/css/LoginModal.css";
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";

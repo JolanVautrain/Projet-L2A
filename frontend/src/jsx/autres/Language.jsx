@@ -1,7 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import fr from '../../static/locales/fr.json';
-import en from '../../static/locales/en.json';
 import PropTypes from 'prop-types';
 import { getActiveUser } from '../utils/userSession.js';
 
@@ -13,6 +11,20 @@ export const LanguageProvider = ({ children }) => {
     const saved = localStorage.getItem('language');
     return saved || navigator.language.split('-')[0] || 'fr';
   });
+
+  const [translations, setTranslations] = useState({ fr: {}, en: {} });
+
+  // Charger les traductions au démarrage
+  useEffect(() => {
+    Promise.all([
+      fetch('/locales/fr.json').then(r => r.json()),
+      fetch('/locales/en.json').then(r => r.json())
+    ])
+      .then(([fr, en]) => {
+        setTranslations({ fr, en });
+      })
+      .catch(err => console.error('Failed to load translations', err));
+  }, []);
 
   // Charger la langue depuis le backend si l'utilisateur est connecté
   useEffect(() => {
@@ -29,10 +41,8 @@ export const LanguageProvider = ({ children }) => {
       .catch(() => {});
   }, []);
 
-  const translations = useMemo(() => ({ fr, en }), []);
-
   const changeLanguage = useCallback((lang) => {
-    if (translations[lang]) {
+    if (translations[lang] && Object.keys(translations[lang]).length > 0) {
       setLanguage(lang);
       localStorage.setItem('language', lang);
       const username = getActiveUser();
