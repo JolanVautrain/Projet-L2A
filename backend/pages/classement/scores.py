@@ -50,7 +50,7 @@ def _handle_new_highscore(
             score,
             stage if stage is not None else 0,
             timer if timer is not None else 0,
-            state
+            state,
         ),
     )
     conn.commit()
