@@ -431,9 +431,17 @@ wss.on("connection", (ws) => {
       broadcastToLobby({ type: "player_count", count: lobby.size });
     }
 
-    if (info.matchId) {
-      const match = matches.get(info.matchId);
+    const matchId = info.matchId || (info.username ? assignments.get(info.username) : null);
+    if (matchId) {
+      const match = matches.get(matchId);
       if (match) {
+        // Notifier l'autre joueur que son adversaire s'est déconnecté
+        broadcastToMatch(matchId, {
+          type: "opponent_disconnected",
+          matchId,
+          username: info.username,
+        });
+        
         match.players.delete(info.username);
         match.playerStates.delete(info.username);
         match.overPlayers.delete(info.username);
@@ -444,7 +452,9 @@ wss.on("connection", (ws) => {
           matches.delete(info.matchId);
         }
       }
-      assignments.delete(info.username);
+      if (info.username) {
+        assignments.delete(info.username);
+      }
     }
 
     connectionInfo.delete(ws);

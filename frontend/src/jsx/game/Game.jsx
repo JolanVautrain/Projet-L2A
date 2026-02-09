@@ -418,15 +418,22 @@ function resetGameState() {
  */
 function Game() {
   const gameContainer = useRef(null);
+  const leavePromptedRef = useRef(false);
   const [stage, setStage] = useState(1);
   const [scoreDisplay, setScoreDisplay] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showGameWonModal, setShowGameWonModal] = useState(false);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+  const [confirmedLeavingGame, setConfirmedLeavingGame] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
   useEffect(() => {
+    const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
+    if (confirmedLeaving) {
+      sessionStorage.removeItem("confirmedLeavingGame");
+    }
     const storedMatchId = sessionStorage.getItem("activeMatchId");
     const storedOffset = sessionStorage.getItem("serverTimeOffsetMs");
     activeMatchId = storedMatchId;
@@ -472,6 +479,11 @@ function Game() {
       try {
         const data = JSON.parse(event.data);
 
+        if (data.type === "join_ok") {
+          setOpponentDisconnected(false);
+          return;
+        }
+
         // ========== CONFIRMATION D'INPUT ==========
         // Le serveur confirme que l'input a été reçu et validé
         if (data.type === "input_ack") {
@@ -515,6 +527,8 @@ function Game() {
           const usernameOpponent = data.username;
           if (username === usernameOpponent) return; // C'est notre action, on ignore
 
+          setOpponentDisconnected(false);
+
           // Mettre à jour l'état de l'adversaire dans la prédiction
           if (clientPrediction && data.serverState) {
             clientPrediction.updateOpponentState(usernameOpponent, data.serverState);
@@ -538,6 +552,15 @@ function Game() {
           setTimeout(() => {
             applySpawnWave(gameScene, data.wave);
           }, delay);
+        }
+
+        // ========== ADVERSAIRE DÉCONNECTÉ ==========
+        if (data.type === "opponent_disconnected") {
+          if (data.matchId && data.matchId !== activeMatchId) return;
+          if (!confirmedLeavingGame) {
+            setOpponentDisconnected(true);
+          }
+          return;
         }
 
         // ========== FIN DE PARTIE ==========
@@ -643,19 +666,17 @@ function Game() {
   const handleReplay = () => {
     setShowGameOverModal(false);
     setShowGameWonModal(false);
-    try {
-      gameScene.scene.resume();
-    } catch (e) {
-      console.warn("Failed to resume scene", e);
-    }
-    setScoreDisplay(0);
-    setStage(1);
-    setTimerSeconds(0);
-    resetGameState();
+    setConfirmedLeavingGame(true);
+    sessionStorage.setItem("confirmedLeavingGame", "1");
+    sessionStorage.removeItem("activeMatchId");
+    sessionStorage.removeItem("serverTimeOffsetMs");
+    navigate("/lobby");
   };
 
   const handleReturnHome = async () => {
     setShowGameOverModal(false);
+    setConfirmedLeavingGame(true);
+    sessionStorage.setItem("confirmedLeavingGame", "1");
     try {
       gameScene.scene.resume();
     } catch (e) {
@@ -676,6 +697,36 @@ function Game() {
       setShowGameOverModal(true);
     };
   }, []);
+
+  // Demander confirmation avant de quitter via un changement d'onglet
+  useEffect(() => {
+    if (confirmedLeavingGame || showGameOverModal || showGameWonModal) {
+      return;
+    }
+
+    const handleBlur = () => {
+      if (!activeMatchId) return;
+      if (leavePromptedRef.current) return;
+      leavePromptedRef.current = true;
+      window.dispatchEvent(
+        new CustomEvent("request-leave-match", {
+          detail: { target: "/lobby", reason: "tab" },
+        })
+      );
+    };
+
+    const handleCancel = () => {
+      leavePromptedRef.current = false;
+    };
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("leave-match-cancelled", handleCancel);
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("leave-match-cancelled", handleCancel);
+      leavePromptedRef.current = false;
+    };
+  }, [confirmedLeavingGame, showGameOverModal, showGameWonModal]);
 
   useEffect(() => {
     globalThis.dispatchEvent(new CustomEvent("score-up", { detail: score }));
@@ -770,6 +821,18 @@ function Game() {
             onReturnHome={handleReturnHome}
           />
         )}
+
+        {opponentDisconnected && (
+          <div className="opponent-disconnected-notification">
+            <div className="notification-content">
+              <span className="notification-icon">⚠️</span>
+              <span className="notification-text">
+                {t("game.opponentDisconnected") || "L'adversaire s'est déconnecté"}
+              </span>
+            </div>
+          </div>
+        )}
+
         {showGameWonModal && (
           <ModalGameWon
             isOpen={true}

@@ -21,6 +21,8 @@
     "failedPrefix": "Failed: ",
     "noData": "No data available",
     "close": "Close"
+    ,"confirm": "Confirm"
+    ,"cancel": "Cancel"
   },
   "nav": {
     "hello": "Hello",
@@ -30,7 +32,9 @@
     "reloadGame": "Reload Game",
     "youReachedScore": "You reached a score of",
     "atStage": "at stage",
-    "time": "Time"
+    "time": "Time",
+    "confirmLeaveMatch": "Are you sure you want to leave the match?",
+    "opponentDisconnected": "Opponent disconnected"
   },
   "leaderboard": {
     "title": "Player Leaderboard",

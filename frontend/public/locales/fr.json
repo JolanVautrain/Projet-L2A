@@ -21,6 +21,8 @@
     "failedPrefix": "Échec : ",
     "noData": "Aucune donnée disponible",
     "close": "Fermer"
+    ,"confirm": "Confirmer"
+    ,"cancel": "Annuler"
   },
   "nav": {
     "hello": "Bonjour",
@@ -30,7 +32,9 @@
     "reloadGame": "Recharger le jeu",
     "youReachedScore": "Vous avez atteint le score de",
     "atStage": "au stage",
-    "time": "Temps"
+    "time": "Temps",
+    "confirmLeaveMatch": "Êtes-vous sûr(e) de vouloir quitter la partie?",
+    "opponentDisconnected": "L'adversaire s'est déconnecté"
   },
   "leaderboard": {
     "title": "Classement des joueurs",

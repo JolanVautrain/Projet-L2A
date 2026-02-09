@@ -5,6 +5,7 @@ import {
   NavLink,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useLanguage } from "./autres/Language.jsx";
@@ -57,6 +58,9 @@ function App() {
   // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => getActiveUser());
   const navigate = useNavigate();
+  const location = useLocation();
+  const [leaveMatchModalOpen, setLeaveMatchModalOpen] = useState(false);
+  const [leaveMatchTarget, setLeaveMatchTarget] = useState(null);
 
   /**
    * Met à jour l'utilisateur et le stocke dans le localStorage.
@@ -101,6 +105,55 @@ function App() {
     const intervalId = setInterval(keepAlive, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, [userState]);
+
+  useEffect(() => {
+    const handleLeaveRequest = (event) => {
+      const target = event?.detail?.target || "/";
+      const activeMatchId = sessionStorage.getItem("activeMatchId");
+      const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
+      if (!activeMatchId || confirmedLeaving) {
+        navigate(target);
+        return;
+      }
+      setLeaveMatchTarget(target);
+      setLeaveMatchModalOpen(true);
+    };
+
+    window.addEventListener("request-leave-match", handleLeaveRequest);
+    return () => {
+      window.removeEventListener("request-leave-match", handleLeaveRequest);
+    };
+  }, [navigate]);
+
+  const requestLeaveIfInMatch = (target, event) => {
+    const activeMatchId = sessionStorage.getItem("activeMatchId");
+    const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
+    if (!activeMatchId || confirmedLeaving || location.pathname !== "/game") {
+      return true;
+    }
+    if (event) {
+      event.preventDefault();
+    }
+    setLeaveMatchTarget(target);
+    setLeaveMatchModalOpen(true);
+    return false;
+  };
+
+  const confirmLeaveMatch = () => {
+    sessionStorage.setItem("confirmedLeavingGame", "1");
+    sessionStorage.removeItem("activeMatchId");
+    sessionStorage.removeItem("serverTimeOffsetMs");
+    const target = leaveMatchTarget || "/";
+    setLeaveMatchModalOpen(false);
+    setLeaveMatchTarget(null);
+    navigate(target);
+  };
+
+  const cancelLeaveMatch = () => {
+    setLeaveMatchModalOpen(false);
+    setLeaveMatchTarget(null);
+    window.dispatchEvent(new CustomEvent("leave-match-cancelled"));
+  };
 
   useEffect(() => {
     if (!userState) return undefined;
@@ -148,8 +201,15 @@ function App() {
     <>
       <header>
         <nav className="navbar">
-          <NavLink to="/">{t("common.home")}</NavLink>
-          <NavLink to="/leaderboard">{t("common.leaderboard")}</NavLink>
+          <NavLink to="/" onClick={(e) => requestLeaveIfInMatch("/", e)}>
+            {t("common.home")}
+          </NavLink>
+          <NavLink
+            to="/leaderboard"
+            onClick={(e) => requestLeaveIfInMatch("/leaderboard", e)}
+          >
+            {t("common.leaderboard")}
+          </NavLink>
           {userState ? (
             <div className="nav-greeting">
               <div className="nav-account-display">
@@ -163,17 +223,48 @@ function App() {
                   {t("common.logout")}
                 </button>
               </div>
-              <NavLink className="btn ghost no-border" to="/account">
+              <NavLink
+                className="btn ghost no-border"
+                to="/account"
+                onClick={(e) => requestLeaveIfInMatch("/account", e)}
+              >
                 {t("account.title")}
               </NavLink>
             </div>
           ) : (
-            <NavLink to="/account">{t("account.title")}</NavLink>
+            <NavLink
+              to="/account"
+              onClick={(e) => requestLeaveIfInMatch("/account", e)}
+            >
+              {t("account.title")}
+            </NavLink>
           )}
-          <NavLink to="/contacts">{t("common.contacts")}</NavLink>
-          <NavLink to="/regle">{t("rules.title")}</NavLink>
+          <NavLink
+            to="/contacts"
+            onClick={(e) => requestLeaveIfInMatch("/contacts", e)}
+          >
+            {t("common.contacts")}
+          </NavLink>
+          <NavLink to="/regle" onClick={(e) => requestLeaveIfInMatch("/regle", e)}>
+            {t("rules.title")}
+          </NavLink>
         </nav>
       </header>
+      {leaveMatchModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>{t("game.confirmLeaveMatch")}</h2>
+            <div className="modal-buttons">
+              <button className="btn ghost" onClick={cancelLeaveMatch}>
+                {t("common.cancel")}
+              </button>
+              <button className="btn accent" onClick={confirmLeaveMatch}>
+                {t("common.confirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Routes>
         <Route
           path="/"

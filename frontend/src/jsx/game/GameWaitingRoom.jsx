@@ -17,6 +17,16 @@ const GameWaitingRoom = () => {
       return;
     }
 
+    const storedMatchId = sessionStorage.getItem("activeMatchId");
+    const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
+    if (storedMatchId && !confirmedLeaving) {
+      navigate("/game");
+      return;
+    }
+    if (confirmedLeaving) {
+      sessionStorage.removeItem("confirmedLeavingGame");
+    }
+
     const wsUrl = getWebSocketUrl();
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
@@ -42,8 +52,10 @@ const GameWaitingRoom = () => {
           break;
 
         case "start_game":
-          if (msg.matchId) {
-            sessionStorage.setItem("activeMatchId", msg.matchId);
+          sessionStorage.removeItem("confirmedLeavingGame");
+          const resolvedMatchId = msg.matchId || msg.match_id || msg.matchID;
+          if (resolvedMatchId) {
+            sessionStorage.setItem("activeMatchId", resolvedMatchId);
             if (typeof msg.serverTime === "number") {
               const offset = msg.serverTime - Date.now();
               sessionStorage.setItem(
