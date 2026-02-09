@@ -11,7 +11,7 @@ let playerStates = new Map(); // username -> { x, y, vx, vy, lastSequence, ... }
 const ANTI_CHEAT_CONFIG = {
   MAX_VELOCITY: 1000, // pixels/frame
   MAX_JUMP_HEIGHT: 500,
-  MIN_TIME_BETWEEN_JUMPS: 100, // ms
+  MIN_TIME_BETWEEN_JUMPS: 10, // ms
   MAX_POSITION_CHANGE: 300, // pixels/frame
 };
 
@@ -40,18 +40,18 @@ function validateInput(username, inputData) {
 
   // Vérifier le numéro de séquence
   if (inputData.sequence <= state.lastSequence) {
-    console.warn(`⚠️ Séquence invalide: ${username} (seq: ${inputData.sequence}, last: ${state.lastSequence})`);
+    console.warn(`[!] Séquence invalide: ${username} (seq: ${inputData.sequence}, last: ${state.lastSequence})`);
     return { valid: false, reason: "sequence_out_of_order" };
   }
 
   // Vérifier les sauts trop rapides
-  if (inputData.input === "JUMP") {
+  /*if (inputData.input === "JUMP") {
     const timeSinceLastJump = Date.now() - state.lastJumpTime;
     if (timeSinceLastJump < ANTI_CHEAT_CONFIG.MIN_TIME_BETWEEN_JUMPS) {
-      console.warn(`⚠️ Trop de sauts trop rapides: ${username}`);
+      console.warn(`[!] Trop de sauts trop rapides: ${username}`);
       return { valid: false, reason: "jump_spam" };
     }
-  }
+  }*/ //TODO: à revoir
 
   // Validation réussie
   return { valid: true };
@@ -129,7 +129,7 @@ wss.on("connection", (ws) => {
   let username = null;
   let clientSequence = 0;
 
-  console.log(`✅ Client connecté. Total: ${wss.clients.size}`);
+  console.log(`[X] Client connecté. Total: ${wss.clients.size}`);
 
   ws.on("message", (raw) => {
     try {
@@ -151,12 +151,12 @@ wss.on("connection", (ws) => {
           lastJumpTime: 0,
         });
 
-        console.log(`🎮 ${username} rejoint (total: ${players.size})`);
+        console.log(`[X] ${username} rejoint (total: ${players.size})`);
 
         broadcast({ type: "player_count", count: players.size });
 
         if (players.size >= MIN_PLAYERS) {
-          console.log("🚀 Démarrage du jeu!");
+          console.log("[X] Démarrage du jeu!");
           broadcast({ type: "start_game" });
         }
       }
@@ -166,28 +166,28 @@ wss.on("connection", (ws) => {
         const inputUsername = msg.username;
         const sequence = msg.sequence || 0;
 
-        // ✅ VALIDATION (anti-cheat)
+        // VALIDATION (anti-cheat)
         const validation = validateInput(inputUsername, {
           input: msg.input,
           sequence: sequence,
         });
 
         if (!validation.valid) {
-          console.warn(`❌ Input invalide de ${inputUsername}: ${validation.reason}`);
+          console.warn(`[!] Input invalide de ${inputUsername}: ${validation.reason}`);
           sendInputAck(ws, { sequence }, false);
           return;
         }
 
-        // ✅ MISE À JOUR DE L'ÉTAT SERVEUR
+        // MISE À JOUR DE L'ÉTAT SERVEUR
         const updatedState = updatePlayerState(inputUsername, {
           input: msg.input,
           sequence: sequence,
         });
 
-        // ✅ CONFIRMATION AU CLIENT
+        // CONFIRMATION AU CLIENT
         sendInputAck(ws, { sequence }, true);
 
-        // ✅ BROADCAST AUX AUTRES JOUEURS
+        // BROADCAST AUX AUTRES JOUEURS
         // Seul l'état serveur validé est envoyé
         broadcast({
           type: "input",
@@ -203,13 +203,13 @@ wss.on("connection", (ws) => {
           },
         });
 
-        console.log(`📨 Input validé de ${inputUsername}: ${msg.input} (seq: ${sequence})`);
+        //console.log(`[X] Input validé de ${inputUsername}: ${msg.input} (seq: ${sequence})`);
       }
 
       // ========== FIN DE PARTIE ==========
       if (msg.type === "gameOver") {
         const gameOverUsername = msg.username;
-        console.log(`💀 ${gameOverUsername} game over`);
+        console.log(`[X] ${gameOverUsername} game over`);
 
         broadcast({
           type: "gameOver",
@@ -229,12 +229,12 @@ wss.on("connection", (ws) => {
         const deltaY = Math.abs((state.y || 0) - (receivedState?.y || 0));
 
         if (deltaX > 100 || deltaY > 100) {
-          console.warn(`⚠️ Désynchronisation détectée pour ${username}`);
+          console.warn(`[!] Désynchronisation détectée pour ${username}`);
           sendStateCorrection(ws, username, receivedState);
         }
       }
     } catch (e) {
-      console.error("Erreur parsing message:", e);
+      console.error("[!] Erreur parsing message:", e);
     }
   });
 
@@ -242,7 +242,7 @@ wss.on("connection", (ws) => {
     if (username) {
       players.delete(username);
       playerStates.delete(username);
-      console.log(`❌ ${username} déconnecté (total: ${players.size})`);
+      console.log(`[!] ${username} déconnecté (total: ${players.size})`);
       broadcast({ type: "player_count", count: players.size });
     }
   });
@@ -252,5 +252,5 @@ wss.on("connection", (ws) => {
   });
 });
 
-console.log("🎮 Serveur de jeu WebSocket démarré sur le port 3001");
-console.log("Anti-cheat activé avec configuration:", ANTI_CHEAT_CONFIG);
+console.log("[X] Serveur de jeu WebSocket démarré sur le port 3001");
+console.log("[X] Anti-cheat activé avec configuration:", ANTI_CHEAT_CONFIG);

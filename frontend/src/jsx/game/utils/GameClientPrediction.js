@@ -129,7 +129,7 @@ class GameClientPrediction {
     
     if (!valid) {
       // Le serveur détecte une fraude/incohérence - ROLLBACK
-      console.warn(`⚠️ Correction du serveur: tentative de fraude détectée (seq: ${sequence})`);
+      console.warn(`[!] Correction du serveur: tentative de fraude détectée (seq: ${sequence})`);
       this.rollback(sequence, { x, y, velocityX, velocityY }, player);
       return;
     }
@@ -140,7 +140,7 @@ class GameClientPrediction {
     const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
     
     if (distance > this.CORRECTION_THRESHOLD) {
-      console.warn(`⚠️ Désynchronisation détectée (distance: ${distance}px) - Correction`);
+      console.warn(`[!] Désynchronisation détectée (distance: ${distance}px) - Correction`);
       this.rollback(sequence, { x, y, velocityX, velocityY }, player, replayActions);
       return;
     }

@@ -30,7 +30,6 @@ def after_request(response):
     
     # Check if origin is allowed
     if origin:
-        # List of explicitly allowed origins
         allowed_origins = [
             "http://localhost:5173",
             "http://127.0.0.1:5173",
@@ -39,7 +38,6 @@ def after_request(response):
             "http://localhost:15256",
             "http://127.0.0.1:15256",
             "http://192.168.60.220:15256",
-            "http://100.95.91.54:15256",
         ]
         
         # Check if origin is explicitly allowed or matches pattern

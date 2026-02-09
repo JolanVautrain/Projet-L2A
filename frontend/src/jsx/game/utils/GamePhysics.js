@@ -2,6 +2,8 @@
  * Gestion de la physique et des collisions du jeu
  */
 
+import { apiUrl } from '../../utils/apiClient.js';
+
 /**
  * Dessine une étoile pixelisée pour l'invincibilité
  */
@@ -87,7 +89,7 @@ export function initPhysics(scene, onAdminModeChange = null) {
   
   // Vérifier si admin directement via le backend
   if (username) {
-    fetch(`http://localhost:5000/api/admin/check/${username}`)
+    fetch(apiUrl(`/admin/check/${username}`))
       .then(r => r.json())
       .then(data => {
         isAdminMode = data.isAdmin === true;
