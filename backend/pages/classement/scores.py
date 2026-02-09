@@ -17,15 +17,17 @@ def _insert_game_session(
     score: int,
     stage: int | None,
     timer: int | None,
+    state
 ) -> None:
     cur.execute(
-        "INSERT INTO game_sessions (username, score, stage, timer, playedAt) "
-        "VALUES (%s, %s, %s, %s, %s)",
+        "INSERT INTO game_sessions (username, score, stage, timer, state, playedAt) "
+        "VALUES (%s, %s, %s, %s, %s,%s)",
         (
             username,
             score,
             stage if stage is not None else 0,
             timer if timer is not None else 0,
+            state,
             str(datetime.datetime.now()),
         ),
     )
@@ -39,15 +41,17 @@ def _handle_new_highscore(
     score: int,
     stage: int | None,
     timer: int | None,
+    state
 ) -> tuple[int, bool]:
     cur.execute(
-        "INSERT INTO highscores (username, high_score, stage, timer) "
-        "VALUES (%s, %s, %s, %s)",
+        "INSERT INTO highscores (username, high_score, stage, timer,state) "
+        "VALUES (%s, %s, %s, %s,%s)",
         (
             username,
             score,
             stage if stage is not None else 0,
             timer if timer is not None else 0,
+            state
         ),
     )
     conn.commit()
@@ -61,6 +65,7 @@ def _update_highscore_if_better(
     score: int,
     stage: int | None,
     timer: int | None,
+    state,
     current_high: int,
 ) -> tuple[int, bool]:
     if score <= current_high:
@@ -68,12 +73,13 @@ def _update_highscore_if_better(
 
     if stage is not None or timer is not None:
         cur.execute(
-            "UPDATE highscores SET high_score = %s, stage = %s, timer = %s "
+            "UPDATE highscores SET high_score = %s, stage = %s, timer = %s, state = %s "
             "WHERE username = %s",
             (
                 score,
                 stage if stage is not None else 0,
                 timer if timer is not None else 0,
+                state,
                 username,
             ),
         )
@@ -113,9 +119,10 @@ def submit_score() -> Response:
 
     stage = utils.parse_optional_int(data, "stage")
     timer = utils.parse_optional_int(data, "timer")
+    state = str(data["state"])
 
     with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
-        _insert_game_session(conn, cur, username, score, stage, timer)
+        _insert_game_session(conn, cur, username, score, stage, timer, state)
 
         cur.execute(
             "SELECT high_score FROM highscores WHERE username = %s",
@@ -125,12 +132,12 @@ def submit_score() -> Response:
 
         if not row:
             high, updated = _handle_new_highscore(
-                cur, conn, username, score, stage, timer
+                cur, conn, username, score, stage, timer,state
             )
         else:
             current_high = int(row[0])
             high, updated = _update_highscore_if_better(
-                cur, conn, username, score, stage, timer, current_high
+                cur, conn, username, score, stage, timer,state, current_high
             )
 
         return utils.make_response({"updated": updated, "highScore": high})
@@ -142,7 +149,7 @@ def get_high_score(username: str) -> Response:
     username = username.strip()
     with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
         cur.execute(
-            "SELECT high_score, stage, timer FROM highscores "
+            "SELECT high_score, stage, timer, state FROM highscores "
             "WHERE username = %s",
             (username,),
         )
@@ -160,6 +167,7 @@ def get_high_score(username: str) -> Response:
                 "highScore": int(row[0]),
                 "stage": int(row[1] or 0),
                 "timer": int(row[2] or 0),
+                "state": row[3]
             }
         )
 
@@ -168,7 +176,7 @@ def get_high_score(username: str) -> Response:
 @utils.handle_db_errors
 def list_high_scores() -> Response:
     rows = db.query_fetchall(
-        "SELECT username, high_score, stage, timer FROM highscores ORDER BY "
+        "SELECT username, high_score, stage, timer,state FROM highscores ORDER BY "
         "high_score DESC"
     )
 
@@ -178,6 +186,7 @@ def list_high_scores() -> Response:
             "highScore": int(r[1]),
             "stage": int(r[2] or 0),
             "timer": int(r[3] or 0),
+            "state": r[4]
         }
         for r in rows
     ]

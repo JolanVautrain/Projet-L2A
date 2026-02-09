@@ -302,6 +302,7 @@ function handleObstacleCollision(_player, _obstacle) {
           score: finalScore,
           stage: getStage(),
           timer: timerSeconds,
+          state: "Defeat"
         }),
       })
         .then((r) => r.json())
@@ -500,6 +501,7 @@ function Game() {
                   score: finalScore,
                   stage: getStage(),
                   timer: timerSeconds,
+                  state: "Victory"
                 }),
               })
                 .then((r) => r.json())

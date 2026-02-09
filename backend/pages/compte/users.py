@@ -14,7 +14,7 @@ bp = Blueprint("users", __name__)
 def get_user_sessions(username: str):
     username = username.strip()
     rows = db.query_fetchall(
-        "SELECT id, score, stage, timer, playedAt FROM game_sessions WHERE "
+        "SELECT id, score, stage, timer, state, playedAt FROM game_sessions WHERE "
         "username = %s ORDER BY score DESC",
         (username,),
     )
@@ -25,7 +25,8 @@ def get_user_sessions(username: str):
             "score": int(r[1]),
             "stage": int(r[2] or 0),
             "timer": int(r[3] or 0),
-            "playedAt": str(r[4]),
+            "state": str(r[4]),
+            "playedAt": str(r[5]),
         }
         for r in rows
     ]

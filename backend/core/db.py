@@ -140,6 +140,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             high_score integer NOT NULL,
             stage integer DEFAULT 0,
             timer integer DEFAULT 0,
+            state varchar(100),
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
         )
@@ -168,6 +169,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             score integer NOT NULL,
             stage integer DEFAULT 0,
             timer integer DEFAULT 0,
+            state varchar(100),
             playedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
