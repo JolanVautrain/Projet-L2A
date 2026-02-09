@@ -6,7 +6,7 @@ from flask.testing import FlaskClient
 from werkzeug.security import check_password_hash
 
 from backend.core import utils
-from backend.tests.conftest import TEST_PASSWORD
+from .conftest import TEST_PASSWORD
 
 
 def test_parse_optional_int():

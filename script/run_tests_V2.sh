@@ -105,13 +105,13 @@ fi
 
 # Exporter les variables d'environnement pour les tests
 export TEST_DB_HOST=localhost
-export TEST_DB_PORT=5433
+export TEST_DB_PORT=5434
 export TEST_DB_USER=testuser
 export TEST_DB_PASSWORD=testpassword
 export TEST_DB_NAME=testdb
 # Variables pour conftest.py
 export POSTGRES_HOST=localhost
-export POSTGRES_PORT=5433
+export POSTGRES_PORT=5434
 export POSTGRES_USER=testuser
 export POSTGRES_PASSWORD=testpassword
 export POSTGRES_DB=testdb

@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from flask.testing import FlaskClient
 
-from backend.tests.conftest import TEST_PASSWORD
+from .conftest import TEST_PASSWORD
 
 
 def test_submit_score(client: FlaskClient, cleanup_user: str):
