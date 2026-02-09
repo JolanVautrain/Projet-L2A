@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, useMemo, useCallback } 
 import fr from '../../static/locales/fr.json';
 import en from '../../static/locales/en.json';
 import PropTypes from 'prop-types';
+import { getActiveUser } from '../utils/userSession.js';
 
 const LanguageContext = createContext();
 
@@ -15,7 +16,7 @@ export const LanguageProvider = ({ children }) => {
 
   // Charger la langue depuis le backend si l'utilisateur est connecté
   useEffect(() => {
-    const username = localStorage.getItem('user');
+    const username = getActiveUser();
     if (!username) return;
     fetch(`/api/user/language/${username}`)
       .then((r) => r.ok ? r.json() : {})
@@ -34,7 +35,7 @@ export const LanguageProvider = ({ children }) => {
     if (translations[lang]) {
       setLanguage(lang);
       localStorage.setItem('language', lang);
-      const username = localStorage.getItem('user');
+      const username = getActiveUser();
       if (username) {
         fetch('/api/user/language', {
           method: 'POST',

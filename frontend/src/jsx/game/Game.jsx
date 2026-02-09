@@ -58,6 +58,10 @@ import {
   checkAchievements,
 } from "./utils/GameGamification.js";
 import {
+  getActiveUser,
+  getUserAchievementsKey,
+} from "../utils/userSession.js";
+import {
   initParticles,
   updateParticles,
   createExplosion,
@@ -97,7 +101,7 @@ let clientPrediction = null; // Système de prédiction client-side
  * Le serveur valide et envoie corrections si nécessaire
  */
 export function sendGameInput(type) {
-  const username = localStorage.getItem("user");
+  const username = getActiveUser();
   if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
   if (!clientPrediction) return;
 
@@ -129,7 +133,7 @@ export function sendGameInput(type) {
 }
 
 export function sendGameOver() {
-  const username = localStorage.getItem("user");
+  const username = getActiveUser();
   if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
 
   inputSocket.send(JSON.stringify({ type: "gameOver", username }));
@@ -202,7 +206,7 @@ function create() {
 function update() {
   if (!gameScene || gameOver) return;
 
-  const username = localStorage.getItem("user");
+  const username = getActiveUser();
   const player = getPlayer();
   const cursors = getCursors();
 
@@ -289,7 +293,7 @@ function handleObstacleCollision(_player, _obstacle) {
 
   if (currentSessionId && !sessionPosted) {
     sessionPosted = true;
-    const username = localStorage.getItem("user");
+    const username = getActiveUser();
 
     if (username) {
       fetch("/api/score", {
@@ -313,8 +317,9 @@ function handleObstacleCollision(_player, _obstacle) {
             );
 
             // Vérifier les achievements
+            const userAchievementsKey = getUserAchievementsKey(username);
             const userAchievementsStr =
-              localStorage.getItem("userAchievements");
+              localStorage.getItem(userAchievementsKey);
             const userAchievements = userAchievementsStr
               ? JSON.parse(userAchievementsStr)
               : [];
@@ -332,7 +337,7 @@ function handleObstacleCollision(_player, _obstacle) {
                 ...newAchievements,
               ];
               localStorage.setItem(
-                "userAchievements",
+                userAchievementsKey,
                 JSON.stringify(updatedAchievements)
               );
             }
@@ -407,7 +412,7 @@ function Game() {
   useEffect(() => {
     const wsUrl = getWebSocketUrl();
     const ws = new WebSocket(wsUrl);
-    const username = localStorage.getItem("user");
+    const username = getActiveUser();
     inputSocket = ws;
 
     ws.onopen = () => console.log("WS connected");
@@ -510,8 +515,10 @@ function Game() {
                     );
 
                     // Vérifier les achievements
+                    const userAchievementsKey =
+                      getUserAchievementsKey(username);
                     const userAchievementsStr =
-                      localStorage.getItem("userAchievements");
+                      localStorage.getItem(userAchievementsKey);
                     const userAchievements = userAchievementsStr
                       ? JSON.parse(userAchievementsStr)
                       : [];
@@ -529,7 +536,7 @@ function Game() {
                         ...newAchievements,
                       ];
                       localStorage.setItem(
-                        "userAchievements",
+                        userAchievementsKey,
                         JSON.stringify(updatedAchievements)
                       );
                     }

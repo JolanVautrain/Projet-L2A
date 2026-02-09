@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getWebSocketUrl } from "../utils/wsClient.js";
+import { getActiveUser } from "../utils/userSession.js";
 
 const MIN_PLAYERS = 2;
 
@@ -8,7 +9,7 @@ const GameWaitingRoom = () => {
   const [playerCount, setPlayerCount] = useState(0);
   const navigate = useNavigate();
   const wsRef = useRef(null);
-  const username = localStorage.getItem("user");
+  const username = getActiveUser();
 
   useEffect(() => {
     if (!username) {
