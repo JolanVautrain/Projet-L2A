@@ -1,8 +1,7 @@
 """Game-centric api call"""
 
-from flask import Blueprint, jsonify, request
-
 from core import db, utils
+from flask import Blueprint, jsonify, request
 
 bp = Blueprint("game", __name__)
 

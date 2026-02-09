@@ -1,0 +1,18 @@
+[MASTER]
+init-hook='import sys; from pathlib import Path; sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))'
+
+[MESSAGES CONTROL]
+disable=
+    broad-exception-caught,
+    import-error,
+    import-outside-toplevel,
+    implicit-str-concat,
+    invalid-name,
+    line-too-long,
+    missing-class-docstring,
+    missing-function-docstring,
+    missing-module-docstring,
+    no-else-return,
+    too-many-arguments,
+    too-many-statements,
+    wrong-import-position

@@ -3,9 +3,8 @@
 import datetime
 from typing import Any, List
 
-from flask import Blueprint, Response, request
-
 from core import db, utils
+from flask import Blueprint, Response, request
 
 bp = Blueprint("scores", __name__)
 
@@ -17,7 +16,7 @@ def _insert_game_session(
     score: int,
     stage: int | None,
     timer: int | None,
-    state
+    state: str | None,
 ) -> None:
     cur.execute(
         "INSERT INTO game_sessions (username, score, stage, timer, state, playedAt) "
@@ -41,7 +40,7 @@ def _handle_new_highscore(
     score: int,
     stage: int | None,
     timer: int | None,
-    state
+    state: str | None,
 ) -> tuple[int, bool]:
     cur.execute(
         "INSERT INTO highscores (username, high_score, stage, timer,state) "
@@ -65,13 +64,13 @@ def _update_highscore_if_better(
     score: int,
     stage: int | None,
     timer: int | None,
-    state,
+    state: str | None,
     current_high: int,
 ) -> tuple[int, bool]:
     if score <= current_high:
         return current_high, False
 
-    if stage is not None or timer is not None:
+    if stage is not None or timer is not None or state is not None:
         cur.execute(
             "UPDATE highscores SET high_score = %s, stage = %s, timer = %s, state = %s "
             "WHERE username = %s",
@@ -119,7 +118,8 @@ def submit_score() -> Response:
 
     stage = utils.parse_optional_int(data, "stage")
     timer = utils.parse_optional_int(data, "timer")
-    state = str(data["state"])
+    raw_state = data.get("state")
+    state = str(raw_state) if raw_state is not None else None
 
     with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
         _insert_game_session(conn, cur, username, score, stage, timer, state)
@@ -132,12 +132,12 @@ def submit_score() -> Response:
 
         if not row:
             high, updated = _handle_new_highscore(
-                cur, conn, username, score, stage, timer,state
+                cur, conn, username, score, stage, timer, state
             )
         else:
             current_high = int(row[0])
             high, updated = _update_highscore_if_better(
-                cur, conn, username, score, stage, timer,state, current_high
+                cur, conn, username, score, stage, timer, state, current_high
             )
 
         return utils.make_response({"updated": updated, "highScore": high})
@@ -167,7 +167,7 @@ def get_high_score(username: str) -> Response:
                 "highScore": int(row[0]),
                 "stage": int(row[1] or 0),
                 "timer": int(row[2] or 0),
-                "state": row[3]
+                "state": row[3],
             }
         )
 
@@ -176,7 +176,7 @@ def get_high_score(username: str) -> Response:
 @utils.handle_db_errors
 def list_high_scores() -> Response:
     rows = db.query_fetchall(
-        "SELECT username, high_score, stage, timer,state FROM highscores ORDER BY "
+        "SELECT username, high_score, stage, timer, state FROM highscores ORDER BY "
         "high_score DESC"
     )
 
@@ -186,7 +186,7 @@ def list_high_scores() -> Response:
             "highScore": int(r[1]),
             "stage": int(r[2] or 0),
             "timer": int(r[3] or 0),
-            "state": r[4]
+            "state": r[4],
         }
         for r in rows
     ]

@@ -75,7 +75,7 @@ trap cleanup EXIT INT TERM
 
 echo -e "${BLUE}"
 echo "╔════════════════════════════════════════════════════════════╗"
-echo "║          SAIL WEATHER - SUITE DE TESTS COMPLÈTE           ║"
+echo "║              G34 - SUITE DE TESTS COMPLÈTE                 ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
@@ -92,6 +92,19 @@ if [ -d "$BACKEND_DIR/tests" ]; then
     print_success "Tests copiés depuis backend/tests/"
 else
     print_warning "Dossier backend/tests/ non trouvé"
+fi
+
+# Installer les dépendances frontend si nécessaire (pour ESLint)
+if command -v npm >/dev/null 2>&1 && [ -f "$FRONTEND_DIR/package.json" ]; then
+    if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+        print_step "Installation des dépendances frontend (npm install)..."
+        (cd "$FRONTEND_DIR" && npm install)
+        print_success "Dépendances frontend installées"
+    else
+        print_success "Dépendances frontend déjà présentes"
+    fi
+else
+    print_warning "npm non disponible ou frontend/package.json absent"
 fi
 
 ###############################################################################

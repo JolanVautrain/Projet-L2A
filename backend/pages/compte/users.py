@@ -2,9 +2,8 @@
 
 from typing import List
 
-from flask import Blueprint, request
-
 from core import db, utils
+from flask import Blueprint, request
 
 bp = Blueprint("users", __name__)
 

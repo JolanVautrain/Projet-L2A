@@ -15,3 +15,7 @@ exclude = ["test*", "WIKI*", "docker*", "script*", "frontend*"]
 
 [tool.black]
 line-length = 79
+
+[tool.mypy]
+mypy_path = "backend"
+ignore_missing_imports = true

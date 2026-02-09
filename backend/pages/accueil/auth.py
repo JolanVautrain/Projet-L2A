@@ -2,12 +2,12 @@
 
 import hashlib
 import secrets
-import psycopg2  # type: ignore
 from datetime import datetime
+
+import psycopg2  # type: ignore
+from core import db, utils
 from flask import Blueprint, request
 from werkzeug.security import check_password_hash, generate_password_hash
-
-from core import db, utils
 
 bp = Blueprint("auth", __name__)
 
@@ -127,10 +127,15 @@ def register_user():
         )
     username = str(data["username"]).strip()
     password = generate_password_hash(str(data["password"]))
+    language = str(data.get("language", "fr")).strip() or "fr"
 
     if len(username) > 100:
         return utils.make_response(
             {"success": False, "message": "username too long"}, 400
+        )
+    if len(language) > 10:
+        return utils.make_response(
+            {"success": False, "message": "language too long"}, 400
         )
     if not username or not password:
         return utils.make_response(
@@ -150,8 +155,8 @@ def register_user():
             )
         try:
             cur.execute(
-                "INSERT INTO users (username, password) VALUES (%s, %s)",
-                (username, password),
+                "INSERT INTO users (username, password, language) VALUES (%s, %s, %s)",
+                (username, password, language),
             )
             conn.commit()
             return utils.make_response({"success": True})

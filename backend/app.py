@@ -1,8 +1,8 @@
 """Bootstrap Flask app and register API blueprints."""
 
 import logging
-import sys
 import re
+import sys
 from pathlib import Path
 
 from flask import Flask, request
