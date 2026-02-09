@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { LanguageProvider } from './Language.jsx'
+import { LanguageProvider } from './autres/Language.jsx'
 import Index from './Index.jsx'
 
 const container = document.getElementById('root')

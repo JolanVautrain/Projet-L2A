@@ -1,17 +1,28 @@
 import PropTypes from "prop-types";
-import { Routes, Route, NavLink, Navigate } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  NavLink,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import { useState } from "react";
-import { useLanguage } from "./Language.jsx";
+import { useLanguage } from "./autres/Language.jsx";
+import { getActiveUser, setActiveUser } from "./utils/userSession.js";
 
 /**
  * Rend une route protégée qui nécessite une authentification.
- * 
+ *
  * @param {*} param0 Props contenant l'utilisateur et les enfants à rendre
  * @returns Les enfants si l'utilisateur est authentifié, sinon redirige vers l'accueil avec ouverture de la modal de connexion
  */
 function RequireAuth({ user, children }) {
   // Si l'utilisateur est authentifié, rendre les enfants
-  return user ? children : <Navigate to="/" replace state={{ openLogin: true }} />;
+  return user ? (
+    children
+  ) : (
+    <Navigate to="/" replace state={{ openLogin: true }} />
+  );
 }
 
 // PropTypes validation pour le composant RequireAuth
@@ -21,12 +32,14 @@ RequireAuth.propTypes = {
 };
 
 // Importation des composants de l'application
-import Accueil from "./Accueil";
-import Leaderboard from "./Leaderboard";
-import Account from "./Account";
-import Contacts from "./Contacts";
-import PageNotFound from "./PageNotFound";
-import Game from "./Game.jsx";
+import Accueil from "./accueil/Accueil";
+import Leaderboard from "./classement/Leaderboard";
+import Account from "./compte/Account";
+import Contacts from "./contacts/Contacts";
+import PageNotFound from "./autres/PageNotFound";
+import Game from "./game/Game.jsx";
+import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
+import Regle from "./autres/regle";
 
 /**
  * Composant principal de l'application.
@@ -36,7 +49,8 @@ function App() {
   const { t, changeLanguage } = useLanguage();
 
   // État utilisateur (persisté dans le localStorage)
-  const [userState, setUserState] = useState(() => localStorage.getItem("user") || null);
+  const [userState, setUserState] = useState(() => getActiveUser());
+  const navigate = useNavigate();
 
   /**
    * Met à jour l'utilisateur et le stocke dans le localStorage.
@@ -44,26 +58,30 @@ function App() {
    */
   const setUser = (value) => {
     setUserState(value);
-    if (value) localStorage.setItem("user", value);
-    else localStorage.removeItem("user");
+    setActiveUser(value);
   };
-  
+
   // Après connexion, si un utilisateur est défini, charger sa langue depuis le backend
   const setUserAndLoadLang = (value) => {
     setUser(value);
     if (value) {
       fetch(`/api/user/language/${value}`)
-        .then((r) => r.ok ? r.json() : null)
+        .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
           if (data?.language) {
             changeLanguage(data.language);
-            localStorage.setItem('language', data.language);
+            localStorage.setItem("language", data.language);
           }
         })
         .catch(() => {});
     } else {
       // Déconnexion : on peut laisser la langue ou remettre par défaut
     }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    navigate("/");
   };
 
   return (
@@ -74,22 +92,55 @@ function App() {
           <NavLink to="/leaderboard">{t("common.leaderboard")}</NavLink>
           {userState ? (
             <div className="nav-greeting">
-              <span>{t("account.hello")} {userState}</span>
-              <NavLink className="btn ghost no-border" to="/account">{t("account.title")}</NavLink>
+              <div className="nav-account-display">
+                <span>
+                  {t("account.hello")} {userState}
+                </span>
+                <button
+                  className="btn ghost no-border account__logout"
+                  onClick={handleLogout}
+                >
+                  {t("common.logout")}
+                </button>
+              </div>
+              <NavLink className="btn ghost no-border" to="/account">
+                {t("account.title")}
+              </NavLink>
             </div>
           ) : (
             <NavLink to="/account">{t("account.title")}</NavLink>
           )}
           <NavLink to="/contacts">{t("common.contacts")}</NavLink>
+          <NavLink to="/regle">{t("rules.title")}</NavLink>
         </nav>
       </header>
       <Routes>
-        <Route path="/" element={<Accueil user={userState} setUser={setUserAndLoadLang} />} />
-        <Route path="/leaderboard" element={<Leaderboard user={userState} setUser={setUserAndLoadLang} />} />
-        <Route path="/account" element={<Account user={userState} setUser={setUserAndLoadLang} />} />
+        <Route
+          path="/"
+          element={<Accueil user={userState} setUser={setUserAndLoadLang} />}
+        />
+        <Route
+          path="/leaderboard"
+          element={
+            <Leaderboard user={userState} setUser={setUserAndLoadLang} />
+          }
+        />
+        <Route
+          path="/account"
+          element={<Account user={userState} setUser={setUserAndLoadLang} />}
+        />
         <Route path="/contacts" element={<Contacts />} />
-        <Route path="/game" element={<RequireAuth user={userState}><Game /></RequireAuth>} />
-        <Route path="/*" element={<PageNotFound />}/>
+        <Route
+          path="/game"
+          element={
+            <RequireAuth user={userState}>
+              <Game />
+            </RequireAuth>
+          }
+        />
+        <Route path="/lobby" element={<RequireAuth user={userState}><GameWaitingRoom /></RequireAuth>}/>
+        <Route path="/*" element={<PageNotFound />} />
+        <Route path="/regle" element={<Regle />} />
       </Routes>
     </>
   );
