@@ -125,7 +125,10 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             users_count = 0
         if users_count == 0:
             default_users = load_default_users()
-            logger.info("Preparing to insert %d default users from db_init.json", len(default_users))
+            logger.info(
+                "Preparing to insert %d default users from db_init.json",
+                len(default_users),
+            )
             for init_username, init_password, init_language in default_users:
                 init_cur.execute(
                     "INSERT INTO users (username, password, language) "
@@ -133,7 +136,9 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
                     (init_username, init_password, init_language),
                 )
                 logger.info("Inserted user: %s", init_username)
-            logger.info("Successfully inserted %d default users", len(default_users))
+            logger.info(
+                "Successfully inserted %d default users", len(default_users)
+            )
         init_cur.execute(
             """CREATE TABLE IF NOT EXISTS highscores (
             username varchar(100) PRIMARY KEY,
@@ -300,7 +305,9 @@ def check_and_recreate_schema() -> None:
                         "WHERE table_name='game_sessions' AND column_name='state'"
                     )
                     if not cur.fetchone():
-                        logger.info("Adding state column to game_sessions table")
+                        logger.info(
+                            "Adding state column to game_sessions table"
+                        )
                         cur.execute(
                             "ALTER TABLE game_sessions ADD COLUMN state varchar(100)"
                         )

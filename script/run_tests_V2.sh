@@ -298,4 +298,5 @@ echo "  👉 Ouvrez: $REPORTS_DIR/htmlcov/index.html"
 echo ""
 
 # Le cleanup sera automatiquement appelé grâce au trap
+rm -rf G34_backend.egg-info
 exit 0

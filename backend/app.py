@@ -26,8 +26,8 @@ logging.basicConfig(level=logging.INFO)
 @app.after_request
 def after_request(response):
     """Add CORS headers to response."""
-    origin = request.headers.get('Origin')
-    
+    origin = request.headers.get("Origin")
+
     # Check if origin is allowed
     if origin:
         allowed_origins = [
@@ -39,16 +39,23 @@ def after_request(response):
             "http://127.0.0.1:15256",
             "http://192.168.60.220:15256",
         ]
-        
+
         # Check if origin is explicitly allowed or matches pattern
-        if origin in allowed_origins or re.match(r"^http://[^:]+:15256$", origin):
-            response.headers['Access-Control-Allow-Origin'] = origin
-            response.headers['Access-Control-Allow-Credentials'] = 'true'
-            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-User, X-Session-User, X-Session-Token'
-            response.headers['Access-Control-Max-Age'] = '1728000'
-    
+        if origin in allowed_origins or re.match(
+            r"^http://[^:]+:15256$", origin
+        ):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = (
+                "GET, POST, DELETE, OPTIONS"
+            )
+            response.headers["Access-Control-Allow-Headers"] = (
+                "Content-Type, Authorization, X-Admin-User, X-Session-User, X-Session-Token"
+            )
+            response.headers["Access-Control-Max-Age"] = "1728000"
+
     return response
+
 
 # Register blueprints - organized by page
 app.register_blueprint(auth.bp)
