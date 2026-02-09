@@ -8,16 +8,9 @@
 
 ## Lancer le projet V2
 
-- PowerShell (Windows) :
+- PowerShell (Windows) : 
 
-```powershell
-# crée et installe deps
-.\scripts\init_env.ps1
-# activer la venv
-. .venv\Scripts\Activate.ps1
-# recharger la page vscode
-CTRL + MAJ + P => Recharger la page/Reload the page
-```
+Il n'est plus pris en charge dans le développement. Merci de basculer sur Linux.
 
 - Bash (Linux / macOS) :
 
@@ -36,10 +29,7 @@ Utilisez les scripts fournis pour initialiser l'environnement et exécuter les t
 
 - PowerShell (Windows) :
 
-```powershell
-# lancer les tests (génère rapports dans backend/tests/reports)
-.\scripts\run_tests.ps1
-```
+Il n'est plus pris en charge dans le développement. Merci de basculer sur Linux.
 
 - Bash (Linux / macOS) :
 
