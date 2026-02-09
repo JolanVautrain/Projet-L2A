@@ -80,8 +80,16 @@ class GameClientPrediction {
    * @param {Function} applyAction - Fonction pour appliquer l'action au joueur
    * @param {WebSocket} ws - Socket WebSocket
    * @param {string} username - Nom d'utilisateur
+   * @param {string|null} matchId - Identifiant de partie multijoueur
    */
-  sendInputWithPrediction(inputType, currentPlayerState, applyAction, ws, username) {
+  sendInputWithPrediction(
+    inputType,
+    currentPlayerState,
+    applyAction,
+    ws,
+    username,
+    matchId
+  ) {
     this.sequenceNumber++;
     const sequence = this.sequenceNumber;
     
@@ -106,6 +114,7 @@ class GameClientPrediction {
       ws.send(
         JSON.stringify({
           type: "input",
+          matchId,
           username,
           input: inputType,
           sequence, // Numéro pour traçabilité

@@ -102,6 +102,33 @@ function App() {
     return () => clearInterval(intervalId);
   }, [userState]);
 
+  useEffect(() => {
+    if (!userState) return undefined;
+
+    const sessionToken = getActiveSessionToken();
+    if (!sessionToken) return undefined;
+
+    const handleBeforeUnload = () => {
+      const payload = JSON.stringify({
+        username: userState,
+        session_token: sessionToken,
+      });
+      try {
+        navigator.sendBeacon(
+          "/api/logout",
+          new Blob([payload], { type: "application/json" })
+        );
+      } catch (e) {
+        // Ignore unload failures
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [userState]);
+
   const handleLogout = () => {
     const sessionToken = getActiveSessionToken();
     if (userState && sessionToken) {

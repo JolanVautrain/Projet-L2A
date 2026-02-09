@@ -27,6 +27,7 @@ def check_login():
 
     username = data["username"].strip()
     password = data["password"].strip()
+
     with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
         cur.execute(
             "SELECT username, password, banned_until, ban_reason FROM users WHERE username = %s",
@@ -83,13 +84,13 @@ def check_login():
         )
         session_row = cur.fetchone()
         if session_row and utils.is_session_active(session_row[1]):
-            return utils.make_response(
-                {
-                    "userExist": True,
-                    "passwordIsCorrect": True,
-                    "alreadyLoggedIn": True,
-                }
+            # Automatically disconnect old session and allow new login
+            cur.execute(
+                "DELETE FROM user_sessions WHERE username = %s",
+                (username,),
             )
+            conn.commit()
+            session_row = None
 
         session_token = secrets.token_urlsafe(32)
         if session_row:

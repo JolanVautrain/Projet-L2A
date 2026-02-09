@@ -68,7 +68,7 @@ services:
       - NODE_ENV=development
       - COREPACK_ENABLE_DOWNLOAD_PROMPT=0
       - BACKEND_PROXY=http://backend:5000
-      - WS_URL=ws://ws-server:3001
+      - VITE_WS_PORT=3001
     command: sh -c "yarn install && yarn dev --host 0.0.0.0"
     depends_on:
       - backend

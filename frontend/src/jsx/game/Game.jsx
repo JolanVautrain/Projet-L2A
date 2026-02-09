@@ -27,8 +27,10 @@ import {
 } from "./utils/GameBackground.js";
 import {
   initObstacles,
+  applySpawnWave,
   spawnObstacle,
   recycleObstacles,
+  setMultiplayerMode,
   updateStage,
   getStage,
   resetObstacles,
@@ -88,10 +90,12 @@ let currentSessionId = null;
 let processingDeath = false;
 let sessionPosted = false;
 let showGameOverModalCallback = null;
-let showGameWonModalCallback = null;
 let gameScene = null;
 let inputSocket = null;
 let clientPrediction = null; // Système de prédiction client-side
+let activeMatchId = null;
+let serverTimeOffsetMs = 0;
+let multiplayerEnabled = false;
 
 /**
  * Envoyer un input avec prédiction client-side
@@ -126,15 +130,17 @@ export function sendGameInput(type) {
     },
     applyActionLocally,
     inputSocket,
-    username
+    username,
+    activeMatchId
   );
 }
 
 export function sendGameOver() {
   const username = getActiveUser();
   if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
-
-  inputSocket.send(JSON.stringify({ type: "gameOver", username }));
+  inputSocket.send(
+    JSON.stringify({ type: "gameOver", username, matchId: activeMatchId })
+  );
 }
 
 /**
@@ -240,6 +246,16 @@ function update() {
     updateStage(newStage);
     createScorePopup(gameScene, 400, 100, `Stage ${newStage}`);
     globalThis.dispatchEvent(new CustomEvent("stage-up", { detail: newStage }));
+
+    if (multiplayerEnabled && inputSocket?.readyState === WebSocket.OPEN) {
+      inputSocket.send(
+        JSON.stringify({
+          type: "stage_update",
+          matchId: activeMatchId,
+          stage: newStage,
+        })
+      );
+    }
   }
 
   // Recycler les obstacles et compter les points
@@ -250,7 +266,9 @@ function update() {
   });
 
   // Mettre à jour et spawner les obstacles
-  spawnObstacle(gameScene);
+  if (!multiplayerEnabled) {
+    spawnObstacle(gameScene);
+  }
 }
 
 /**
@@ -409,14 +427,46 @@ function Game() {
   const { t } = useLanguage();
 
   useEffect(() => {
+    const storedMatchId = sessionStorage.getItem("activeMatchId");
+    const storedOffset = sessionStorage.getItem("serverTimeOffsetMs");
+    activeMatchId = storedMatchId;
+    serverTimeOffsetMs = storedOffset ? Number(storedOffset) : 0;
+    multiplayerEnabled = Boolean(storedMatchId);
+    setMultiplayerMode(multiplayerEnabled);
+  }, []);
+
+  useEffect(() => {
     const wsUrl = getWebSocketUrl();
     const ws = new WebSocket(wsUrl);
     const username = getActiveUser();
     inputSocket = ws;
+    let isUnmounting = false;
+    let closeAfterOpen = false;
 
-    ws.onopen = () => console.log("WS connected");
-    ws.onerror = (e) => console.error("WS error", e);
-    ws.onclose = () => console.log("WS closed");
+    ws.onopen = () => {
+      if (closeAfterOpen) {
+        ws.close();
+        return;
+      }
+      console.log("WS connected");
+      if (activeMatchId) {
+        ws.send(
+          JSON.stringify({
+            type: "join_game",
+            username,
+            matchId: activeMatchId,
+          })
+        );
+      }
+    };
+    ws.onerror = (e) => {
+      if (isUnmounting) return;
+      console.error("WS error", e);
+    };
+    ws.onclose = () => {
+      if (isUnmounting) return;
+      console.log("WS closed");
+    };
 
     ws.onmessage = (event) => {
       try {
@@ -461,6 +511,7 @@ function Game() {
         // ========== INPUT REÇU (adversaire) ==========
         // Mise à jour de l'adversaire avec interpolation
         if (data.type === "input") {
+          if (data.matchId && data.matchId !== activeMatchId) return;
           const usernameOpponent = data.username;
           if (username === usernameOpponent) return; // C'est notre action, on ignore
 
@@ -479,8 +530,19 @@ function Game() {
           console.log(`📨 Action adversaire: ${usernameOpponent} ${data.input}`);
         }
 
+        if (data.type === "spawn_wave") {
+          if (data.matchId !== activeMatchId) return;
+          const spawnAt = Number(data.spawnAt || 0);
+          const targetTime = spawnAt - serverTimeOffsetMs;
+          const delay = Math.max(0, targetTime - Date.now());
+          setTimeout(() => {
+            applySpawnWave(gameScene, data.wave);
+          }, delay);
+        }
+
         // ========== FIN DE PARTIE ==========
         if (data.type === "gameOver") {
+          if (data.matchId && data.matchId !== activeMatchId) return;
           const usernameOpponent = data.username;
           if (username === usernameOpponent) return;
 
@@ -555,9 +617,12 @@ function Game() {
                 .catch((err) => console.warn("Failed to submit score", err));
             }
           }
-          if (showGameWonModalCallback) {
-            showGameWonModalCallback();
+          try {
+            gameScene?.scene?.pause();
+          } catch (e) {
+            console.warn("Failed to pause scene", e);
           }
+          setShowGameWonModal(true);
         }
       } catch (err) {
         console.error("Invalid WS message", event.data);
@@ -565,7 +630,12 @@ function Game() {
     };
 
     return () => {
-      ws.close();
+      isUnmounting = true;
+      if (ws.readyState === WebSocket.CONNECTING) {
+        closeAfterOpen = true;
+      } else {
+        ws.close();
+      }
       inputSocket = null;
     };
   }, []);
@@ -591,6 +661,8 @@ function Game() {
     } catch (e) {
       console.warn("Failed to resume scene", e);
     }
+    sessionStorage.removeItem("activeMatchId");
+    sessionStorage.removeItem("serverTimeOffsetMs");
     navigate("/");
   };
 
@@ -602,17 +674,6 @@ function Game() {
         console.warn("Failed to pause scene", e);
       }
       setShowGameOverModal(true);
-    };
-  }, []);
-
-  useEffect(() => {
-    showGameWonModalCallback = () => {
-      try {
-        gameScene.scene.pause();
-      } catch (e) {
-        console.warn("Failed to pause scene", e);
-      }
-      setShowGameWonModal(true);
     };
   }, []);
 

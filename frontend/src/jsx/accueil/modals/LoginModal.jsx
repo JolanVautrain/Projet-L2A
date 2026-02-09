@@ -23,8 +23,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
    * 
    * @param {Event} e
    */
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const submitLogin = () => {
     const userTrim = username.trim();
     const passTrim = password.trim();
     // Validation basique des champs
@@ -45,7 +44,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
         password: passTrim,
       }),
     })
-    // Traitement de la réponse
+      // Traitement de la réponse
       .then((response) => {
         if (!response.ok) {
           throw new Error("Erreur HTTP: " + response.status);
@@ -56,14 +55,12 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
       .then((data) => {
         if (!data.userExist) {
           setError(t("loginModal.incorrectUsername"));
-        } else if (data.alreadyLoggedIn) {
-          setError(t("loginModal.alreadyLoggedIn"));
         } else if (data.banned) {
           // User is banned
           const bannedUntil = data.banned_until ? new Date(data.banned_until) : null;
           const now = new Date();
           let duration = "permanent";
-          
+
           if (bannedUntil && bannedUntil.toString() !== "Invalid Date") {
             if (bannedUntil.getTime() !== new Date(8640000000000000).getTime()) {
               // Temporary ban - calculate remaining hours
@@ -71,7 +68,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
               duration = `${Math.max(1, hours)}h`;
             }
           }
-          
+
           const baseMessage = t("loginModal.accountBanned");
           const banMessage = `${baseMessage.replace("{duration}", duration)}\n${t("loginModal.banReason")}: ${data.ban_reason || t("common.noData")}`;
           setError(banMessage);
@@ -82,9 +79,9 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
           action(userTrim, data.session_token);
           // appeler un callback optionnel après connexion réussie (ex: redirection)
           try {
-            if (typeof afterLogin === 'function') afterLogin(userTrim);
+            if (typeof afterLogin === "function") afterLogin(userTrim);
           } catch (err) {
-            console.error('afterLogin callback failed', err);
+            console.error("afterLogin callback failed", err);
           }
           // ferme la modal automatiquement après connexion réussie
           if (typeof onClose === "function") onClose();
@@ -96,6 +93,11 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
         console.error("Erreur:", err);
       })
       .finally(() => setLoading(false));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    submitLogin(false);
   };
   // Ne rien rendre si la modal n'est pas ouverte
   if (!isOpen) return null;

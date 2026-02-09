@@ -20,9 +20,16 @@ const GameWaitingRoom = () => {
     const wsUrl = getWebSocketUrl();
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
+    let isUnmounting = false;
+    let closeAfterOpen = false;
 
     ws.onopen = () => {
+      if (closeAfterOpen) {
+        ws.close();
+        return;
+      }
       console.log("Connected to lobby WS");
+      ws.send(JSON.stringify({ type: "join_lobby", username }));
       ws.send(JSON.stringify({ type: "join", username }));
     };
 
@@ -35,7 +42,19 @@ const GameWaitingRoom = () => {
           break;
 
         case "start_game":
-          console.log("Game starting!");
+          if (msg.matchId) {
+            sessionStorage.setItem("activeMatchId", msg.matchId);
+            if (typeof msg.serverTime === "number") {
+              const offset = msg.serverTime - Date.now();
+              sessionStorage.setItem(
+                "serverTimeOffsetMs",
+                String(offset)
+              );
+            } else {
+              sessionStorage.setItem("serverTimeOffsetMs", "0");
+            }
+          }
+          console.log("Game starting!", msg.matchId);
           navigate("/game");
           break;
 
@@ -45,15 +64,22 @@ const GameWaitingRoom = () => {
     };
 
     ws.onerror = (err) => {
+      if (isUnmounting) return;
       console.error("WebSocket error", err);
     };
 
     ws.onclose = () => {
+      if (isUnmounting) return;
       console.log("Lobby WS closed");
     };
 
     return () => {
-      ws.close();
+      isUnmounting = true;
+      if (ws.readyState === WebSocket.CONNECTING) {
+        closeAfterOpen = true;
+      } else {
+        ws.close();
+      }
     };
   }, [navigate, username]);
 

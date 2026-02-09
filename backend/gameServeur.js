@@ -1,11 +1,19 @@
+import crypto from "crypto";
 import WebSocket, { WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({ port: 3001 });
 const MIN_PLAYERS = 2;
 
-// Gestion des joueurs et de leurs états
-let players = new Set();
-let playerStates = new Map(); // username -> { x, y, vx, vy, lastSequence, ... }
+const BASE_OBSTACLE_SPEED = 200;
+const SPEED_INCREMENT = 150;
+const MAX_SPAWN_RATE = 4000;
+const MIN_SPAWN_RATE = 1000;
+
+// Lobby et matchs
+const lobby = new Map(); // ws -> username
+const matches = new Map(); // matchId -> match
+const assignments = new Map(); // username -> matchId
+const connectionInfo = new Map(); // ws -> { username, matchId, inLobby }
 
 // Configuration anti-cheat
 const ANTI_CHEAT_CONFIG = {
@@ -15,21 +23,138 @@ const ANTI_CHEAT_CONFIG = {
   MAX_POSITION_CHANGE: 300, // pixels/frame
 };
 
-function broadcast(data) {
+function makeMatchId() {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return crypto.randomBytes(16).toString("hex");
+}
+
+function broadcastToClients(clients, data) {
   const msg = JSON.stringify(data);
-  wss.clients.forEach((client) => {
+  const list = Array.from(clients);
+  list.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(msg);
     }
   });
 }
 
+function broadcastToLobby(data) {
+  broadcastToClients(lobby.keys(), data);
+}
+
+function broadcastToMatch(matchId, data) {
+  const match = matches.get(matchId);
+  if (!match) return;
+  broadcastToClients(match.players.values(), data);
+}
+
+function getSpawnInterval(stage) {
+  return Math.max(MIN_SPAWN_RATE, MAX_SPAWN_RATE - (stage - 1) * 150);
+}
+
+function buildSpawnWave(stage) {
+  let bombCount = 1;
+  let speedBoost = 0;
+
+  if (stage >= 3) {
+    if (Math.random() < 0.8) {
+      speedBoost = (stage - 2) * 15;
+    } else {
+      bombCount = 2 + Math.floor((stage - 3) / 3);
+    }
+  }
+
+  const obstacleSpeed =
+    -(BASE_OBSTACLE_SPEED + (stage - 1) * SPEED_INCREMENT + speedBoost);
+
+  const heightLevels = [540, 420];
+  const selectHeight = () => {
+    const rand = Math.random();
+    if (rand < 0.5) return heightLevels[0];
+    return heightLevels[1];
+  };
+
+  const selectedHeights = [];
+  for (let i = 0; i < bombCount; i += 1) {
+    let randomHeight;
+    do {
+      randomHeight = selectHeight();
+    } while (selectedHeights.includes(randomHeight));
+    selectedHeights.push(randomHeight);
+  }
+
+  const bombs = selectedHeights.map((baseY, i) => {
+    const x = 900 + i * 100;
+    const y = baseY + (Math.random() * 30 - 15);
+    return { x, y };
+  });
+
+  return { speed: obstacleSpeed, bombs };
+}
+
+function scheduleNextSpawn(matchId) {
+  const match = matches.get(matchId);
+  if (!match) return;
+
+  const interval = getSpawnInterval(match.stage);
+  const now = Date.now();
+  const last = match.lastSpawnAt || now;
+  const nextAt = Math.max(now, last + interval);
+  const delay = Math.max(0, nextAt - now);
+
+  match.spawnTimer = setTimeout(() => {
+    const wave = buildSpawnWave(match.stage);
+    match.lastSpawnAt = Date.now();
+    const spawnAt = match.lastSpawnAt + 200;
+    broadcastToMatch(matchId, {
+      type: "spawn_wave",
+      matchId,
+      spawnAt,
+      wave,
+    });
+    scheduleNextSpawn(matchId);
+  }, delay);
+}
+
+function createMatch(playerEntries) {
+  const matchId = makeMatchId();
+  const match = {
+    id: matchId,
+    players: new Map(),
+    playerStates: new Map(),
+    stage: 1,
+    lastSpawnAt: 0,
+    spawnTimer: null,
+    overPlayers: new Set(),
+  };
+
+  matches.set(matchId, match);
+
+  const serverTime = Date.now();
+  playerEntries.forEach(({ username, ws }) => {
+    assignments.set(username, matchId);
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          type: "start_game",
+          matchId,
+          serverTime,
+        })
+      );
+    }
+  });
+
+  scheduleNextSpawn(matchId);
+}
+
 /**
  * Valider un input reçu d'un client
  * Détecte les tentatives de triche
  */
-function validateInput(username, inputData) {
-  const state = playerStates.get(username) || {
+function validateInput(match, username, inputData) {
+  const state = match.playerStates.get(username) || {
     x: 0,
     y: 0,
     vx: 0,
@@ -60,8 +185,8 @@ function validateInput(username, inputData) {
 /**
  * Mettre à jour l'état serveur d'un joueur
  */
-function updatePlayerState(username, inputData) {
-  let state = playerStates.get(username) || {
+function updatePlayerState(match, username, inputData) {
+  let state = match.playerStates.get(username) || {
     x: 0,
     y: 0,
     vx: 0,
@@ -81,7 +206,7 @@ function updatePlayerState(username, inputData) {
   }
 
   // Sauvegarder l'état
-  playerStates.set(username, state);
+  match.playerStates.set(username, state);
 
   return state;
 }
@@ -126,22 +251,56 @@ function sendStateCorrection(ws, username, state) {
 }
 
 wss.on("connection", (ws) => {
-  let username = null;
-  let clientSequence = 0;
-
   console.log(`[X] Client connecté. Total: ${wss.clients.size}`);
 
   ws.on("message", (raw) => {
     try {
       const msg = JSON.parse(raw.toString());
 
-      // ========== CONNEXION ==========
-      if (msg.type === "join") {
-        username = msg.username;
-        players.add(username);
+      if (msg.type === "join_lobby" || msg.type === "join") {
+        const username = msg.username;
+        if (!username) return;
 
-        // Initialiser l'état du joueur
-        playerStates.set(username, {
+        if (lobby.has(ws)) return;
+
+        lobby.set(ws, username);
+        connectionInfo.set(ws, { username, matchId: null, inLobby: true });
+        console.log(`[X] ${username} rejoint le lobby (total: ${lobby.size})`);
+
+        broadcastToLobby({ type: "player_count", count: lobby.size });
+
+        if (lobby.size >= MIN_PLAYERS) {
+          const entries = [];
+          for (const [socket, user] of lobby.entries()) {
+            if (entries.length >= MIN_PLAYERS) break;
+            lobby.delete(socket);
+            entries.push({ username: user, ws: socket });
+          }
+          if (entries.length === MIN_PLAYERS) {
+            createMatch(entries);
+          }
+          broadcastToLobby({ type: "player_count", count: lobby.size });
+        }
+        return;
+      }
+
+      if (msg.type === "join_game") {
+        const username = msg.username;
+        const matchId = msg.matchId;
+        const assignedMatch = assignments.get(username);
+        if (!username || !matchId || assignedMatch !== matchId) {
+          ws.send(JSON.stringify({ type: "error", message: "invalid_match" }));
+          return;
+        }
+
+        const match = matches.get(matchId);
+        if (!match) {
+          ws.send(JSON.stringify({ type: "error", message: "match_not_found" }));
+          return;
+        }
+
+        match.players.set(username, ws);
+        match.playerStates.set(username, {
           x: 0,
           y: 0,
           vx: 0,
@@ -150,87 +309,112 @@ wss.on("connection", (ws) => {
           lastSequence: -1,
           lastJumpTime: 0,
         });
+        connectionInfo.set(ws, { username, matchId, inLobby: false });
 
-        console.log(`[X] ${username} rejoint (total: ${players.size})`);
-
-        broadcast({ type: "player_count", count: players.size });
-
-        if (players.size >= MIN_PLAYERS) {
-          console.log("[X] Démarrage du jeu!");
-          broadcast({ type: "start_game" });
-        }
+        ws.send(JSON.stringify({ type: "join_ok", matchId }));
+        return;
       }
 
-      // ========== INPUT REÇU ==========
+      const info = connectionInfo.get(ws);
+      const matchId = msg.matchId || info?.matchId;
+      const match = matchId ? matches.get(matchId) : null;
+
+      if (msg.type === "stage_update" && match) {
+        const newStage = Number(msg.stage || 1);
+        if (!Number.isNaN(newStage)) {
+          match.stage = Math.max(match.stage, newStage);
+        }
+        return;
+      }
+
       if (msg.type === "input") {
         const inputUsername = msg.username;
         const sequence = msg.sequence || 0;
 
-        // VALIDATION (anti-cheat)
-        const validation = validateInput(inputUsername, {
-          input: msg.input,
-          sequence: sequence,
-        });
+        if (match) {
+          const validation = validateInput(match, inputUsername, {
+            input: msg.input,
+            sequence,
+          });
 
-        if (!validation.valid) {
-          console.warn(`[!] Input invalide de ${inputUsername}: ${validation.reason}`);
-          sendInputAck(ws, { sequence }, false);
-          return;
+          if (!validation.valid) {
+            console.warn(
+              `[!] Input invalide de ${inputUsername}: ${validation.reason}`
+            );
+            sendInputAck(ws, { sequence }, false);
+            return;
+          }
+
+          const updatedState = updatePlayerState(match, inputUsername, {
+            input: msg.input,
+            sequence,
+          });
+
+          sendInputAck(ws, { sequence }, true);
+
+          broadcastToMatch(matchId, {
+            type: "input",
+            matchId,
+            username: inputUsername,
+            input: msg.input,
+            sequence,
+            serverState: {
+              x: updatedState.x || 0,
+              y: updatedState.y || 0,
+              velocityX: updatedState.vx || 0,
+              velocityY: updatedState.velocityY || 0,
+            },
+          });
+        } else {
+          sendInputAck(ws, { sequence }, true);
+          broadcastToClients(wss.clients, {
+            type: "input",
+            username: inputUsername,
+            input: msg.input,
+            sequence,
+          });
         }
-
-        // MISE À JOUR DE L'ÉTAT SERVEUR
-        const updatedState = updatePlayerState(inputUsername, {
-          input: msg.input,
-          sequence: sequence,
-        });
-
-        // CONFIRMATION AU CLIENT
-        sendInputAck(ws, { sequence }, true);
-
-        // BROADCAST AUX AUTRES JOUEURS
-        // Seul l'état serveur validé est envoyé
-        broadcast({
-          type: "input",
-          username: inputUsername,
-          input: msg.input,
-          sequence: sequence,
-          // État serveur validé pour correction client si besoin
-          serverState: {
-            x: updatedState.x || 0,
-            y: updatedState.y || 0,
-            velocityX: updatedState.vx || 0,
-            velocityY: updatedState.velocityY || 0,
-          },
-        });
-
-        //console.log(`[X] Input validé de ${inputUsername}: ${msg.input} (seq: ${sequence})`);
       }
 
-      // ========== FIN DE PARTIE ==========
       if (msg.type === "gameOver") {
         const gameOverUsername = msg.username;
         console.log(`[X] ${gameOverUsername} game over`);
 
-        broadcast({
-          type: "gameOver",
-          username: gameOverUsername,
-          timestamp: Date.now(),
-        });
+        if (match) {
+          match.overPlayers.add(gameOverUsername);
+          broadcastToMatch(matchId, {
+            type: "gameOver",
+            matchId,
+            username: gameOverUsername,
+            timestamp: Date.now(),
+          });
+
+          if (match.overPlayers.size >= match.players.size) {
+            if (match.spawnTimer) {
+              clearTimeout(match.spawnTimer);
+            }
+            match.players.forEach((_, user) => assignments.delete(user));
+            matches.delete(matchId);
+          }
+        } else {
+          broadcastToClients(wss.clients, {
+            type: "gameOver",
+            username: gameOverUsername,
+            timestamp: Date.now(),
+          });
+        }
       }
 
-      // ========== SYNC D'ÉTAT ==========
-      if (msg.type === "sync_state") {
-        // Le client envoie son état pour vérification
+      if (msg.type === "sync_state" && match) {
         const state = msg.state;
-        const receivedState = playerStates.get(username);
+        const receivedState = match.playerStates.get(info?.username);
 
-        // Vérifier si l'état du client est trop désynchronisé
         const deltaX = Math.abs((state.x || 0) - (receivedState?.x || 0));
         const deltaY = Math.abs((state.y || 0) - (receivedState?.y || 0));
 
         if (deltaX > 100 || deltaY > 100) {
-          console.warn(`[!] Désynchronisation détectée pour ${username}`);
-          sendStateCorrection(ws, username, receivedState);
+          console.warn(`[!] Désynchronisation détectée pour ${info?.username}`);
+          sendStateCorrection(ws, info?.username, receivedState);
         }
       }
     } catch (e) {
@@ -239,12 +423,32 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("close", () => {
-    if (username) {
-      players.delete(username);
-      playerStates.delete(username);
-      console.log(`[!] ${username} déconnecté (total: ${players.size})`);
-      broadcast({ type: "player_count", count: players.size });
+    const info = connectionInfo.get(ws);
+    if (!info) return;
+
+    if (info.inLobby && info.username) {
+      lobby.delete(ws);
+      broadcastToLobby({ type: "player_count", count: lobby.size });
     }
+
+    if (info.matchId) {
+      const match = matches.get(info.matchId);
+      if (match) {
+        match.players.delete(info.username);
+        match.playerStates.delete(info.username);
+        match.overPlayers.delete(info.username);
+        if (match.players.size === 0) {
+          if (match.spawnTimer) {
+            clearTimeout(match.spawnTimer);
+          }
+          matches.delete(info.matchId);
+        }
+      }
+      assignments.delete(info.username);
+    }
+
+    connectionInfo.delete(ws);
+    console.log(`[!] ${info.username} déconnecté`);
   });
 
   ws.on("error", (error) => {

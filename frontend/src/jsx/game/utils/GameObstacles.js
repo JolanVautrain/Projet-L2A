@@ -16,6 +16,7 @@ let lastSpawnTime = 0;
 let obstacles = null;
 let obstaclesOpponent = null;
 let internalStage = 1;
+let multiplayerMode = false;
 
 /**
  * Initialise le système d'obstacles
@@ -27,11 +28,16 @@ export function initObstacles(scene) {
   internalStage = 1;
 }
 
+export function setMultiplayerMode(enabled) {
+  multiplayerMode = Boolean(enabled);
+}
+
 /**
  * Apparition d'une bombe dans le jeu avec style pixel cyberpunk
  */
 export function spawnObstacle(scene) {
   if (!scene || !obstacles) return;
+  if (multiplayerMode) return;
 
   const now = Date.now();
   const timeSinceLastSpawn = now - lastSpawnTime;
@@ -130,7 +136,9 @@ export function recycleObstacles(scene, onObstacleRecycled) {
   obstacles.children.iterate((o) => {
     if (o && o.x !== undefined && o.x < -50) {
       o.destroy();
-      spawnObstacle(scene);
+      if (!multiplayerMode) {
+        spawnObstacle(scene);
+      }
       
       if (onObstacleRecycled) {
         onObstacleRecycled();
@@ -170,4 +178,27 @@ export function resetObstacles() {
   }
   internalStage = 1;
   lastSpawnTime = Date.now();
+}
+
+export function applySpawnWave(scene, wave) {
+  if (!scene || !obstacles || !wave || !Array.isArray(wave.bombs)) return;
+
+  wave.bombs.forEach((bomb) => {
+    const x = Number(bomb.x);
+    const y = Number(bomb.y);
+    if (Number.isNaN(x) || Number.isNaN(y)) return;
+
+    const obstacle = obstacles.create(x, y, "obstacle");
+    const obstacle2 = obstaclesOpponent.create(x, 300 - (600 - y), "obstacle");
+    obstacle.setVelocityX(wave.speed);
+    obstacle.setImmovable(true);
+    obstacle.body.allowGravity = false;
+
+    obstacle2.setVelocityX(wave.speed);
+    obstacle2.setImmovable(true);
+    obstacle2.body.allowGravity = false;
+
+    obstacle.setTint(0xff00ff);
+    obstacle2.setTint(0xff00ff);
+  });
 }
