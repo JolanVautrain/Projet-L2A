@@ -262,11 +262,41 @@
   },
   "rules": {
     "title": "Règles du jeu",
-    "objective": "Objectif",
-    "objectiveDesc": "Collecter les étoiles et éviter les bombes pour accumuler le maximum de points.",
-    "controls": "Contrôles",
-    "controlsDesc": "Utilisez les flèches du clavier ou WASD pour vous déplacer. Collectez les étoiles pour augmenter votre score.",
-    "stages": "Stages",
-    "stagesDesc": "À chaque stage, plus de bombes apparaissent. Atteindre un certain score augmente automatiquement le stage."
+    "rule1": {
+      "name": "Règle 1",
+      "content": "soyez respectueux envers les autres joueurs et évitez les comportements toxiques."
+    },
+    "rule2": {
+      "name": "Règle 2",
+      "content": "Les tricheurs seront sévèrement punis, sans exception."
+    },
+    "rule3": {
+      "name": "Règle 3",
+      "content": "Les comportements inappropriés entraîneront des sanctions."
+    },
+    "rule4": {
+      "name": "Règle 4",
+      "content": "Le harcèlement des autres joueurs est strictement interdit."
+    },
+    "rule5": {
+      "name": "Règle 5",
+      "content": "Les décisions des modérateurs sont finales et doivent être respectées."
+    },
+    "rule6": {
+      "name": "Règle 6",
+      "content": "Les utilisateurs doivent signaler tout comportement suspect ou inapproprié."
+    },
+    "rule7": {
+      "name": "Règle 7",
+      "content": "Les utilisateurs doivent respecter la vie privée des autres."
+    },
+    "rule8": {
+      "name": "Règle 8",
+      "content": "Les utilisateurs ne doivent pas partager d'informations personnelles."
+    },
+    "rule9": {
+      "name": "Règle 9",
+      "content": "Les utilisateurs doivent utiliser un langage approprié en tout temps."
+    }
   }
 }

@@ -1,5 +1,7 @@
 import PropTypes from "prop-types";
 import { useLanguage } from "./Language.jsx";
+import "../../static/css/regle.css";
+
 
 // Règles du jeu
 function RulesCard({ rule }) {
@@ -26,26 +28,57 @@ function Regle() {
 
     const rules = [
     {
-        name : "regle 1 ",
-        content : "ceci est la regle 1"
+        name : t("rules.rule1.name"),
+        content : t("rules.rule1.content")
     },
 
     {
-        name : "regle 2 ",
-        content : "ceci est la regle 2"
+        name : t("rules.rule2.name"),
+        content : t("rules.rule2.content")
     },
 
     {
-        name : "regle 3 ",
-        content : "ceci est la regle 3"
-    }
+        name : t("rules.rule3.name"),
+        content : t("rules.rule3.content")
+    },
+
+     {
+        name : t("rules.rule4.name"),
+        content : t("rules.rule4.content")
+    },
+
+     {
+        name : t("rules.rule5.name"),
+        content : t("rules.rule5.content")
+    },
+
+     {
+        name : t("rules.rule6.name"),
+        content : t("rules.rule6.content")
+    },
+
+     {
+        name : t("rules.rule7.name"),
+        content : t("rules.rule7.content")
+    },
+
+     {
+        name : t("rules.rule8.name"),
+        content : t("rules.rule8.content")
+    },
+
+     {
+        name : t("rules.rule9.name"),
+        content : t("rules.rule9.content")
+    },
+
 ]
     return (
         
         <div className="rules-container">
             <h2>{t("rules.title")}</h2>
-            {rules.map((rule, index) => (
-                <RulesCard key={index} rule={rule} />
+            {rules.map((rule) => (
+                <RulesCard key={rule.name} rule={rule} />
             ))}
         </div>
     )
