@@ -76,11 +76,39 @@ def check_login():
             return utils.make_response(
                 {"userExist": True, "passwordIsCorrect": False}
             )
+
+        cur.execute(
+            "SELECT session_token, last_seen FROM user_sessions WHERE username = %s",
+            (username,),
+        )
+        session_row = cur.fetchone()
+        if session_row and utils.is_session_active(session_row[1]):
+            return utils.make_response(
+                {
+                    "userExist": True,
+                    "passwordIsCorrect": True,
+                    "alreadyLoggedIn": True,
+                }
+            )
+
+        session_token = secrets.token_urlsafe(32)
+        if session_row:
+            cur.execute(
+                "UPDATE user_sessions SET session_token = %s, last_seen = CURRENT_TIMESTAMP WHERE username = %s",
+                (session_token, username),
+            )
+        else:
+            cur.execute(
+                "INSERT INTO user_sessions (username, session_token) VALUES (%s, %s)",
+                (username, session_token),
+            )
+        conn.commit()
         return utils.make_response(
             {
                 "userExist": True,
                 "passwordIsCorrect": True,
                 "username": stored_username,
+                "session_token": session_token,
             }
         )
 
@@ -133,6 +161,38 @@ def register_user():
             return utils.make_response(
                 {"success": False, "message": "user already exists"}, 409
             )
+
+
+@bp.route("/api/logout", methods=["POST"])
+@utils.handle_db_errors
+def logout_user():
+    data = request.get_json(silent=True) or {}
+    username = data.get("username") or request.headers.get("X-Session-User")
+    token = data.get("session_token") or request.headers.get("X-Session-Token")
+
+    if not username or not token:
+        return utils.make_response(
+            {
+                "error": utils.BAD_REQUEST,
+                "message": "username and session_token required",
+            },
+            400,
+        )
+
+    with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
+        cur.execute(
+            "DELETE FROM user_sessions WHERE username = %s AND session_token = %s",
+            (username, token),
+        )
+        conn.commit()
+
+    return utils.make_response({"ok": True})
+
+
+@bp.route("/api/session/ping", methods=["POST", "GET"])
+@utils.handle_db_errors
+def ping_session():
+    return utils.make_response({"ok": True})
 
 
 @bp.route("/api/user/generate-recovery-code", methods=["POST"])

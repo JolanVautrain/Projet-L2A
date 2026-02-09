@@ -206,6 +206,7 @@
     "usernamePasswordRequired": "Username and password required.",
     "incorrectUsername": "Incorrect username.",
     "incorrectPassword": "Incorrect password.",
+    "alreadyLoggedIn": "This account is already signed in on another device.",
     "connectionError": "Connection error. Please try again.",
     "noAccount": "No account? Register",
     "accountBanned": "Your account has been banned for {duration}.",

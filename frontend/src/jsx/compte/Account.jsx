@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Statistics from "./Statistics.jsx";
 import { LanguageSelector, useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
+import { getActiveSessionToken } from "../utils/userSession.js";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 
@@ -174,6 +175,17 @@ function Account({ user, setUser }) {
   };
   // Gère la déconnexion de l'utilisateur
   const handleLogout = () => {
+    const sessionToken = getActiveSessionToken();
+    if (user && sessionToken) {
+      fetch(`${apiBase}/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Session-User": user,
+          "X-Session-Token": sessionToken,
+        },
+      }).catch(() => {});
+    }
     setUser(null);
     navigate("/");
   };

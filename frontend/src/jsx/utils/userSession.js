@@ -14,6 +14,11 @@ export function getActiveUser() {
   return null;
 }
 
+export function getActiveSessionToken() {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem("sessionToken");
+}
+
 export function setActiveUser(value) {
   if (typeof window === "undefined") return;
 
@@ -21,9 +26,20 @@ export function setActiveUser(value) {
     sessionStorage.setItem("user", value);
   } else {
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("sessionToken");
   }
 
   localStorage.removeItem("user");
+}
+
+export function setActiveSessionToken(value) {
+  if (typeof window === "undefined") return;
+
+  if (value) {
+    sessionStorage.setItem("sessionToken", value);
+  } else {
+    sessionStorage.removeItem("sessionToken");
+  }
 }
 
 export function getUserAchievementsKey(username) {

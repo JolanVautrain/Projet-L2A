@@ -212,6 +212,7 @@
     "incorrectUsername": "Nom d'utilisateur incorrect.",
     "incorrectPassword": "Mot de passe incorrect.",
     "connectionError": "Erreur de connexion. Réessayez.",
+    "alreadyLoggedIn": "Ce compte est deja connecte sur un autre appareil.",
     "noAccount": "Pas de compte ? S'inscrire",
     "accountBanned": "Votre compte a été banni pour {duration}.",
     "banReason": "Raison",

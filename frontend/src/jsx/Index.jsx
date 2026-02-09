@@ -6,9 +6,15 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "./autres/Language.jsx";
-import { getActiveUser, setActiveUser } from "./utils/userSession.js";
+import {
+  getActiveSessionToken,
+  getActiveUser,
+  setActiveSessionToken,
+  setActiveUser,
+} from "./utils/userSession.js";
+import { apiFetch } from "./utils/apiClient.js";
 
 /**
  * Rend une route protégée qui nécessite une authentification.
@@ -56,9 +62,14 @@ function App() {
    * Met à jour l'utilisateur et le stocke dans le localStorage.
    * @param {string|null} value
    */
-  const setUser = (value) => {
+  const setUser = (value, sessionToken) => {
     setUserState(value);
     setActiveUser(value);
+    if (sessionToken) {
+      setActiveSessionToken(sessionToken);
+    } else if (!value) {
+      setActiveSessionToken(null);
+    }
   };
 
   // Après connexion, si un utilisateur est défini, charger sa langue depuis le backend
@@ -79,7 +90,29 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    if (!userState) return undefined;
+
+    const keepAlive = () => {
+      apiFetch("/session/ping").catch(() => {});
+    };
+
+    keepAlive();
+    const intervalId = setInterval(keepAlive, 5 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [userState]);
+
   const handleLogout = () => {
+    const sessionToken = getActiveSessionToken();
+    if (userState && sessionToken) {
+      apiFetch("/logout", {
+        method: "POST",
+        headers: {
+          "X-Session-User": userState,
+          "X-Session-Token": sessionToken,
+        },
+      }).catch(() => {});
+    }
     setUser(null);
     navigate("/");
   };

@@ -183,6 +183,15 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
         );"""
         )
         init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS user_sessions (
+            username varchar(100) PRIMARY KEY,
+            session_token varchar(128) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        );"""
+        )
+        init_cur.execute(
             """CREATE TABLE IF NOT EXISTS recovery_codes (
             id SERIAL PRIMARY KEY,
             username varchar(100) NOT NULL,
@@ -216,6 +225,7 @@ def check_and_recreate_schema() -> None:
         "user_xp_history",
         "game_sessions",
         "user_inputs",
+        "user_sessions",
         "recovery_codes",
     ]
     try:
@@ -269,6 +279,30 @@ def check_and_recreate_schema() -> None:
                         logger.info("Adding ban_reason column to users table")
                         cur.execute(
                             "ALTER TABLE users ADD COLUMN ban_reason TEXT NULL"
+                        )
+                        conn.commit()
+
+                    # Check and add state column in highscores
+                    cur.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name='highscores' AND column_name='state'"
+                    )
+                    if not cur.fetchone():
+                        logger.info("Adding state column to highscores table")
+                        cur.execute(
+                            "ALTER TABLE highscores ADD COLUMN state varchar(100)"
+                        )
+                        conn.commit()
+
+                    # Check and add state column in game_sessions
+                    cur.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name='game_sessions' AND column_name='state'"
+                    )
+                    if not cur.fetchone():
+                        logger.info("Adding state column to game_sessions table")
+                        cur.execute(
+                            "ALTER TABLE game_sessions ADD COLUMN state varchar(100)"
                         )
                         conn.commit()
             except psycopg2.Error as err:

@@ -56,6 +56,8 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
       .then((data) => {
         if (!data.userExist) {
           setError(t("loginModal.incorrectUsername"));
+        } else if (data.alreadyLoggedIn) {
+          setError(t("loginModal.alreadyLoggedIn"));
         } else if (data.banned) {
           // User is banned
           const bannedUntil = data.banned_until ? new Date(data.banned_until) : null;
@@ -77,10 +79,10 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
           setError(t("loginModal.incorrectPassword"));
         } else {
           // renvoie le nom d'utilisateur au parent pour affichage dans le header
-          action(username);
+          action(userTrim, data.session_token);
           // appeler un callback optionnel après connexion réussie (ex: redirection)
           try {
-            if (typeof afterLogin === 'function') afterLogin(username);
+            if (typeof afterLogin === 'function') afterLogin(userTrim);
           } catch (err) {
             console.error('afterLogin callback failed', err);
           }

@@ -21,6 +21,8 @@ export function getApiBaseUrl() {
   return 'http://localhost:5000/api';
 }
 
+import { getActiveSessionToken, getActiveUser } from "./userSession.js";
+
 export function apiUrl(endpoint) {
   const base = getApiBaseUrl();
   // Enlever le /api du endpoint s'il le contient
@@ -30,10 +32,18 @@ export function apiUrl(endpoint) {
 
 export async function apiFetch(endpoint, options = {}) {
   const url = apiUrl(endpoint);
+  const sessionUser = getActiveUser();
+  const sessionToken = getActiveSessionToken();
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(sessionUser && sessionToken
+        ? {
+            'X-Session-User': sessionUser,
+            'X-Session-Token': sessionToken,
+          }
+        : {}),
       ...options.headers,
     },
   });
