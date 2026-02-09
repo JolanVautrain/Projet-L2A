@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import { useLanguage } from "./Language.jsx";
-import "../../static/css/regle.css";
 
 
 // Règles du jeu
