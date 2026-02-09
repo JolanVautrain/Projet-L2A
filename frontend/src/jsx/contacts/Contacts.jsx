@@ -1,12 +1,14 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
 import { useLanguage } from "../autres/Language.jsx";
-import "../../static/css/Index.css";
-import "../../static/css/Contacts.css";
-import jolanImg from "../../static/assets/contacts/jolan.png";
-import gabImg from "../../static/assets/contacts/gab.jpg";
-import ethanImg from "../../static/assets/contacts/ethan.jpg";
-import laloImg from "../../static/assets/contacts/lalo.jpg";
+
+// Les images sont maintenant servies depuis public/assets
+const IMAGES = {
+  jolanImg: "/assets/contacts/jolan.png",
+  gabImg: "/assets/contacts/gab.jpg",
+  ethanImg: "/assets/contacts/ethan.jpg",
+  laloImg: "/assets/contacts/lalo.jpg",
+};
 
 /**
  * Composant ContactCard
@@ -63,28 +65,28 @@ function Contacts() {
       name: "Jolan Vautrain",
       role: t("contacts.jolan.role"),
       email: "jolan.vautrain@etudiant.univ-rennes.fr",
-      img: jolanImg,
+      img: IMAGES.jolanImg,
       egg: t("contacts.jolan.egg"),
     },
     {
       name: "Gabriel Salaun",
       role: t("contacts.gabriel.role"),
       email: "gabriel.salaun@etudiant.univ-rennes.fr",
-      img: gabImg,
+      img: IMAGES.gabImg,
       egg: t("contacts.gabriel.egg"),
     },
     {
       name: "Ethan Louis",
       role: t("contacts.ethan.role"),
       email: "ethan.louis@etudiant.univ-rennes.fr",
-      img: ethanImg,
+      img: IMAGES.ethanImg,
       egg: t("contacts.ethan.egg"),
     },
     {
       name: "Lalo Lucas",
       role: t("contacts.lalo.role"),
       email: "lalo.lucas@etudiant.univ-rennes.fr",
-      img: laloImg,
+      img: IMAGES.laloImg,
       egg: t("contacts.lalo.egg"),
     },
   ];

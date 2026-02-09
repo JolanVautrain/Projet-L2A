@@ -2,6 +2,9 @@
  * Gestion de la physique et des collisions du jeu
  */
 
+import { apiUrl } from '../../utils/apiClient.js';
+import { getActiveUser } from '../../utils/userSession.js';
+
 /**
  * Dessine une étoile pixelisée pour l'invincibilité
  */
@@ -83,11 +86,11 @@ export function initPhysics(scene, onAdminModeChange = null) {
   isInvincible = false;
   
   // Détecte si l'utilisateur est admin
-  const username = localStorage.getItem("user");
+  const username = getActiveUser();
   
   // Vérifier si admin directement via le backend
   if (username) {
-    fetch(`http://localhost:5000/api/admin/check/${username}`)
+    fetch(apiUrl(`/admin/check/${username}`))
       .then(r => r.json())
       .then(data => {
         isAdminMode = data.isAdmin === true;

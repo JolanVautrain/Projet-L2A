@@ -5,7 +5,7 @@ from typing import Any, List
 
 from flask import Blueprint, Response, request
 
-from ...core import db, utils
+from core import db, utils
 
 bp = Blueprint("scores", __name__)
 

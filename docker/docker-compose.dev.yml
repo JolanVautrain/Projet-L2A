@@ -38,7 +38,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: flask run --host=0.0.0.0 --port=5000
+    command: flask --app app run --host=0.0.0.0 --port=5000
 
   # ================= WEBSOCKET SERVER (Node.js) =================
   ws-server:
@@ -48,7 +48,7 @@ services:
       - ../backend:/app
     ports:
       - "3001:3001"
-    command: node gameServeur.js
+    command: sh -c "npm install && node gameServeur.js"
     depends_on:
       - backend
     restart: unless-stopped

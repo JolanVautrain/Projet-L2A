@@ -21,6 +21,18 @@ TEST_DIR="$PROJECT_ROOT/test"
 REPORTS_DIR="$TEST_DIR/reports"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
+VENV_DIR="$PROJECT_ROOT/.venv"
+
+# Déterminer le bon interpréteur Python
+if [ -f "$VENV_DIR/bin/python" ]; then
+    PYTHON="$VENV_DIR/bin/python"
+    PIP="$VENV_DIR/bin/pip"
+    PYTEST="$VENV_DIR/bin/pytest"
+else
+    PYTHON="python3"
+    PIP="pip3"
+    PYTEST="pytest"
+fi
 
 # Fonction d'affichage
 print_step() {
@@ -44,6 +56,13 @@ cleanup() {
     print_step "Nettoyage du conteneur de test..."
     cd "$PROJECT_ROOT"
     docker compose -f docker/docker-compose.test.yml down -v 2>/dev/null || true
+    
+    # Supprimer les fichiers temporaires de build
+    if [ -d "$PROJECT_ROOT/sail_weather_backend.egg-info" ]; then
+        rm -rf "$PROJECT_ROOT/sail_weather_backend.egg-info"
+        print_success "Dossier sail_weather_backend.egg-info supprimé"
+    fi
+    
     print_success "Nettoyage terminé"
 }
 
@@ -105,13 +124,13 @@ fi
 
 # Exporter les variables d'environnement pour les tests
 export TEST_DB_HOST=localhost
-export TEST_DB_PORT=5433
+export TEST_DB_PORT=5434
 export TEST_DB_USER=testuser
 export TEST_DB_PASSWORD=testpassword
 export TEST_DB_NAME=testdb
 # Variables pour conftest.py
 export POSTGRES_HOST=localhost
-export POSTGRES_PORT=5433
+export POSTGRES_PORT=5434
 export POSTGRES_USER=testuser
 export POSTGRES_PASSWORD=testpassword
 export POSTGRES_DB=testdb
@@ -169,9 +188,11 @@ print_step "TESTS UNITAIRES ET D'INTÉGRATION BACKEND"
 print_step "═══════════════════════════════════════════════════════════"
 
 print_step "Exécution des tests pytest avec couverture..."
+# Installer le backend en mode editable pour que les imports fonctionnent
+"$PIP" install -q -e "$PROJECT_ROOT" 2>/dev/null || true
 # Ajouter le dossier racine du projet au PYTHONPATH pour que les imports fonctionnent
 export PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH"
-if pytest test/backend/ \
+if "$PYTEST" test/backend/ \
     --verbose \
     --cov=backend \
     --cov-report=term-missing \

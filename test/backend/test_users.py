@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from flask.testing import FlaskClient
 
-from backend.tests.conftest import TEST_PASSWORD
+from .conftest import TEST_PASSWORD
 
 
 def test_get_user_xp_new_user(client: FlaskClient, cleanup_user: str):

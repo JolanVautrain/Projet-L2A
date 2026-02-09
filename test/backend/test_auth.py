@@ -6,7 +6,7 @@ from typing import Any, cast
 import pytest
 from flask.testing import FlaskClient
 
-from backend.tests.conftest import TEST_PASSWORD
+from .conftest import TEST_PASSWORD
 
 
 def test_register_new_user(client: FlaskClient, cleanup_user: str):

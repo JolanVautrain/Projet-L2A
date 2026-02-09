@@ -1,4 +1,4 @@
-import "../../../static/css/ModalGameOver.css";
+
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
 
