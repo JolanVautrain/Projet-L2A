@@ -38,7 +38,7 @@ const GameWaitingRoom = () => {
         ws.close();
         return;
       }
-      console.log("Connected to lobby WS");
+      console.log("[!] Connected to lobby WS");
       ws.send(JSON.stringify({ type: "join_lobby", username }));
       ws.send(JSON.stringify({ type: "join", username }));
     };
@@ -66,7 +66,7 @@ const GameWaitingRoom = () => {
               sessionStorage.setItem("serverTimeOffsetMs", "0");
             }
           }
-          console.log("Game starting!", msg.matchId);
+          console.log("[!] Game starting!", msg.matchId);
           navigate("/game");
           break;
 
@@ -82,7 +82,7 @@ const GameWaitingRoom = () => {
 
     ws.onclose = () => {
       if (isUnmounting) return;
-      console.log("Lobby WS closed");
+      console.log("[!] Lobby WS closed");
     };
 
     return () => {
@@ -99,6 +99,25 @@ const GameWaitingRoom = () => {
     <div className="lobby-overlay">
       <h2>Waiting for players...</h2>
       <p>Players: {playerCount} / {MIN_PLAYERS}</p>
+      <div className="sea">
+        <div className="circle-wrapper">
+            <div className="bubble"></div>
+            <div className="submarine-wrapper">
+                <div className="submarine-body">
+                    <div className="window"></div>
+                    <div className="engine"></div>
+                    <div className="light"></div>
+                </div>
+                <div className="helix"></div>
+                <div className="hat">
+                  <div className="leds-wrapper">
+                      <div className="periscope"></div>
+                      <div className="leds"></div>
+                  </div>
+                </div>
+            </div>
+        </div>
+      </div>
     </div>
   );
 };
