@@ -267,6 +267,7 @@
   },
   "rules": {
     "title": "Règles du jeu",
+    "intro": "Les 10 Commandements de bienséance",
     "rule1": {
       "name": "Règle 1",
       "content": "Soyez respectueux envers les autres joueurs et évitez les comportements toxiques."

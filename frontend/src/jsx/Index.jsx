@@ -46,7 +46,7 @@ import Contacts from "./contacts/Contacts";
 import PageNotFound from "./autres/PageNotFound";
 import Game from "./game/Game.jsx";
 import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
-import Regle from "./autres/regle";
+import Regle from "./regle/regle";
 
 /**
  * Composant principal de l'application.

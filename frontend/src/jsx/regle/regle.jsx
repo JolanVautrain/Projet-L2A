@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useLanguage } from "./Language.jsx";
+import { useLanguage } from "../autres/Language.jsx";
 
 
 // Règles du jeu
@@ -76,6 +76,7 @@ function Regle() {
         
         <div className="rules-container">
             <h2>{t("rules.title")}</h2>
+            <h3>{t("rules.intro")}</h3>
             {rules.map((rule) => (
                 <RulesCard key={rule.name} rule={rule} />
             ))}
