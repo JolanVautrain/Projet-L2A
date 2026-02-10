@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useLanguage } from "./Language.jsx";
+import { useLanguage } from "../autres/Language.jsx";
 
 const handleSubmit = (event) => {
     event.preventDefault();
