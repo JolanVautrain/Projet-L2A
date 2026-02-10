@@ -42,6 +42,7 @@ RequireAuth.propTypes = {
 import Accueil from "./accueil/Accueil";
 import Leaderboard from "./classement/Leaderboard";
 import Account from "./compte/Account";
+import Statistics from "./statistics/Statistics";
 import Contacts from "./contacts/Contacts";
 import PageNotFound from "./autres/PageNotFound";
 import Game from "./game/Game.jsx";
@@ -210,6 +211,12 @@ function App() {
           >
             {t("common.leaderboard")}
           </NavLink>
+          <NavLink
+            to="/statistics"
+            onClick={(e) => requestLeaveIfInMatch("/statistics", e)}
+          >
+            {t("common.statistics")}
+          </NavLink>
           {userState ? (
             <div className="nav-greeting">
               <div className="nav-account-display">
@@ -274,6 +281,12 @@ function App() {
           path="/leaderboard"
           element={
             <Leaderboard user={userState} setUser={setUserAndLoadLang} />
+          }
+        />
+        <Route
+          path="/statistics"
+          element={
+            <Statistics user={userState} setUser={setUserAndLoadLang} />
           }
         />
         <Route
