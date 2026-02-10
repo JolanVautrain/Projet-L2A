@@ -8,10 +8,23 @@ const MIN_PLAYERS = 2;
 
 const GameWaitingRoom = () => {
   const [playerCount, setPlayerCount] = useState(0);
+  const [opponentUsername, setOpponentUsername] = useState(null);
+  const [matchReady, setMatchReady] = useState(false);
   const navigate = useNavigate();
   const wsRef = useRef(null);
   const username = getActiveUser();
   const { t } = useLanguage();
+  
+  // Récupérer l'avatar de l'utilisateur actuel
+  const getCurrentAvatar = (user) => {
+    if (!user) return "businessman1.png";
+    if (user === "admin") return "admin.jpg";
+    const saved = localStorage.getItem(`avatar_${user}`);
+    return (saved && saved !== "admin.jpg") ? saved : "businessman1.png";
+  };
+  
+  const currentAvatar = getCurrentAvatar(username);
+  const opponentAvatar = getCurrentAvatar(opponentUsername);
 
   useEffect(() => {
     if (!username) {
@@ -51,6 +64,14 @@ const GameWaitingRoom = () => {
       switch (msg.type) {
         case "player_count":
           setPlayerCount(msg.count);
+          break;
+        
+        case "match_found":
+          // Nouveau cas: quand un match est trouvé, afficher les deux joueurs
+          if (msg.opponent) {
+            setOpponentUsername(msg.opponent);
+            setMatchReady(true);
+          }
           break;
 
         case "start_game":
@@ -102,6 +123,42 @@ const GameWaitingRoom = () => {
       <h2>{t("lobby.title")}</h2>
       <h3>{t("lobby.description")}</h3>
       <p>{t("lobby.players")}: {playerCount} / {MIN_PLAYERS}</p>
+      
+      {/* Affichage de l'avatar en mode recherche ou versus */}
+      {matchReady && opponentUsername ? (
+        <div className="versus-container">
+          <div className="player-avatar-box">
+            <img 
+              src={`/assets/avatar/${currentAvatar}`} 
+              alt={username}
+              className="player-lobby-avatar"
+            />
+            <p className="player-name">{username}</p>
+          </div>
+          <div className="versus-text">VS</div>
+          <div className="player-avatar-box">
+            <img 
+              src={`/assets/avatar/${opponentAvatar}`} 
+              alt={opponentUsername}
+              className="player-lobby-avatar"
+            />
+            <p className="player-name">{opponentUsername}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="searching-container">
+          <div className="player-avatar-searching">
+            <img 
+              src={`/assets/avatar/${currentAvatar}`} 
+              alt={username}
+              className="player-lobby-avatar pulse"
+            />
+            <p className="player-name">{username}</p>
+            <p className="searching-text">Recherche en cours...</p>
+          </div>
+        </div>
+      )}
+      
       <div className="sea">
         <div className="circle-wrapper">
             <div className="bubble"></div>

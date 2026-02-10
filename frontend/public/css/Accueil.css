@@ -12,24 +12,24 @@
 .home::after {
   content: "";
   position: absolute;
-  width: 520px;
-  height: 520px;
+  width: 600px;
+  height: 600px;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.35;
+  filter: blur(160px);
+  opacity: 0.25;
   z-index: 0;
 }
 
 .home::before {
-  background: radial-gradient(circle at 30% 30%, #1d4ed8, transparent 55%);
-  top: -180px;
-  left: -120px;
+  background: radial-gradient(circle at center, #1d4ed8 0%, #1d4ed880 30%, transparent 70%);
+  top: -250px;
+  left: -200px;
 }
 
 .home::after {
-  background: radial-gradient(circle at 60% 60%, #0ea5e9, transparent 55%);
-  bottom: -220px;
-  right: -160px;
+  background: radial-gradient(circle at center, #0ea5e9 0%, #0ea5e980 30%, transparent 70%);
+  bottom: -280px;
+  right: -220px;
 }
 
 .hero {

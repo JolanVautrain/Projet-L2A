@@ -5,6 +5,8 @@
   margin: 0 auto;
   padding: 2rem 1.4rem;
   color: #ffffff;
+  position: relative;
+  z-index: 1;
 }
 
 .contacts-header {
@@ -44,13 +46,15 @@
   background: linear-gradient(160deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
-  padding: 28px; /* larger padding for bigger cards */
+  padding: 28px;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s;
   width: 100%;
-  max-width: 1120px; /* allow even bigger cards */
-  margin: 0 auto; /* center horizontally inside grid */
-  min-height: 140px; /* ensure comfortable height */
+  max-width: 1120px;
+  margin: 0 auto;
+  min-height: 140px;
+  position: relative;
+  z-index: 2;
 }
 
 .contact-card:hover {

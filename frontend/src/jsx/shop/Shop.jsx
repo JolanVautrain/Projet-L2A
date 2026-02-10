@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "../autres/Language.jsx";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 function Shop() {
   const { t } = useLanguage();
@@ -19,6 +19,42 @@ function Shop() {
   const [supportChecked, setSupportChecked] = useState(true);
   const [warrantyChecked, setWarrantyChecked] = useState(true);
   const [insuranceChecked, setInsuranceChecked] = useState(true);
+
+  // Ad popup: show only once (persisted) and auto-hide after 15s
+  const [showAdPopup, setShowAdPopup] = useState(false);
+  const adTimerRef = useRef(null);
+  const closeAd = () => {
+    setShowAdPopup(false);
+    if (adTimerRef.current) {
+      clearTimeout(adTimerRef.current);
+      adTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    const key = "ad_popup_shown_v1";
+    const already = localStorage.getItem(key);
+    if (!already) {
+      // afficher la popup une seule fois et marquer comme vue
+      setShowAdPopup(true);
+      try {
+        localStorage.setItem(key, "1");
+      } catch (e) {
+        // ignore storage errors
+      }
+      // Fermer automatiquement après 15 secondes
+      adTimerRef.current = setTimeout(() => {
+        setShowAdPopup(false);
+        adTimerRef.current = null;
+      }, 15000);
+    }
+    return () => {
+      if (adTimerRef.current) {
+        clearTimeout(adTimerRef.current);
+        adTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const fmtTime = (s) => {
     const hours = Math.floor(s / 3600).toString().padStart(2, "0");
@@ -63,7 +99,7 @@ function Shop() {
 
   function handleCancelPurchase() {
     // Dark pattern: Show urgency message when user tries to cancel
-    if (window.confirm(t("shop.modal.exitWarning"))) {
+    if (globalThis.confirm(t("shop.modal.exitWarning"))) {
       setModalOpen(false);
     }
   }
@@ -78,7 +114,7 @@ function Shop() {
   const [viewerCount, setViewerCount] = useState(Math.floor(Math.random() * 20) + 15);
   
   // Dark pattern: Dynamic price increase simulation
-  const [priceMultiplier, setPriceMultiplier] = useState(1.0);
+  const [priceMultiplier, setPriceMultiplier] = useState(2);
   
   // Dark pattern: Price increase warning
   const [showPriceWarning, setShowPriceWarning] = useState(false);
@@ -305,6 +341,24 @@ function Shop() {
           <p className="hero__lede">{t("shop.intro")}</p>
         </div>
       </section>
+
+      {showAdPopup && (
+        <div className="ad-popup-overlay" onClick={closeAd}>
+          <div className="ad-popup-card" onClick={(e) => e.stopPropagation()}>
+            <button className="ad-close" onClick={closeAd}>✕</button>
+            <div className="ad-content">
+              <div className="ad-badge">OFFRE EXCLUSIVE</div>
+              <h2 className="ad-title">-70% sur tous les articles !</h2>
+              <p className="ad-desc">Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !</p>
+              <div className="ad-timer">Plus que quelques heures !</div>
+              <div className="ad-actions">
+                <button className="btn primary ad-cta" onClick={() => { closeAd(); }}>{t("shop.open")}</button>
+                <button className="btn ghost ad-later" onClick={closeAd}>Plus tard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dark pattern: Price increase warning */}
       {showPriceWarning && (

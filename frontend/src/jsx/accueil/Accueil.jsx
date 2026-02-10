@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoginModal from "./modals/LoginModal.jsx";
 import RegisterModal from "./modals/RegisterModal.jsx";
@@ -90,15 +90,46 @@ function Accueil({ user, setUser }) {
     }
   }, [location]);
 
-  // Show advertising popup after a delay
+  // Show advertising popup once per user journey, auto-hide after 15s
+  const adTimerRef = useRef(null);
+  
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowAdPopup(true);
-    }, 3000); // Show after 3 seconds
-    return () => clearTimeout(timer);
+    const key = "ad_popup_shown_v1";
+    const already = localStorage.getItem(key);
+    if (!already) {
+      // Show popup after 3 seconds, mark as seen, auto-close after 15s
+      const showTimer = setTimeout(() => {
+        setShowAdPopup(true);
+        try {
+          localStorage.setItem(key, "1");
+        } catch (e) {
+          // ignore storage errors
+        }
+        // Auto-close after 15 seconds
+        adTimerRef.current = setTimeout(() => {
+          setShowAdPopup(false);
+          adTimerRef.current = null;
+        }, 15000);
+      }, 3000);
+      
+      return () => {
+        clearTimeout(showTimer);
+        if (adTimerRef.current) {
+          clearTimeout(adTimerRef.current);
+          adTimerRef.current = null;
+        }
+      };
+    }
+    return undefined;
   }, []);
 
-  const closeAdPopup = () => setShowAdPopup(false);
+  const closeAdPopup = () => {
+    setShowAdPopup(false);
+    if (adTimerRef.current) {
+      clearTimeout(adTimerRef.current);
+      adTimerRef.current = null;
+    }
+  };
   const goToShop = () => {
     setShowAdPopup(false);
     navigate('/shop');
@@ -213,10 +244,10 @@ function Accueil({ user, setUser }) {
           <div className="ad-popup-card" onClick={(e) => e.stopPropagation()}>
             <button className="ad-close" onClick={closeAdPopup}>✕</button>
             <div className="ad-content">
-              <div className="ad-badge">🎁 OFFRE EXCLUSIVE</div>
+              <div className="ad-badge">OFFRE EXCLUSIVE</div>
               <h2 className="ad-title">-70% sur tous les articles !</h2>
               <p className="ad-desc">Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !</p>
-              <div className="ad-timer">⏰ Plus que quelques heures !</div>
+              <div className="ad-timer">Plus que quelques heures !</div>
               <button className="btn primary ad-cta" onClick={goToShop}>
                 🛒 VOIR LA BOUTIQUE
               </button>

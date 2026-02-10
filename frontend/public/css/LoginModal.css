@@ -129,11 +129,18 @@
 .modal-register-link {
   margin-top: 10px;
   display: flex;
-  justify-content: center;
+  flex-direction: row;
+  gap: 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
-.modal-register-link .register-btn {
-  width: auto;
-  padding: 8px 14px;
+.modal-register-link .register-btn,
+.modal-register-link .forgot-password-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 @media (max-width: 500px) {

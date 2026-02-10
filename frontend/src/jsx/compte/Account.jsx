@@ -36,9 +36,70 @@ function Account({ user, setUser }) {
   const [newRecoveryCode, setNewRecoveryCode] = useState(null);
   const [showNewCode, setShowNewCode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState("");
   const navigate = useNavigate();
   const { t } = useLanguage();
   const apiBase = getApiBaseUrl();
+
+  // Liste des avatars disponibles (sans admin.jpg pour utilisateurs normaux)
+  const availableAvatars = [
+    "businessman1.png",
+    "fireman.png",
+    "fireman_temu.png",
+    "fireman_woman.png",
+    "gangster.png",
+    "gangster_temu.png",
+    "policeman.png",
+    "policewomen.png",
+    "politician_men.png",
+    "politician_woman.png",
+    "rescue.png",
+    "samourai.png",
+    "worker.png",
+  ];
+
+  // Charger l'avatar depuis localStorage
+  useEffect(() => {
+    if (user) {
+      // Admin a toujours admin.jpg et ne peut pas le changer
+      if (user === "admin") {
+        setSelectedAvatar("admin.jpg");
+        localStorage.setItem(`avatar_${user}`, "admin.jpg");
+        return;
+      }
+      
+      const savedAvatar = localStorage.getItem(`avatar_${user}`);
+      // Empêcher les utilisateurs normaux d'utiliser admin.jpg
+      if (savedAvatar && savedAvatar !== "admin.jpg" && availableAvatars.includes(savedAvatar)) {
+        setSelectedAvatar(savedAvatar);
+      } else {
+        // Avatar par défaut
+        setSelectedAvatar(availableAvatars[0]);
+        localStorage.setItem(`avatar_${user}`, availableAvatars[0]);
+      }
+    }
+  }, [user]);
+
+  // Fonction pour sélectionner un avatar
+  const handleAvatarSelect = (avatar) => {
+    // Admin ne peut pas changer son avatar
+    if (user === "admin") {
+      return;
+    }
+    
+    // Empêcher de sélectionner admin.jpg
+    if (avatar === "admin.jpg") {
+      return;
+    }
+    
+    setSelectedAvatar(avatar);
+    if (user) {
+      localStorage.setItem(`avatar_${user}`, avatar);
+      
+      // Déclencher un événement personnalisé pour actualiser l'avatar dans la navbar
+      window.dispatchEvent(new CustomEvent("avatarChanged", { detail: { avatar, username: user } }));
+    }
+  };
 
   // Fonction pour charger et enrichir les utilisateurs
   const loadAdminUsers = async (currentUser) => {
@@ -273,6 +334,48 @@ function Account({ user, setUser }) {
           <p>
             {t("account.hello")} {user}, {t("account.yourAccountPage")}.
           </p>
+          
+          {/* Sélecteur d'avatar */}
+          {user !== "admin" ? (
+            <div className="avatar-selector">
+              <h3>{t("account.chooseAvatar") || "Choisir votre avatar"}</h3>
+              <div className="avatar-grid">
+                {availableAvatars.map((avatar) => (
+                  <div
+                    key={avatar}
+                    className={`avatar-option ${selectedAvatar === avatar ? "selected" : ""}`}
+                    onClick={() => handleAvatarSelect(avatar)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleAvatarSelect(avatar);
+                      }
+                    }}
+                  >
+                    <img
+                      src={`/assets/avatar/${avatar}`}
+                      alt={avatar.replace(".png", "")}
+                      className="avatar-img"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="avatar-selector">
+              <h3>Avatar Administrateur</h3>
+              <div className="admin-avatar-display">
+                <img
+                  src="/assets/avatar/admin.jpg"
+                  alt="Admin Avatar"
+                  className="admin-avatar-img"
+                />
+                <p style={{color: "#66e3b8", marginTop: "12px"}}>Avatar unique et non modifiable</p>
+              </div>
+            </div>
+          )}
+          
           <LanguageSelector />
           
           {/* Codes de récupération */}

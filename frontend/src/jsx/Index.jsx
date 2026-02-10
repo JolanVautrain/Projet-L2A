@@ -59,6 +59,7 @@ function App() {
 
   // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => getActiveUser());
+  const [navbarAvatarKey, setNavbarAvatarKey] = useState(0); // Force le rendu de l'avatar
   const navigate = useNavigate();
   const location = useLocation();
   const [leaveMatchModalOpen, setLeaveMatchModalOpen] = useState(false);
@@ -108,6 +109,20 @@ function App() {
     return () => clearInterval(intervalId);
   }, [userState]);
 
+  // Écouter l'événement de changement d'avatar
+  useEffect(() => {
+    const handleAvatarChange = (event) => {
+      if (event.detail.username === userState) {
+        setNavbarAvatarKey(prev => prev + 1); // Force le re-rendu de l'avatar
+      }
+    };
+
+    window.addEventListener("avatarChanged", handleAvatarChange);
+    return () => {
+      window.removeEventListener("avatarChanged", handleAvatarChange);
+    };
+  }, [userState]);
+
   useEffect(() => {
     const handleLeaveRequest = (event) => {
       const target = event?.detail?.target || "/";
@@ -128,17 +143,8 @@ function App() {
   }, [navigate]);
 
   const requestLeaveIfInMatch = (target, event) => {
-    const activeMatchId = sessionStorage.getItem("activeMatchId");
-    const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
-    if (!activeMatchId || confirmedLeaving || location.pathname !== "/game") {
-      return true;
-    }
-    if (event) {
-      event.preventDefault();
-    }
-    setLeaveMatchTarget(target);
-    setLeaveMatchModalOpen(true);
-    return false;
+    // Plus de popup de confirmation - permettre la navigation directement
+    return true;
   };
 
   const confirmLeaveMatch = () => {
@@ -163,6 +169,7 @@ function App() {
     const sessionToken = getActiveSessionToken();
     if (!sessionToken) return undefined;
 
+    // Pas de popup beforeunload - seulement beacon de déconnexion silencieux
     const handleBeforeUnload = () => {
       const payload = JSON.stringify({
         username: userState,
@@ -173,7 +180,7 @@ function App() {
           "/api/logout",
           new Blob([payload], { type: "application/json" })
         );
-      } catch (e) { //type: ignore
+      } catch (e) { //eslint-disable-line
         // Ignore unload failures
       }
     };
@@ -220,24 +227,34 @@ function App() {
           </NavLink>
           {userState ? (
             <div className="nav-greeting">
-              <div className="nav-account-display">
-                <span>
-                  {t("account.hello")} {userState}
-                </span>
-                <button
-                  className="btn ghost no-border account__logout"
-                  onClick={handleLogout}
-                >
-                  {t("common.logout")}
-                </button>
-              </div>
               <NavLink
-                className="btn ghost no-border"
+                className="nav-user-profile"
                 to="/account"
                 onClick={(e) => requestLeaveIfInMatch("/account", e)}
               >
-                {t("account.title")}
+                <img
+                  key={navbarAvatarKey}
+                  src={"/assets/avatar/" + (() => {
+                    if (userState === "admin") return "admin.jpg";
+                    const saved = localStorage.getItem("avatar_" + userState);
+                    return (saved && saved !== "admin.jpg") ? saved : "businessman1.png";
+                  })()}
+                  alt="Avatar"
+                  className="nav-avatar"
+                />
+                <span className="nav-username">{userState}</span>
               </NavLink>
+              <button
+                className="btn ghost no-border nav-logout-btn"
+                onClick={handleLogout}
+                title={t("common.logout")}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
             </div>
           ) : (
             <NavLink
