@@ -30,15 +30,15 @@ function Accueil({ user, setUser }) {
     return `${m}:${s}`;
   };
 
-  // Génère et rafraîchit des valeurs aléatoires toutes les 10s
+  // Génère et rafraîchit des valeurs aléatoires toutes les 15s
   useEffect(() => {
     const updateStats = () => {
       setGamesInProgress(getRandomInt(20, 100));
-      setAverageTime(formatTime(getRandomInt(60, 10 * 60)));
+      setAverageTime(formatTime(getRandomInt(120, 10 * 60)));
       setActivePlayers(getRandomInt(100, 1000));
     };
     updateStats();
-    const id = setInterval(updateStats, 10000); // rafraîchit toutes les 10 secondes
+    const id = setInterval(updateStats, 15000); // rafraîchit toutes les 15 secondes
     return () => clearInterval(id);
   }, []);
 
