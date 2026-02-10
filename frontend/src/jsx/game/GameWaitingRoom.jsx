@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getWebSocketUrl } from "../utils/wsClient.js";
 import { getActiveUser } from "../utils/userSession.js";
+import { useLanguage } from "../autres/Language.jsx";
 
 const MIN_PLAYERS = 2;
 
@@ -10,6 +11,7 @@ const GameWaitingRoom = () => {
   const navigate = useNavigate();
   const wsRef = useRef(null);
   const username = getActiveUser();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!username) {
@@ -97,8 +99,9 @@ const GameWaitingRoom = () => {
 
   return (
     <div className="lobby-overlay">
-      <h2>Waiting for players...</h2>
-      <p>Players: {playerCount} / {MIN_PLAYERS}</p>
+      <h2>{t("lobby.title")}</h2>
+      <h3>{t("lobby.description")}</h3>
+      <p>{t("lobby.players")}: {playerCount} / {MIN_PLAYERS}</p>
       <div className="sea">
         <div className="circle-wrapper">
             <div className="bubble"></div>

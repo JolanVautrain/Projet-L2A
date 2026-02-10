@@ -310,5 +310,10 @@
     "title": "Signalement",
     "desc": "Formulaire de signalement.",
     "text": "Décrivez le problème que vous avez rencontré..."
+  },
+  "lobby": {
+    "title" : "Recherche de joueur en cours... ",
+    "description" : "Merci de patientez... Le sous-Marin cherche au fond fin de l'océan...",
+    "players" : "Joueur connectés dans le lobby"
   }
 }
