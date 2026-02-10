@@ -298,5 +298,10 @@
       "name": "Rule 9",
       "content": "Users must use appropriate language at all times."
     }
+  },
+  "report": {
+    "title": "Report",
+    "desc": "Reporting form.",
+    "text": "Describe the issue you encountered..."
   }
 }

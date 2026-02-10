@@ -303,5 +303,10 @@
       "name": "Règle 9",
       "content": "Les utilisateurs doivent utiliser un langage approprié en tout temps."
     }
+  },
+  "report": {
+    "title": "Signalement",
+    "desc": "Formulaire de signalement.",
+    "text": "Décrivez le problème que vous avez rencontré..."
   }
 }
