@@ -20,6 +20,7 @@ def get_user_sessions(username: str):
 
     result: List[dict[str, int | float | str]] = [
         {
+            "username":username,
             "id": int(r[0]),
             "score": int(r[1]),
             "stage": int(r[2] or 0),

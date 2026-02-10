@@ -8,7 +8,7 @@ import { getApiBaseUrl } from "../utils/apiClient.js";
 function Leaderboard({ user, setUser }) {
   // Runtime API base: uses VITE_BACKEND_URL or constructs dynamically from window.location
   const apiBase = getApiBaseUrl();
-  const [scores, setScores] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ function Leaderboard({ user, setUser }) {
   useEffect(() => {
     let mounted = true;
     Promise.all([
-      fetch("/api/score")
+      fetch("/api/leaderboard/score")
         .then((r) => {
           if (r.ok) {
             return r.json();
@@ -32,7 +32,7 @@ function Leaderboard({ user, setUser }) {
         }),
       // Charger les sessions du joueur connecté si disponible
       user
-        ? fetch(`/api/user/sessions/${user}`)
+        ? fetch(`/api/leaderboard/users`)
             .then(async (r) => {
               if (r.ok) return r.json();
               return [];
@@ -40,10 +40,10 @@ function Leaderboard({ user, setUser }) {
             .catch(() => [])
         : Promise.resolve([]),
     ])
-      .then(([globalScores, sessions]) => {
+      .then(([scores, users]) => {
         if (mounted) {
-          setScores(globalScores);
-          setUserSessions(sessions || []);
+          setUserSessions(scores || []);
+          setTopUsers(users || []);
         }
       })
       .catch((err) => {
@@ -91,22 +91,19 @@ function Leaderboard({ user, setUser }) {
       second: '2-digit' 
     });
   };
-  // Trier les sessions par date (les plus récentes en premier)
-  const sortedUserSessions = userSessions && userSessions.length > 0
-    ? [...userSessions].sort((a, b) => b.score - a.score)
-    : [];
 
   
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
       {/* Section : Tous les temps du joueur connecté */}
-      {user && sortedUserSessions.length > 0 && (
+      {user && userSessions.length > 0 && (
         <div className="leaderboard__panel">
           <h2>{t("leaderboard.top10games")}</h2>
           <table className="scores-table">
             <thead>
               <tr>
+                <th>{t("common.rank")}</th>
                 <th>{t("common.username")}</th>
                 <th>{t("common.score")}</th>
                 <th>{t("common.stage")}</th>
@@ -116,8 +113,9 @@ function Leaderboard({ user, setUser }) {
               </tr>
             </thead>
             <tbody>
-              {sortedUserSessions.map((s) => (
+              {userSessions.map((s) => (
                 <tr key={s.id}>
+                  <td>{s.id}</td>
                   <td>{s.username}</td>
                   <td>{s.score}</td>
                   <td>{s.stage ?? 0}</td>
@@ -132,21 +130,23 @@ function Leaderboard({ user, setUser }) {
           <table className="scores-table">
             <thead>
               <tr>
+                <th>{t("common.rank")}</th>
                 <th>{t("common.username")}</th>
                 <th>{t("common.score")}</th>
                 <th>{t("common.stage")}</th>
+                <th>{t("common.gameState")}</th>
                 <th>{t("leaderboard.timerSeconds")}</th>
-                <th>{t("leaderboard.date")}</th>
               </tr>
             </thead>
             <tbody>
-              {sortedUserSessions.map((s) => (
+              {topUsers.map((s) => (
                 <tr key={s.id}>
+                  <td>{s.id}</td>
                   <td>{s.username}</td>
-                  <td>{s.score ?? 0}</td>
+                  <td>{s.highScore ?? 0}</td>
                   <td>{s.stage ?? 0}</td>
+                  <td>{s.state}</td>
                   <td>{s.timer ?? 0}</td>
-                  <td>{formatDate(s.playedAt)}</td>
                 </tr>
               ))}
             </tbody>
