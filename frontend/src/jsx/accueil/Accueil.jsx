@@ -103,8 +103,11 @@ function Accueil({ user, setUser }) {
           <div className="hero__actions">
             <Link className="btn primary rainbow" to="/lobby">
                 {t("accueil.startGame")}
+            </Link>
+            <Link className="btn primary rainbow" to="/game">
+                {t("accueil.startGameSolo")}
               </Link>
-            <Link className="btn ghost" to="/regle">
+            <Link className="btn accent" to="/regle">
               {t("accueil.seeRules")}
             </Link>
             <button
