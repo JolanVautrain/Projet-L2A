@@ -230,7 +230,7 @@ function Statistics({ user, setUser }) {
       )}
       {/* Section : Tous les temps du joueur connecté */}
       {user && sortedUserSessions.length > 0 && (
-        <div className="leaderboard__panel">
+        <div className="leaderboard__panel" id="game-history">
           <h2>{t("leaderboard.yourOtherGames")}</h2>
           <table className="scores-table">
             <thead>

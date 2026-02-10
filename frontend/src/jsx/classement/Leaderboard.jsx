@@ -23,13 +23,12 @@ function Leaderboard({ user, setUser }) {
   useEffect(() => {
     let mounted = true;
     Promise.all([
-      fetch("/api/leaderboard/score")
-        .then((r) => {
-          if (r.ok) {
-            return r.json();
-          }
-          throw new Error(t("leaderboard.fetchFailed"));
-        }),
+      fetch("/api/leaderboard/score").then((r) => {
+        if (r.ok) {
+          return r.json();
+        }
+        throw new Error(t("leaderboard.fetchFailed"));
+      }),
       // Charger les sessions du joueur connecté si disponible
       user
         ? fetch(`/api/leaderboard/users`)
@@ -57,18 +56,43 @@ function Leaderboard({ user, setUser }) {
     };
   }, [user, apiBase, t]);
   if (loading) return <p>{t("leaderboard.loadingLeaderboard")}</p>;
-  if (error) return <p>{t("common.error")}: {error}</p>;
+  if (error)
+    return (
+      <p>
+        {t("common.error")}: {error}
+      </p>
+    );
   // Si pas connecté, afficher une bannière explicite et proposer d'ouvrir la modal
   if (user == null) {
     return (
       <div className="leaderboard leaderboard--centered">
         <h1>{t("leaderboard.title")}</h1>
         <p className="leaderboard__notice">{t("leaderboard.loginRequired")}</p>
-        <button className="btn primary leaderboard__login-btn" onClick={openLogin}>
+        <button
+          className="btn primary leaderboard__login-btn"
+          onClick={openLogin}
+        >
           {t("leaderboard.openLogin")}
         </button>
-        <LoginModal isOpen={isOpen} onClose={closeLogin} action={setUser || (() => {})} afterLogin={() => { /* no-op: setUser already updates leaderboard */ }} openRegister={openRegister} />
-        <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { if (setUser) { setUser(u); } closeRegister(); }} />
+        <LoginModal
+          isOpen={isOpen}
+          onClose={closeLogin}
+          action={setUser || (() => {})}
+          afterLogin={() => {
+            /* no-op: setUser already updates leaderboard */
+          }}
+          openRegister={openRegister}
+        />
+        <RegisterModal
+          isOpen={isRegisterOpen}
+          onClose={closeRegister}
+          afterRegister={(u) => {
+            if (setUser) {
+              setUser(u);
+            }
+            closeRegister();
+          }}
+        />
         <div className="leaderboard-loader" aria-hidden>
           <div className="lb-loader">
             <div className="lb-box"></div>
@@ -80,78 +104,82 @@ function Leaderboard({ user, setUser }) {
   }
   // Fonction pour formater la date selon la langue
   const formatDate = (dateStr) => {
-    const locale = language === 'en' ? 'en-US' : 'fr-FR';
-    return new Date(dateStr).toLocaleString(locale, { 
-      timeZone: "Europe/Paris", 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit', 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
+    const locale = language === "en" ? "en-US" : "fr-FR";
+    return new Date(dateStr).toLocaleString(locale, {
+      timeZone: "Europe/Paris",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   };
 
-  
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
       {/* Section : Tous les temps du joueur connecté */}
       {user && userSessions.length > 0 && (
-        <div className="leaderboard__panel">
-          <h2>{t("leaderboard.top10games")}</h2>
-          <table className="scores-table">
-            <thead>
-              <tr>
-                <th>{t("common.rank")}</th>
-                <th>{t("common.username")}</th>
-                <th>{t("common.score")}</th>
-                <th>{t("common.stage")}</th>
-                <th>{t("common.gameState")}</th>
-                <th>{t("leaderboard.timerSeconds")}</th>
-                <th>{t("leaderboard.date")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {userSessions.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.id}</td>
-                  <td>{s.username}</td>
-                  <td>{s.score}</td>
-                  <td>{s.stage ?? 0}</td>
-                  <td>{s.state}</td>
-                  <td>{s.timer ?? 0}</td>
-                  <td>{formatDate(s.playedAt)}</td>
+        <>
+          <div className="leaderboard__panel">
+            <h2>{t("leaderboard.top10games")}</h2>
+            <table className="scores-table">
+              <thead>
+                <tr>
+                  <th>{t("common.rank")}</th>
+                  <th>{t("common.username")}</th>
+                  <th>{t("common.score")}</th>
+                  <th>{t("common.stage")}</th>
+                  <th>{t("common.gameState")}</th>
+                  <th>{t("leaderboard.timerSeconds")}</th>
+                  <th>{t("leaderboard.date")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <h2>{t("leaderboard.top10users")}</h2>
-          <table className="scores-table">
-            <thead>
-              <tr>
-                <th>{t("common.rank")}</th>
-                <th>{t("common.username")}</th>
-                <th>{t("common.score")}</th>
-                <th>{t("common.stage")}</th>
-                <th>{t("common.gameState")}</th>
-                <th>{t("leaderboard.timerSeconds")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topUsers.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.id}</td>
-                  <td>{s.username}</td>
-                  <td>{s.highScore ?? 0}</td>
-                  <td>{s.stage ?? 0}</td>
-                  <td>{s.state}</td>
-                  <td>{s.timer ?? 0}</td>
+              </thead>
+              <tbody>
+                {userSessions.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.id}</td>
+                    <td>{s.username}</td>
+                    <td>{s.score}</td>
+                    <td>{s.stage ?? 0}</td>
+                    <td>{s.state}</td>
+                    <td>{s.timer ?? 0}</td>
+                    <td>{formatDate(s.playedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="leaderboard__panel">
+            <h2>{t("leaderboard.top10users")}</h2>
+            <table className="scores-table">
+              <thead>
+                <tr>
+                  <th>{t("common.rank")}</th>
+                  <th>{t("common.username")}</th>
+                  <th>{t("common.score")}</th>
+                  <th>{t("common.stage")}</th>
+                  <th>{t("common.gameState")}</th>
+                  <th>{t("leaderboard.timerSeconds")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {topUsers.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.id}</td>
+                    <td>{s.username}</td>
+                    <td>{s.highScore ?? 0}</td>
+                    <td>{s.stage ?? 0}</td>
+                    <td>{s.state}</td>
+                    <td>{s.timer ?? 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );
