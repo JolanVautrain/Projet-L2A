@@ -11,8 +11,6 @@ import {
   initWeatherSystem,
   updateWeatherSystem,
   addNightStars,
-  removeNightStars,
-  addSunGlow,
   isNight,
   getTimeOfDay,
   getSunProgress,
@@ -21,7 +19,6 @@ import {
 import {
   createBackgroundSystem,
   updateBackgroundParallax,
-  getBackgroundLayers,
   updateStarsVisibility,
   updateSkyGradient,
 } from "./utils/GameBackground.js";
@@ -42,7 +39,6 @@ import {
   toggleInvincible,
   getInvincibility,
   getPlayer,
-  getPlatforms,
   resetPhysicsState,
   setupCollisions,
   getOpponent,
@@ -68,17 +64,13 @@ import {
   createScorePopup,
   createElectricSpark,
   createDustCloud,
-  createTrail,
   createShockWave,
 } from "./utils/GameParticles.js";
 import {
   initEnhancements,
   createImpactEffect,
-  addPlayerTrail,
   addVignette,
-  clearEnhancements,
   createEnergyAura,
-  updatePlayerHologram,
 } from "./utils/GameEnhancements.js";
 import ModalGameWon from "./modals/ModalGameWon.jsx";
 import GameClientPrediction from "./utils/GameClientPrediction.js";
@@ -210,9 +202,7 @@ function create() {
 function update() {
   if (!gameScene || gameOver) return;
 
-  const username = getActiveUser();
   const player = getPlayer();
-  const cursors = getCursors();
 
   if (!player) return;
 
@@ -503,7 +493,7 @@ function Game() {
         if (data.type === "state_correction") {
           if (clientPrediction) {
             const player = getPlayer();
-            console.warn(`⚠️ Correction du serveur reçue`);
+            console.warn(`[!] Correction du serveur reçue`);
             clientPrediction.processServerCorrection(
               {
                 sequence: data.sequence || 0,
@@ -541,7 +531,7 @@ function Game() {
               opponent.setVelocityY(-500);
             }
           }
-          console.log(`📨 Action adversaire: ${usernameOpponent} ${data.input}`);
+          console.log(`[X] Action adversaire: ${usernameOpponent} ${data.input}`);
         }
 
         if (data.type === "spawn_wave") {
@@ -708,7 +698,7 @@ function Game() {
       if (!activeMatchId) return;
       if (leavePromptedRef.current) return;
       leavePromptedRef.current = true;
-      window.dispatchEvent(
+      globalThis.dispatchEvent(
         new CustomEvent("request-leave-match", {
           detail: { target: "/lobby", reason: "tab" },
         })
@@ -719,11 +709,11 @@ function Game() {
       leavePromptedRef.current = false;
     };
 
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("leave-match-cancelled", handleCancel);
+    globalThis.addEventListener("blur", handleBlur);
+    globalThis.addEventListener("leave-match-cancelled", handleCancel);
     return () => {
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("leave-match-cancelled", handleCancel);
+      globalThis.removeEventListener("blur", handleBlur);
+      globalThis.removeEventListener("leave-match-cancelled", handleCancel);
       leavePromptedRef.current = false;
     };
   }, [confirmedLeavingGame, showGameOverModal, showGameWonModal]);

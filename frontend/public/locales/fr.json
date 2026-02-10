@@ -19,13 +19,13 @@
     "error": "Erreur",
     "saving": "Enregistrement...",
     "failedPrefix": "Échec : ",
-    "noData": "Aucune donnée disponible",
+    "noData": "Aucune donnée disponible. Merci de contacter le support.",
     "close": "Fermer"
     ,"confirm": "Confirmer"
     ,"cancel": "Annuler"
   },
   "nav": {
-    "hello": "Bonjour",
+    "hello": "Bonjour, maitre",
     "profile": "Profil"
   },
   "game": {
@@ -140,9 +140,9 @@
   },
   "accueil": {
     "readyToPlay": "Prêt à jouer ?",
-    "tagline": "Aligne, anticipe,",
+    "tagline": "Court, esquive",
     "taglineHighlight": "gagne",
-    "welcomeText": "Bienvenue dans le jeu d'alignement ultime où chaque coup compte.",
+    "welcomeText": "Bienvenue dans le meilleur jeu de pvp runner de France.",
     "startGame": "Lancer une partie",
     "seeRules": "Voir les règles",
     "connectButton": "Se connecter",
@@ -151,52 +151,52 @@
     "averageTime": "Temps moyen",
     "fastGames": "Parties rapides et intenses",
     "activePlayers": "Joueurs actifs",
-    "communityReady": "Communauté prête à jouer",
-    "atmosphere": "Atmosphère",
-    "animatedInterface": "Interface animée",
-    "atmosphereDesc": "Des dégradés dynamiques, des cartes flottantes et un parcours guidé pour que chaque visite sur l'accueil soit une invitation à lancer une partie.",
-    "instantGames": "Parties instantanées",
-    "instantGamesDesc": "Lance une partie en quelques secondes et reprends là où tu t'es arrêté.",
-    "breathtakingVision": "Vision à couper le souffle",
-    "breathtakingVisionDesc": "Animations fluides et grille lisible pour suivre chaque coup sans effort.",
-    "extraordinaryChallenge": "Un challenge hors du commun",
-    "extraordinaryChallengeDesc": "Une tension avec des bombes prêtes à exploser au moindre toucher.",
-    "howItWorks": "Comment ça marche",
-    "clearPath": "Un parcours clair, animé étape par étape",
-    "clearPathDesc": "Chaque bloc s'affiche avec un léger mouvement pour garder le rythme et t'amener naturellement vers le bouton \"Jouer\".",
-    "chooseYourSide": "Choisis ton camp",
-    "chooseYourSideDesc": "Sélectionne ton rôle et vérifie la configuration en un coup d'œil.",
-    "observeTerrain": "Observe le terrain",
-    "observeTerrainDesc": "La grille surdimensionnée et les repères colorés te guident en temps réel.",
-    "alignAndWin": "Aligne et gagne",
-    "alignAndWinDesc": "Enchaîne les coups avec les animations de feedback, puis partage la victoire.",
-    "joinTheGame": "Rejoins la partie",
-    "connectToSave": "Connecte-toi pour sauvegarder tes coups",
-    "oneClickConnect": "Un clic suffit pour ouvrir la modal et reprendre là où tu t'étais arrêté.",
-    "openLogin": "Ouvrir la connexion"
+    "communityReady": "Une communauté actif dans le jeu",
+    "atmosphere": "Avis de notre jeu par les meilleurs Journaux",
+    "animatedInterface": "10/10 JeuxVideoFR.com",
+    "atmosphereDesc": "Une interface animée. Des dégradés dynamiques, des cartes flottantes et un parcours guidé pour que chaque visite sur l'accueil soit une invitation à lancer une partie.",
+    "instantGames": "20/20 JournalDuGeekFr.com",
+    "instantGamesDesc": "Des parties instantanées qui change tout. Lance une partie en quelques secondes et reprends là où tu t'es arrêté.",
+    "breathtakingVision": "5/5 OuestFranceGaming.com",
+    "breathtakingVisionDesc": "Une vision à couper le souffle. Animations fluides et grille lisible pour suivre chaque coup sans effort.",
+    "extraordinaryChallenge": "10/10 FnacGaming.fr",
+    "extraordinaryChallengeDesc": "Un challenge hors du commun. Une tension avec des bombes prêtes à exploser au moindre toucher.",
+    "howItWorks": "Comment ça fonctionne ?",
+    "clearPath": "Voici le tuto de père Castor.",
+    "clearPathDesc": "La science est faite de tant de choses qui semblent évidentes après avoir été expliquées.",
+    "chooseYourSide": "Connecte-toi à ton compte",
+    "chooseYourSideDesc": "Rejoinds ton compte et clique sur joueur en un coup d'œil.",
+    "observeTerrain": "Attends dans le lobby",
+    "observeTerrainDesc": "Nous te mettons en relation avec les joueurs du monde en temps réel.",
+    "alignAndWin": "Esquivent les bombes",
+    "alignAndWinDesc": "Enchaîne les coups pour esquiver les bombes pour gagner le fight.",
+    "joinTheGame": "Rejoins le jeu des warriors",
+    "connectToSave": "Connecte-toi pour jouer et sauvegarder ta progression pendant ton ascension.",
+    "oneClickConnect": "3 clic suffit pour créer un compte et 10 clic pour supprimer ton compte après attestation sur l'honneur a envoyé au support par courriel recommandé.",
+    "openLogin": "1 compte créer = 1 arbre planter"
   },
   "languageNames": {
     "fr": "Français",
     "en": "English"
   },
   "contacts": {
-    "title": "Équipe — Contacts",
+    "title": "Équipe de l'élite — Contacts",
     "intro": "Nos valeureux développeurs — fidèles compagnons des longues nuits, des cafés et des commits héroïques.",
-    "clickForAnecdote": "Cliquer pour une anecdote...",
+    "clickForAnecdote": "Cliquer pour voir une anecdote...",
     "hideAnecdote": "Masquer l'anecdote de",
     "showAnecdote": "Afficher l'anecdote de",
-    "footer": "C'est beau le travail",
+    "footer": "Le travail rend libre",
     "jolan": {
-      "role": "Chef mise en place du projet",
-      "egg": "Maîtrise secrète de la mise en place du projet (docker)."
+      "role": "Dieu de la mise en place du projet et du multijoueur",
+      "egg": "Maîtrise secrète de la mise en place du projet et du websocket."
     },
     "gabriel": {
-      "role": "Camarade efficace dans le travail",
+      "role": "Camarade du partie efficace dans le travail",
       "egg": "Détient un record personnel : 42 pull-requests en une journée."
     },
     "ethan": {
-      "role": "Le travailleur mécontent",
-      "egg": "Râle mais délivre ; spécialiste des fixes 23:00."
+      "role": "Le travailleur productif dans son lit",
+      "egg": "Il a trouver un super nom pour le projet : Groupe 34, pour savoir ce que veut dire 34 demander à Ethan"
     },
     "lalo": {
       "role": "Heureux dans la vie",
@@ -267,9 +267,10 @@
   },
   "rules": {
     "title": "Règles du jeu",
+    "intro": "Les 10 Commandements de bienséance",
     "rule1": {
       "name": "Règle 1",
-      "content": "soyez respectueux envers les autres joueurs et évitez les comportements toxiques."
+      "content": "Soyez respectueux envers les autres joueurs et évitez les comportements toxiques."
     },
     "rule2": {
       "name": "Règle 2",
