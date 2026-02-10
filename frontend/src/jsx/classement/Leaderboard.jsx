@@ -4,6 +4,7 @@ import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 import { useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
+import SortableTable from "../utils/SortableTable.jsx";
 
 function Leaderboard({ user, setUser }) {
   // Runtime API base: uses VITE_BACKEND_URL or constructs dynamically from window.location
@@ -116,6 +117,25 @@ function Leaderboard({ user, setUser }) {
     });
   };
 
+  const columnsGames = [
+    { key: "rank", label: t("leaderboard.rank") },
+    { key: "username", label: t("leaderboard.username") },
+    { key: "score", label: t("common.score") },
+    { key: "stage", label: t("common.stage") },
+    { key: "state", label: t("common.gameState") },
+    { key: "timer", label: t("leaderboard.timerSeconds") },
+    { key: "playedAt", label: t("leaderboard.date") },
+  ];
+
+  const columnsUsers = [
+    { key: "rank", label: t("leaderboard.rank") },
+    { key: "username", label: t("leaderboard.username") },
+    { key: "highScore", label: t("common.score") },
+    { key: "stage", label: t("common.stage") },
+    { key: "timer", label: t("leaderboard.timerSeconds") },
+    { key: "state", label: t("common.gameState") },
+  ];
+
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
@@ -124,60 +144,12 @@ function Leaderboard({ user, setUser }) {
         <>
           <div className="leaderboard__panel">
             <h2>{t("leaderboard.top10games")}</h2>
-            <table className="scores-table">
-              <thead>
-                <tr>
-                  <th>{t("common.rank")}</th>
-                  <th>{t("common.username")}</th>
-                  <th>{t("common.score")}</th>
-                  <th>{t("common.stage")}</th>
-                  <th>{t("common.gameState")}</th>
-                  <th>{t("leaderboard.timerSeconds")}</th>
-                  <th>{t("leaderboard.date")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {userSessions.map((s) => (
-                  <tr key={s.id}>
-                    <td>{s.id}</td>
-                    <td>{s.username}</td>
-                    <td>{s.score}</td>
-                    <td>{s.stage ?? 0}</td>
-                    <td>{s.state}</td>
-                    <td>{s.timer ?? 0}</td>
-                    <td>{formatDate(s.playedAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <SortableTable data={userSessions} columns={columnsGames}/>
           </div>
 
           <div className="leaderboard__panel">
             <h2>{t("leaderboard.top10users")}</h2>
-            <table className="scores-table">
-              <thead>
-                <tr>
-                  <th>{t("common.rank")}</th>
-                  <th>{t("common.username")}</th>
-                  <th>{t("common.score")}</th>
-                  <th>{t("common.stage")}</th>
-                  <th>{t("common.gameState")}</th>
-                  <th>{t("leaderboard.timerSeconds")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topUsers.map((s) => (
-                  <tr key={s.id}>
-                    <td>{s.id}</td>
-                    <td>{s.username}</td>
-                    <td>{s.highScore ?? 0}</td>
-                    <td>{s.stage ?? 0}</td>
-                    <td>{s.state}</td>
-                    <td>{s.timer ?? 0}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <SortableTable data={topUsers} columns={columnsUsers}/>
           </div>
         </>
       )}

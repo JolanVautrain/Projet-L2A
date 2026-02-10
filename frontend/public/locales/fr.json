@@ -37,6 +37,7 @@
     "opponentDisconnected": "L'adversaire s'est déconnecté"
   },
   "leaderboard": {
+    "username": "Nom d'utilisateur",
     "title": "Classement des joueurs",
     "yourBestScore": "Votre meilleur score",
     "yourOtherGames": "Vos autres parties",
@@ -126,6 +127,7 @@
     ,"invalidDuration": "La durée doit être positive"
   },
   "statistics": {
+    "username": "Nom d'utilisateur",
     "title": "Vos statistiques",
     "totalGames": "Nombre de parties",
     "totalPlayTime": "Temps de jeu total",

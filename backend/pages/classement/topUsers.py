@@ -19,7 +19,7 @@ def get_high_score() -> Response:
     result: List[dict[str, int | str]] = []
     for r in rows:
         result.append({
-            "id": index,
+            "rank": index,
             "username": r[0],
             "score": int(r[1] or 0),
             "stage": int(r[2] or 0),
@@ -42,7 +42,7 @@ def list_high_scores() -> Response:
     result: List[dict[str, int | str]] = []
     for r in rows:
         result.append({
-            "id":index,
+            "rank":index,
             "username": r[0],
             "highScore": int(r[1]),
             "stage": int(r[2] or 0),
