@@ -313,7 +313,7 @@
   },
   "lobby": {
     "title" : "Recherche de joueur en cours... ",
-    "description" : "Merci de patientez... Le sous-Marin cherche au fond fin de l'océan...",
+    "description" : "Merci de patientez... Le sous-Marin cherche au fin fond de l'océan... des joueurs",
     "players" : "Joueur connectés dans le lobby"
   }
 }

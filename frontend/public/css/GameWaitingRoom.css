@@ -136,7 +136,8 @@ body {
   border-radius: 50%;
   border: 5px solid #D93A54;
 }
-.sea .submarine-wrapper .submarine-body .engine:after, .sea .submarine-wrapper .submarine-body .engine:before {
+.sea .submarine-wrapper .submarine-body .engine:after,
+.sea .submarine-wrapper .submarine-body .engine:before {
   position: absolute;
   content: "";
   border-radius: 2px;
@@ -144,14 +145,15 @@ body {
   -webkit-animation: spin 900ms linear infinite;
           animation: spin 900ms linear infinite;
   opacity: 0.8;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 .sea .submarine-wrapper .submarine-body .engine:after {
-  top: 8px;
   width: 20px;
   height: 4px;
 }
 .sea .submarine-wrapper .submarine-body .engine:before {
-  left: 19px;
   width: 4px;
   height: 20px;
 }
@@ -246,14 +248,20 @@ body {
 }
 
 @-webkit-keyframes spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
   100% {
-    transform: rotate(360deg);
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
 @keyframes spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
   100% {
-    transform: rotate(360deg);
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 @-webkit-keyframes leds-off {
