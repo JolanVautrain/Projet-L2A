@@ -104,7 +104,7 @@ function Accueil({ user, setUser }) {
             <Link className="btn primary rainbow" to="/lobby">
                 {t("accueil.startGame")}
               </Link>
-            <Link className="btn ghost" to="/leaderboard">
+            <Link className="btn ghost" to="/regle">
               {t("accueil.seeRules")}
             </Link>
             <button

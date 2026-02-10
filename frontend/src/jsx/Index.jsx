@@ -119,9 +119,9 @@ function App() {
       setLeaveMatchModalOpen(true);
     };
 
-    window.addEventListener("request-leave-match", handleLeaveRequest);
+    globalThis.addEventListener("request-leave-match", handleLeaveRequest);
     return () => {
-      window.removeEventListener("request-leave-match", handleLeaveRequest);
+      globalThis.removeEventListener("request-leave-match", handleLeaveRequest);
     };
   }, [navigate]);
 
@@ -152,7 +152,7 @@ function App() {
   const cancelLeaveMatch = () => {
     setLeaveMatchModalOpen(false);
     setLeaveMatchTarget(null);
-    window.dispatchEvent(new CustomEvent("leave-match-cancelled"));
+    globalThis.dispatchEvent(new CustomEvent("leave-match-cancelled"));
   };
 
   useEffect(() => {
@@ -171,7 +171,7 @@ function App() {
           "/api/logout",
           new Blob([payload], { type: "application/json" })
         );
-      } catch (e) {
+      } catch (e) { //type: ignore
         // Ignore unload failures
       }
     };
