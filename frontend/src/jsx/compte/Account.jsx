@@ -273,7 +273,6 @@ function Account({ user, setUser }) {
           <p>
             {t("account.hello")} {user}, {t("account.yourAccountPage")}.
           </p>
-          <Statistics user={user} />
           <LanguageSelector />
           
           {/* Codes de récupération */}
