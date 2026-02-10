@@ -1,14 +1,7 @@
 import PropTypes from "prop-types";
+import ReportModal from "../accueil/modals/report.jsx";
+import { useState } from "react";
 import { useLanguage } from "../autres/Language.jsx";
-
-const handleSubmit = (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const text = formData.get("text");
-    console.log("Text submitted:", text);
-};
-
-
 
 // Règles du jeu
 function RulesCard({ rule }) {
@@ -79,40 +72,11 @@ function Regle() {
         content : t("rules.rule9.content")
     }];
 
-    const report = {
-        title : t("report.title"),
-        desc : t("report.desc"),
-        text : t("report.text"),
-    };
+    const [isReportOpen, setIsReportOpen] = useState(false);
 
-const reportForm = (
-      <form id="report-form" onSubmit={handleSubmit}>
-        <label htmlFor="input-name">
-          '{t("report.desc")}'
-          <input
-            type="text"
-            name="input-name"
-            placeholder="bob"
-            inputMode="text"
-            pattern="[a-zA-Z0-9]+"
-            required
-          />
-        </label>
-        <label htmlFor="input-text">
-          {t("report.text")}
-          <textarea
-            name="input-text"
-            placeholder={t("report.textPlaceholder")}
-            required
-          />
-        </label>
-
-
-        <button type="submit" className="btn primary">
-          {t("report.submit") || "Submit"}
-        </button>
-      </form>
-    );
+        const reportForm = () => {
+            setIsReportOpen(true);
+        };
 
     
     return (
@@ -122,18 +86,20 @@ const reportForm = (
                 {rules.map((rule) => (
                     <RulesCard key={rule.name} rule={rule} />
                 ))}
-            </div>
-
-            <div className="report-container">
-                <div className="report-section">
-                    {reportForm}
-                    <p className="report-section__desc">
-                    {t("report.title") }
-                </p>
                 </div>
-            </div>
+      <div className="report-container">
+        <button className="btn primary" onClick={reportForm}>
+          {t("report.button")}
+        </button>
+      </div>
+
+        {/* MODAL */}
+        <ReportModal
+            isOpen={isReportOpen}
+            onClose={() => setIsReportOpen(false)}
+        />
         </div>
-    )
+  );
 }
 
 export default Regle;
