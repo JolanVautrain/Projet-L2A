@@ -18,6 +18,30 @@ function Accueil({ user, setUser }) {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const { t } = useLanguage();
 
+  // Statistiques aléatoires affichées dans la page d'accueil
+  const [gamesInProgress, setGamesInProgress] = useState(0);
+  const [averageTime, setAverageTime] = useState("00:00");
+  const [activePlayers, setActivePlayers] = useState(0);
+
+  const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  // Génère et rafraîchit des valeurs aléatoires toutes les 10s
+  useEffect(() => {
+    const updateStats = () => {
+      setGamesInProgress(getRandomInt(20, 100));
+      setAverageTime(formatTime(getRandomInt(60, 10 * 60)));
+      setActivePlayers(getRandomInt(100, 1000));
+    };
+    updateStats();
+    const id = setInterval(updateStats, 10000); // rafraîchit toutes les 10 secondes
+    return () => clearInterval(id);
+  }, []);
+
   // Données pour les sections mises en avant
   const highlights = [
     {
@@ -95,17 +119,17 @@ function Accueil({ user, setUser }) {
           <div className="hero__stats">
             <div className="stat-card">
               <span className="stat-label">{t("accueil.gamesInProgress")}</span>
-              <strong className="stat-value">12</strong>
+              <strong className="stat-value">{gamesInProgress}</strong>
               <p className="stat-note">{t("accueil.stableServers")}</p>
             </div>
             <div className="stat-card">
               <span className="stat-label">{t("accueil.averageTime")}</span>
-              <strong className="stat-value">04:32</strong>
+              <strong className="stat-value">{averageTime}</strong>
               <p className="stat-note">{t("accueil.fastGames")}</p>
             </div>
             <div className="stat-card">
               <span className="stat-label">{t("accueil.activePlayers")}</span>
-              <strong className="stat-value">+120</strong>
+              <strong className="stat-value">{activePlayers >= 0 ? `+${activePlayers}` : activePlayers}</strong>
               <p className="stat-note">{t("accueil.communityReady")}</p>
             </div>
           </div>
