@@ -109,7 +109,7 @@ function Shop() {
     const showNotification = () => {
       const msg = messages[Math.floor(Math.random() * messages.length)]();
       setNotification(msg);
-      setTimeout(() => setNotification(null), 4000);
+      setTimeout(() => setNotification(null), 10000);
     };
 
     // Show first notification after 2 seconds
