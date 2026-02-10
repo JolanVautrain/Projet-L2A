@@ -16,6 +16,7 @@ import { useLanguage } from "../autres/Language.jsx";
 function Accueil({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [showAdPopup, setShowAdPopup] = useState(false);
   const { t } = useLanguage();
 
   // Statistiques aléatoires affichées dans la page d'accueil
@@ -88,6 +89,20 @@ function Accueil({ user, setUser }) {
       globalThis.history.replaceState({}, document.title, globalThis.location.pathname);
     }
   }, [location]);
+
+  // Show advertising popup after a delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowAdPopup(true);
+    }, 3000); // Show after 3 seconds
+    return () => clearTimeout(timer);
+  }, []);
+
+  const closeAdPopup = () => setShowAdPopup(false);
+  const goToShop = () => {
+    setShowAdPopup(false);
+    navigate('/shop');
+  };
   // Rendu du composant Accueil
   return (
     <div className="home">
@@ -191,6 +206,27 @@ function Accueil({ user, setUser }) {
       </section>
       <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} openRegister={openRegister} />
       <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }} />
+      
+      {/* Advertising popup for shop */}
+      {showAdPopup && (
+        <div className="ad-popup-overlay" onClick={closeAdPopup}>
+          <div className="ad-popup-card" onClick={(e) => e.stopPropagation()}>
+            <button className="ad-close" onClick={closeAdPopup}>✕</button>
+            <div className="ad-content">
+              <div className="ad-badge">🎁 OFFRE EXCLUSIVE</div>
+              <h2 className="ad-title">-70% sur tous les articles !</h2>
+              <p className="ad-desc">Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !</p>
+              <div className="ad-timer">⏰ Plus que quelques heures !</div>
+              <button className="btn primary ad-cta" onClick={goToShop}>
+                🛒 VOIR LA BOUTIQUE
+              </button>
+              <button className="btn ghost ad-later" onClick={closeAdPopup}>
+                Plus tard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

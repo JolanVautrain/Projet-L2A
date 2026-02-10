@@ -48,6 +48,7 @@ import PageNotFound from "./autres/PageNotFound";
 import Game from "./game/Game.jsx";
 import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
 import Regle from "./regle/regle";
+import Shop from "./shop/Shop";
 
 /**
  * Composant principal de l'application.
@@ -252,6 +253,9 @@ function App() {
           >
             {t("common.contacts")}
           </NavLink>
+          <NavLink to="/shop" onClick={(e) => requestLeaveIfInMatch("/shop", e)}>
+            {t("common.shop")}
+          </NavLink>
           <NavLink to="/regle" onClick={(e) => requestLeaveIfInMatch("/regle", e)}>
             {t("rules.title")}
           </NavLink>
@@ -305,6 +309,7 @@ function App() {
         <Route path="/lobby" element={<RequireAuth user={userState}><GameWaitingRoom /></RequireAuth>}/>
         <Route path="/*" element={<PageNotFound />} />
         <Route path="/regle" element={<Regle />} />
+        <Route path="/shop" element={<Shop />} />
       </Routes>
     </>
   );

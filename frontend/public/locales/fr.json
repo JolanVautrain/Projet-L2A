@@ -8,6 +8,7 @@
     "rules": "Règles",
     "home": "Accueil",
     "contacts": "Contacts",
+    "shop": "Boutique",
     "play": "Jouer",
     "score": "Score",
     "stage": "Stage",
@@ -267,6 +268,63 @@
     "speechOne": "Qui va là ? Montrez-vous !",
     "speechTwo": "Attention — accès réservé !",
     "speechThree": "Énoncez votre identité immédiatement !"
+  },
+  "shop": {
+    "title": "Boutique",
+    "subtitle": "Objets cosmétiques et packs utiles",
+    "intro": "Offrez-vous quelques améliorations visuelles ou utilitaires pour personnaliser votre expérience de jeu.",
+    "buy": "Acheter",
+    "open": "Ouvrir",
+    "salePrefix": "Offre flash se termine dans",
+    "saleEnded": "Offre terminée",
+    "soldOut": "Indisponible",
+    "modal": {
+      "title": "Confirmer l'achat",
+      "notice": "ATTENTION : Cette offre expire dans quelques secondes ! Les stocks sont limités.",
+      "extrasTitle": "Options recommandées (pré-sélectionnées pour votre confort)",
+      "delivery": "Livraison standard (OBLIGATOIRE)",
+      "express": "Livraison express 24h (FORTEMENT RECOMMANDÉ)",
+      "giftWrap": "Emballage cadeau premium",
+      "support": "Support client prioritaire 24/7",
+      "warranty": "Garantie étendue 2 ans (protection maximale)",
+      "insurance": "Assurance casse/vol",
+      "subtotal": "Total",
+      "savingsText": "Vous économisez jusqu'à 50% avec ces options groupées !",
+      "addon": "Ajouter l'assurance premium (+2.99€) — RECOMMANDÉ pour protéger votre achat",
+      "confirm": "OUI, JE VEUX ACHETER MAINTENANT",
+      "cancel": "Non merci, je préfère rater cette offre exceptionnelle",
+      "exitWarning": "ATTENTION ! Êtes-vous CERTAIN de vouloir abandonner cette offre EXCLUSIVE ? Cette promotion ne sera plus jamais disponible à ce prix ! Vous allez PERDRE cette opportunité UNIQUE !"
+    },
+    "loot": {
+      "revealing": "Ouverture en cours...",
+      "loading": "Révélation de votre récompense...",
+      "close": "Récupérer ma récompense",
+      "coinPack": "Pack de 100 pièces",
+      "nothing": "Rien (réessayez !)"
+    },
+    "products": {
+      "neoSkin": {
+        "title": "Skin Néon",
+        "desc": "Un skin lumineux pour votre avatar en jeu."
+      },
+      "bombPack": {
+        "title": "Pack Bombes (esthétique)",
+        "desc": "Icônes et effets de bombe exclusifs (visuels uniquement)."
+      },
+      "avatarPack": {
+        "title": "Pack Avatar",
+        "desc": "Avatars premium pour votre profil."
+      }
+      ,
+      "lootboxBasic": {
+        "title": "Coffret Mystère",
+        "desc": "Un coffret contenant des récompenses aléatoires."
+      },
+      "lootboxRare": {
+        "title": "Coffret Rare",
+        "desc": "Coffret avec meilleures chances d'objets rares."
+      }
+    }
   },
   "rules": {
     "title": "Règles",

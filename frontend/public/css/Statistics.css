@@ -31,6 +31,7 @@
   background-color: #243050;
   border-color: rgba(79, 158, 246, 0.5);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 158, 246, 0.2);
 }
 
 .stat-label {
