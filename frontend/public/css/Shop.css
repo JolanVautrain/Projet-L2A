@@ -519,5 +519,255 @@
   font-size: 14px;
 }
 
+/* Cart Styles */
+.cart-button {
+  position: relative;
+  margin-top: 16px;
+  font-size: 18px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: none;
+  border-radius: 12px;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(251,191,36,0.4);
+}
 
+.cart-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(251,191,36,0.6);
+}
 
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+.cart-modal {
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(251,191,36,0.3);
+  margin-bottom: 16px;
+}
+
+.cart-header h3 {
+  margin: 0;
+  color: #fbbf24;
+}
+
+.empty-cart {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-cart p {
+  font-size: 18px;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 16px;
+}
+
+.cart-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(15,23,42,0.5);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(251,191,36,0.2);
+  transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+  border-color: rgba(251,191,36,0.5);
+  background: rgba(15,23,42,0.7);
+}
+
+.cart-item-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+}
+
+.cart-item-info {
+  flex: 1;
+}
+
+.cart-item-info h4 {
+  margin: 0 0 8px 0;
+  color: #eaf6ff;
+  font-size: 16px;
+}
+
+.cart-item-price {
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 18px;
+  margin: 4px 0;
+}
+
+.rarity-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.rarity-common {
+  background: rgba(148,163,184,0.2);
+  color: #cbd5e1;
+}
+
+.rarity-rare {
+  background: rgba(59,130,246,0.2);
+  color: #60a5fa;
+}
+
+.rarity-epic {
+  background: rgba(168,85,247,0.2);
+  color: #c084fc;
+}
+
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(251,191,36,0.5);
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quantity-btn:hover {
+  background: rgba(251,191,36,0.2);
+  border-color: #fbbf24;
+}
+
+.quantity {
+  min-width: 32px;
+  text-align: center;
+  font-weight: 600;
+  color: #eaf6ff;
+}
+
+.remove-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin-left: 8px;
+  border: 1px solid rgba(239,68,68,0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.remove-btn:hover {
+  background: rgba(239,68,68,0.2);
+  border-color: #ef4444;
+}
+
+.cart-footer {
+  padding-top: 16px;
+  border-top: 2px solid rgba(251,191,36,0.3);
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+
+.cart-total span {
+  color: #94a3b8;
+}
+
+.cart-total strong {
+  color: #fbbf24;
+  font-size: 24px;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.loot-countdown {
+  text-align: center;
+  padding: 32px;
+}
+
+.countdown-circle {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(251,191,36,0.5);
+  animation: pulse 1s infinite;
+}
+
+.countdown-number {
+  font-size: 48px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.countdown-text {
+  color: #94a3b8;
+  font-size: 16px;
+  margin: 0;
+}

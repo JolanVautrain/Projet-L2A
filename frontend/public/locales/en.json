@@ -8,6 +8,7 @@
     "rules": "Rules",
     "home": "Home",
     "contacts": "Contacts",
+    "shop": "Shop",
     "play": "Play",
     "score": "Score",
     "stage": "Stage",
@@ -297,6 +298,70 @@
     "rule9": {
       "name": "Rule 9",
       "content": "Users must use appropriate language at all times."
+    }
+  },
+  "shop": {
+    "title": "Shop",
+    "subtitle": "Cosmetic items and useful packs",
+    "intro": "Treat yourself to some visual or utility enhancements to personalize your gaming experience.",
+    "buy": "Buy",
+    "open": "Open",
+    "salePrefix": "Flash sale ends in",
+    "saleEnded": "Sale ended",
+    "soldOut": "Out of stock",
+    "modal": {
+      "title": "Confirm Purchase",
+      "notice": "WARNING: This offer expires in a few seconds! Stocks are limited.",
+      "extrasTitle": "Recommended options (pre-selected for your convenience)",
+      "delivery": "Standard delivery (REQUIRED)",
+      "express": "24h express delivery (HIGHLY RECOMMENDED)",
+      "giftWrap": "Premium gift wrap",
+      "support": "24/7 priority customer support",
+      "warranty": "2-year extended warranty (maximum protection)",
+      "insurance": "Breakage/theft insurance",
+      "subtotal": "Total",
+      "savingsText": "You save up to 50% with these bundled options!",
+      "addon": "Add premium insurance (+2.99€) — RECOMMENDED to protect your purchase",
+      "confirm": "YES, I WANT TO BUY NOW",
+      "cancel": "No thanks, I'd rather miss this exceptional offer",
+      "exitWarning": "WARNING! Are you CERTAIN you want to abandon this EXCLUSIVE offer? This promotion will NEVER be available at this price again! You will LOSE this UNIQUE opportunity!"
+    },
+    "loot": {
+      "revealing": "Opening...",
+      "loading": "Revealing your reward...",
+      "close": "Claim my reward",
+      "coinPack": "100 Coins Pack",
+      "nothing": "Nothing (try again!)"
+    },
+    "products": {
+      "neoSkin": {
+        "title": "Neon Skin",
+        "desc": "A luminous skin for your in-game avatar."
+      },
+      "bombPack": {
+        "title": "Bomb Pack (aesthetic)",
+        "desc": "Exclusive bomb icons and effects (visual only)."
+      },
+      "avatarPack": {
+        "title": "Avatar Pack",
+        "desc": "Premium avatars for your profile."
+      },
+      "lootboxBasic": {
+        "title": "Mystery Box",
+        "desc": "A box containing random rewards."
+      },
+      "lootboxRare": {
+        "title": "Rare Box",
+        "desc": "Box with better chances of rare items."
+      },
+      "xpPack": {
+        "title": "XP Pack +100",
+        "desc": "Instantly add 100 experience points to your account."
+      },
+      "levelUpPack": {
+        "title": "Level Up Pack",
+        "desc": "Instantly gain an extra level!"
+      }
     }
   },
   "report": {

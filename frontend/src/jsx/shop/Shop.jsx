@@ -1,12 +1,17 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../autres/Language.jsx";
 import { useState, useEffect, useRef } from "react";
+import { getActiveUser } from "../utils/userSession.js";
+import shopProductsData from "./shopProducts.json";
 
 function Shop() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState(null);
-  const [addonChecked, setAddonChecked] = useState(true);
   const [countdown, setCountdown] = useState(60);
   const [showConfetti, setShowConfetti] = useState(false);
   const [saleCountdown, setSaleCountdown] = useState(6 * 3600); // initial 6 hours in seconds
@@ -31,6 +36,16 @@ function Shop() {
     }
   };
 
+  // Vérification de l'authentification
+  useEffect(() => {
+    const user = getActiveUser();
+    if (user) {
+      setIsAuthenticated(true);
+    } else {
+      navigate("/");
+    }
+  }, [navigate]);
+
   useEffect(() => {
     const key = "ad_popup_shown_v1";
     const already = localStorage.getItem(key);
@@ -39,7 +54,7 @@ function Shop() {
       setShowAdPopup(true);
       try {
         localStorage.setItem(key, "1");
-      } catch (e) {
+      } catch {
         // ignore storage errors
       }
       // Fermer automatiquement après 15 secondes
@@ -70,23 +85,75 @@ function Shop() {
     return hours * 3600;
   };
 
-  function handleBuyClick(p) {
-    setModalProduct(p);
-    setModalOpen(true);
-    setCountdown(60);
-    setAddonChecked(true);
-    // Reset all extra options to checked (dark pattern)
-    setDeliveryChecked(true);
-    setExpressChecked(true);
-    setGiftWrapChecked(true);
-    setSupportChecked(true);
-    setWarrantyChecked(true);
-    setInsuranceChecked(true);
+  function handleAddToCart(p) {
+    // Ajouter au panier au lieu d'ouvrir la modal directement
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === p.id);
+      if (existingItem) {
+        return prevCart.map(item => 
+          item.id === p.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { ...p, quantity: 1 }];
+    });
+  }
+
+  function handleRemoveFromCart(productId) {
+    setCart(prevCart => prevCart.filter(item => item.id !== productId));
+  }
+
+  function handleUpdateCartQuantity(productId, newQuantity) {
+    if (newQuantity <= 0) {
+      handleRemoveFromCart(productId);
+      return;
+    }
+    setCart(prevCart => 
+      prevCart.map(item => 
+        item.id === productId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  }
+
+  function handleCheckout() {
+    // Fermer le panier et confirmer l'achat de tous les articles
+    setShowCart(false);
+    
+    // Ouvrir les lootboxes dans le panier
+    const lootboxes = cart.filter(item => item.isLootbox);
+    if (lootboxes.length > 0) {
+      openLootboxesSequentially(lootboxes);
+    } else {
+      // Si pas de lootboxes, juste afficher les confettis
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3200);
+    }
+    
+    // Vider le panier après l'achat
+    setCart([]);
+  }
+
+  function openLootboxesSequentially(lootboxes) {
+    if (lootboxes.length === 0) return;
+    
+    let index = 0;
+    const openNext = () => {
+      if (index < lootboxes.length) {
+        const lootbox = lootboxes[index];
+        for (let i = 0; i < lootbox.quantity; i++) {
+          setTimeout(() => {
+            handleOpenLootbox(lootbox);
+          }, i * 500); // Délai entre chaque ouverture
+        }
+        index++;
+      }
+    };
+    
+    openNext();
   }
 
   function handleConfirmPurchase() {
     // Check if it's a lootbox, if yes open the lootbox reveal
-    if (modalProduct && modalProduct.isLootbox) {
+    if (modalProduct?.isLootbox) {
       setModalOpen(false);
       handleOpenLootbox(modalProduct);
     } else {
@@ -109,12 +176,12 @@ function Shop() {
   const [lootProduct, setLootProduct] = useState(null);
   const [lootPrize, setLootPrize] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [lootWaiting, setLootWaiting] = useState(false);
+  const [lootCountdown, setLootCountdown] = useState(0);
+  const audioRef = useRef(null);
   
   // Dark pattern: fake viewer count
   const [viewerCount, setViewerCount] = useState(Math.floor(Math.random() * 20) + 15);
-  
-  // Dark pattern: Dynamic price increase simulation
-  const [priceMultiplier, setPriceMultiplier] = useState(2);
   
   // Dark pattern: Price increase warning
   const [showPriceWarning, setShowPriceWarning] = useState(false);
@@ -145,7 +212,7 @@ function Shop() {
     const showNotification = () => {
       const msg = messages[Math.floor(Math.random() * messages.length)]();
       setNotification(msg);
-      setTimeout(() => setNotification(null), 10000);
+      setTimeout(() => setNotification(null), 3000);
     };
 
     // Show first notification after 2 seconds
@@ -154,7 +221,7 @@ function Shop() {
     // Then show every 8-15 seconds
     const interval = setInterval(() => {
       showNotification();
-    }, Math.random() * 7000 + 8000);
+    }, Math.random() * 12000 + 15000); // Changé de 7000 + 8000 à 12000 + 15000 (15-27 secondes)
 
     return () => {
       clearTimeout(initialTimer);
@@ -175,20 +242,20 @@ function Shop() {
     return () => clearInterval(interval);
   }, []);
   
-  // Dark pattern: Gradual price increase (simulated scarcity)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPriceMultiplier(prev => Math.min(2.0, prev + 0.01)); // Max 100% increase
-    }, 30000); // Increase every 30 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
+  // Dark pattern: Gradual price increase (simulated scarcity) - Disabled
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // Removed unused priceMultiplier state
+  //   }, 30000);
+  //   
+  //   return () => clearInterval(interval);
+  // }, []);
   
   // Dark pattern: Price increase warning banner
   useEffect(() => {
     const showTimer = setTimeout(() => {
       setShowPriceWarning(true);
-    }, 20000); // Show after 20 seconds
+    }, 30000); // Show after 30 seconds
     
     return () => clearTimeout(showTimer);
   }, []);
@@ -211,29 +278,110 @@ function Shop() {
   }, [showPriceWarning]);
 
   function handleOpenLootbox(p) {
-    // simulate purchase+open in one flow for demo
+    // Utiliser les temps d'attente depuis le JSON
+    const waitTime = shopProductsData.lootboxWaitTimes[p.id] || 3; // Par défaut 3 secondes
+    
     setLootProduct(p);
     setLootOpen(true);
     setLootPrize(null);
-    // reveal prize after a short delay
-    const prizes = [
-      { name: t("shop.loot.coinPack"), img: "/assets/star.png" },
-      { name: t("shop.products.neoSkin.title"), img: "/assets/star.png" },
-      { name: t("shop.products.avatarPack.title"), img: "/assets/logo.png" },
-      { name: t("shop.loot.nothing"), img: "/assets/bomb.png" },
-    ];
-    const choice = prizes[Math.floor(Math.random() * prizes.length)];
-    setTimeout(() => setLootPrize(choice), 800);
-    setTimeout(() => {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 2600);
-    }, 900);
+    setLootWaiting(true);
+    setLootCountdown(waitTime);
+    
+    // Obtenir les récompenses possibles pour cette lootbox
+    const possibleRewards = shopProductsData.lootboxRewards[p.id] || [];
+    
+    // Calculer le poids total
+    const totalWeight = possibleRewards.reduce((sum, reward) => sum + reward.weight, 0);
+    
+    // Sélectionner une récompense aléatoire basée sur les poids
+    let random = Math.random() * totalWeight;
+    let selectedReward = null;
+    
+    for (const reward of possibleRewards) {
+      random -= reward.weight;
+      if (random <= 0) {
+        selectedReward = reward;
+        break;
+      }
+    }
+    
+    // Si productId est null, c'est "rien"
+    let choice;
+    if (!selectedReward || selectedReward.productId === null) {
+      choice = { 
+        name: t("shop.loot.nothing"), 
+        img: "/assets/bomb.png", 
+        rarity: "none",
+        productId: null
+      };
+    } else {
+      // Trouver le produit correspondant dans la liste des produits
+      const product = products.find(prod => prod.id === selectedReward.productId);
+      if (product) {
+        choice = {
+          name: product.title,
+          img: product.img,
+          rarity: selectedReward.rarity,
+          productId: product.id
+        };
+      } else {
+        // Fallback si le produit n'existe pas
+        choice = { 
+          name: t("shop.loot.nothing"), 
+          img: "/assets/bomb.png", 
+          rarity: "none",
+          productId: null
+        };
+      }
+    }
+    
+    // Jouer la musique selon la rareté
+    const musicMap = {
+      "none": null, // Aucune musique
+      "common": "/assets/sound/victory_commun.mp3",
+      "rare": "/assets/sound/victory_rare.mp3",
+      "epic": "/assets/sound/victory_long.mp3",
+    };
+    
+    const musicPath = musicMap[choice.rarity];
+    
+    if (musicPath && audioRef.current) {
+      audioRef.current.src = musicPath;
+      audioRef.current.play().catch(err => console.error("Audio play error:", err));
+    }
+    
+    // Compte à rebours
+    let timeLeft = waitTime;
+    const countdownInterval = setInterval(() => {
+      timeLeft -= 1;
+      setLootCountdown(timeLeft);
+      
+      if (timeLeft <= 0) {
+        clearInterval(countdownInterval);
+        setLootWaiting(false);
+        setLootPrize(choice);
+        
+        // Confettis seulement si ce n'est pas "rien"
+        if (choice.rarity !== "none") {
+          setTimeout(() => {
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 2600);
+          }, 100);
+        }
+      }
+    }, 1000);
   }
 
   function closeLoot() {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setLootOpen(false);
     setLootPrize(null);
     setLootProduct(null);
+    setLootWaiting(false);
+    setLootCountdown(0);
   }
 
   useEffect(() => {
@@ -269,63 +417,23 @@ function Shop() {
     return () => clearInterval(sid);
   }, [saleActive, saleCountdown]);
 
-  const products = [
-    {
-      id: "skin-neo",
-      title: t("shop.products.neoSkin.title"),
-      desc: t("shop.products.neoSkin.desc"),
-      price: "3.99€",
-      oldPrice: "9.99€",
-      img: "/assets/star.png",
-      stock: 3,
-      badge: "Nouveauté",
-      hot: true,
-    },
-    {
-      id: "bomb-icon",
-      title: t("shop.products.bombPack.title"),
-      desc: t("shop.products.bombPack.desc"),
-      price: "1.99€",
-      oldPrice: "4.99€",
-      img: "/assets/bomb.png",
-      stock: 12,
-      badge: "Promo",
-      hot: true,
-    },
-    {
-      id: "avatar-logo",
-      title: t("shop.products.avatarPack.title"),
-      desc: t("shop.products.avatarPack.desc"),
-      price: "2.49€",
-      oldPrice: "5.99€",
-      img: "/assets/logo.png",
-      stock: 1,
-      badge: "Dernier",
-      hot: true,
-    },
-    {
-      id: "lootbox-basic",
-      title: t("shop.products.lootboxBasic.title"),
-      desc: t("shop.products.lootboxBasic.desc"),
-      price: "0.99€",
-      oldPrice: "2.99€",
-      img: "/assets/shop/lootbox-basic.svg",
-      stock: 50,
-      badge: "Mystère",
-      isLootbox: true,
-    },
-    {
-      id: "lootbox-rare",
-      title: t("shop.products.lootboxRare.title"),
-      desc: t("shop.products.lootboxRare.desc"),
-      price: "4.99€",
-      oldPrice: "9.99€",
-      img: "/assets/shop/lootbox.png",
-      stock: 12,
-      badge: "Rare",
-      isLootbox: true,
-    },
-  ];
+  // Charger les produits depuis le JSON avec traduction
+  const products = shopProductsData.products.map(p => ({
+    ...p,
+    title: t(p.titleKey),
+    desc: t(p.descKey),
+  }));
+
+  const cartTotal = cart.reduce((sum, item) => {
+    const price = Number.parseFloat(item.price.replace('€', '').replace(',', '.'));
+    return sum + (price * item.quantity);
+  }, 0);
+
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (!isAuthenticated) {
+    return null; // Ou un spinner de chargement
+  }
 
   return (
     <div className="shop-page">
@@ -339,6 +447,11 @@ function Shop() {
           <h1>{t("shop.title")}</h1>
             <p className="hero__eyebrow">{t("shop.subtitle")}</p>
           <p className="hero__lede">{t("shop.intro")}</p>
+          
+          {/* Bouton Panier */}
+          <button className="btn primary cart-button" onClick={() => setShowCart(true)}>
+            🛒 Panier {cartItemCount > 0 && <span className="cart-badge">{cartItemCount}</span>}
+          </button>
         </div>
       </section>
 
@@ -387,11 +500,11 @@ function Shop() {
                   <span className="product-price">{p.price}</span>
                 </div>
                 <button
-                  onClick={() => handleBuyClick(p)}
+                  onClick={() => handleAddToCart(p)}
                   disabled={!saleActive || p.stock === 0}
                   className={`btn primary ${p.stock <= 2 ? 'pulse' : ''} ${(!saleActive || p.stock === 0) ? 'disabled' : ''}`}
                 >
-                  {(!saleActive || p.stock === 0) ? t("shop.soldOut") : (p.isLootbox ? t("shop.open") : t("shop.buy"))}
+                  {(!saleActive || p.stock === 0) ? t("shop.soldOut") : "➕ Ajouter au panier"}
                 </button>
               </div>
               {p.stock !== undefined && (
@@ -479,7 +592,7 @@ function Shop() {
               <div className="total-line">
                 <span>{t("shop.modal.subtotal")}</span>
                 <span className="total-value">{(() => {
-                  const basePrice = parseFloat(modalProduct.price.replace('€', '').replace(',', '.'));
+                  const basePrice = Number.parseFloat(modalProduct.price.replace('€', '').replace(',', '.'));
                   let total = basePrice;
                   if (deliveryChecked) total += 1.99;
                   if (expressChecked) total += 4.99;
@@ -519,7 +632,19 @@ function Shop() {
         <div className="modal-overlay">
           <div className="modal-card">
             <h3>{lootProduct.title}</h3>
-            <p className="modal-notice">{t("shop.loot.revealing")}</p>
+            {lootWaiting ? (
+              <>
+                <p className="modal-notice">⏳ Ouverture en cours...</p>
+                <div className="loot-countdown">
+                  <div className="countdown-circle">
+                    <span className="countdown-number">{lootCountdown}</span>
+                  </div>
+                  <p className="countdown-text">Secondes restantes</p>
+                </div>
+              </>
+            ) : (
+              <p className="modal-notice">{t("shop.loot.revealing")}</p>
+            )}
             <div className="modal-product">
               <img src={lootProduct.img} alt="" />
               <div>
@@ -538,8 +663,90 @@ function Shop() {
               )}
             </div>
             <div className="modal-actions">
-              <button className="btn primary" onClick={closeLoot}>{t("shop.loot.close")}</button>
+              <button 
+                className="btn primary" 
+                onClick={closeLoot}
+                disabled={lootWaiting}
+              >
+                {lootWaiting ? "Patientez..." : t("shop.loot.close")}
+              </button>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Audio element for lootbox music */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <audio ref={audioRef} style={{ display: 'none' }} />
+      
+      {/* Cart Modal */}
+      {showCart && (
+        <div className="modal-overlay" onClick={() => setShowCart(false)}>
+          <div className="modal-card cart-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cart-header">
+              <h3>🛒 Mon Panier</h3>
+              <button className="btn ghost" onClick={() => setShowCart(false)}>✕</button>
+            </div>
+            
+            {cart.length === 0 ? (
+              <div className="empty-cart">
+                <p>Votre panier est vide</p>
+                <button className="btn primary" onClick={() => setShowCart(false)}>Continuer mes achats</button>
+              </div>
+            ) : (
+              <>
+                <div className="cart-items">
+                  {cart.map(item => (
+                    <div key={item.id} className="cart-item">
+                      <img src={item.img} alt="" className="cart-item-img" />
+                      <div className="cart-item-info">
+                        <h4>{item.title}</h4>
+                        <p className="cart-item-price">{item.price}</p>
+                        {item.rarity && (
+                          <span className={`rarity-badge rarity-${item.rarity}`}>
+                            {item.rarity === 'common' && '⚪ Commun'}
+                            {item.rarity === 'rare' && '🔵 Rare'}
+                            {item.rarity === 'epic' && '🟣 Épique'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="cart-item-controls">
+                        <button 
+                          className="btn ghost quantity-btn" 
+                          onClick={() => handleUpdateCartQuantity(item.id, item.quantity - 1)}
+                        >
+                          −
+                        </button>
+                        <span className="quantity">{item.quantity}</span>
+                        <button 
+                          className="btn ghost quantity-btn" 
+                          onClick={() => handleUpdateCartQuantity(item.id, item.quantity + 1)}
+                        >
+                          +
+                        </button>
+                        <button 
+                          className="btn ghost remove-btn" 
+                          onClick={() => handleRemoveFromCart(item.id)}
+                          title="Supprimer"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="cart-footer">
+                  <div className="cart-total">
+                    <span>Total:</span>
+                    <strong>{cartTotal.toFixed(2)}€</strong>
+                  </div>
+                  <button className="btn accent checkout-btn" onClick={handleCheckout}>
+                    Acheter ({cartItemCount} article{cartItemCount > 1 ? 's' : ''})
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

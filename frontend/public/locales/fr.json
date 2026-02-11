@@ -324,6 +324,14 @@
       "lootboxRare": {
         "title": "Coffret Rare",
         "desc": "Coffret avec meilleures chances d'objets rares."
+      },
+      "xpPack": {
+        "title": "Pack XP +100",
+        "desc": "Ajoutez instantanément 100 points d'expérience à votre compte."
+      },
+      "levelUpPack": {
+        "title": "Pack Level Up",
+        "desc": "Gagnez instantanément un niveau supplémentaire !"
       }
     }
   },
