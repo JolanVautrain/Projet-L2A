@@ -259,6 +259,7 @@ function Accueil({ user, setUser }) {
             <div className="ad-content">
               <div className="ad-badge">{t("accueil.adPopupBadge")}</div>
               <h2 className="ad-title">{t("accueil.adPopupTitle")}</h2>
+              <img src="/assets/shop/lootbox/lootboxPub.png" alt="Lootboxes" className="ad-image" />
               <p className="ad-desc">{t("accueil.adPopupDesc")}</p>
               <div className="ad-timer">{t("accueil.adPopupTimer")}</div>
               <button className="btn primary ad-cta" onClick={goToShop}> {t("accueil.adPopupShopBtn")}

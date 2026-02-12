@@ -32,7 +32,7 @@
       "descKey": "shop.products.avatarPack.desc",
       "price": "2.49€",
       "oldPrice": "5.99€",
-      "img": "/assets/logo.png",
+      "img": "/assets/shop/article/packAvatarCyber.png",
       "stock": 1,
       "hot": true,
       "trending": true,
@@ -45,7 +45,7 @@
       "descKey": "shop.products.lootboxBasic.desc",
       "price": "0.99€",
       "oldPrice": "2.99€",
-      "img": "/assets/shop/lootbox-basic.svg",
+      "img": "/assets/shop/lootbox/lootboxCommun.png",
       "stock": 50,
       "category": "lootboxes",
       "isLootbox": true
@@ -56,8 +56,19 @@
       "descKey": "shop.products.lootboxRare.desc",
       "price": "4.99€",
       "oldPrice": "9.99€",
-      "img": "/assets/shop/lootbox.png",
+      "img": "/assets/shop/lootbox/lootboxRare.png",
       "stock": 12,
+      "category": "lootboxes",
+      "isLootbox": true
+    },
+    {
+      "id": "lootbox-precieux",
+      "titleKey": "shop.products.lootboxPrecieux.title",
+      "descKey": "shop.products.lootboxPrecieux.desc",
+      "price": "9.99€",
+      "oldPrice": "19.99€",
+      "img": "/assets/shop/lootbox/lootboxPrecieux.png",
+      "stock": 15,
       "category": "lootboxes",
       "isLootbox": true
     },

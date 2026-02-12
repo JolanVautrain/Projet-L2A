@@ -1,7 +1,6 @@
-import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../autres/Language.jsx";
 import { useState, useEffect } from "react";
-import { getActiveUser } from "../utils/userSession.js";
+import { getActiveUser, setActiveUser } from "../utils/userSession.js";
 import shopProductsData from "./shopProducts.json";
 import { useCart } from "./hooks/useCart.js";
 import { useLootbox } from "./hooks/useLootbox.js";
@@ -13,11 +12,12 @@ import { LootboxModal } from "./components/LootboxModal.jsx";
 import { PriceWarningBanner, Notification, Confetti } from "./components/ShopUI.jsx";
 import { FilterTabs } from "./components/FilterTabs.jsx";
 import { FeaturedSection } from "./components/FeaturedSection.jsx";
+import LoginModal from "../accueil/modals/LoginModal.jsx";
+import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 import './components/ShopAnimations.css';
 
 function Shop() {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Hooks pour la logique métier
@@ -31,20 +31,19 @@ function Shop() {
   const [showCart, setShowCart] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [notification, setNotification] = useState(null);
-  const [showAdPopup, setShowAdPopup] = useState(false);
   const [reviewCounts, setReviewCounts] = useState({});
   const [viewerCounts, setViewerCounts] = useState({});
   const [activeFilter, setActiveFilter] = useState('all');
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   // Vérification de l'authentification
   useEffect(() => {
     const user = getActiveUser();
     if (user) {
       setIsAuthenticated(true);
-    } else {
-      navigate("/");
     }
-  }, [navigate]);
+  }, []);
 
   // Générer les avis et viewers une seule fois au démarrage
   useEffect(() => {
@@ -56,17 +55,6 @@ function Shop() {
     });
     setReviewCounts(reviews);
     setViewerCounts(viewers);
-  }, []);
-
-  // Popup publicitaire (affichée une fois seulement)
-  useEffect(() => {
-    const key = "ad_popup_shown_v1";
-    if (!localStorage.getItem(key)) {
-      setShowAdPopup(true);
-      localStorage.setItem(key, "1");
-      const timer = setTimeout(() => setShowAdPopup(false), 15000);
-      return () => clearTimeout(timer);
-    }
   }, []);
 
   // Notifications sociales (fausses)
@@ -122,7 +110,59 @@ function Shop() {
     clearCart();
   };
 
-  if (!isAuthenticated) return null;
+  // Fonction de connexion
+  const handleLogin = (username) => {
+    setActiveUser(username);
+    setIsAuthenticated(true);
+    setIsLoginOpen(false);
+  };
+
+  // Si non authentifié, afficher la page de connexion
+  if (!isAuthenticated) {
+    return (
+      <div className="account account--centered">
+        <h1>{t("shop.title")}</h1>
+        <p className="account__notice">{t("account.loginRequired")}</p>
+        <button
+          className="btn primary account__login-btn"
+          onClick={() => setIsLoginOpen(true)}
+        >
+          {t("account.openLogin")}
+        </button>
+        <LoginModal
+          isOpen={isLoginOpen}
+          action={handleLogin}
+          onClose={() => setIsLoginOpen(false)}
+          openRegister={() => {
+            setIsLoginOpen(false);
+            setIsRegisterOpen(true);
+          }}
+          afterLogin={() => {}}
+        />
+        <RegisterModal
+          isOpen={isRegisterOpen}
+          onClose={() => setIsRegisterOpen(false)}
+          afterRegister={(username) => {
+            setActiveUser(username);
+            setIsAuthenticated(true);
+            setIsRegisterOpen(false);
+          }}
+        />
+        <div className="account-loop" aria-hidden>
+          <div className="loop-wrapper">
+            <div className="mountain"></div>
+            <div className="hill"></div>
+            <div className="tree"></div>
+            <div className="tree"></div>
+            <div className="tree"></div>
+            <div className="rock"></div>
+            <div className="truck"></div>
+            <div className="wheels"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="shop-page">
@@ -137,24 +177,6 @@ function Shop() {
           </button>
         </div>
       </section>
-
-      {showAdPopup && (
-        <div className="ad-popup-overlay" onClick={() => setShowAdPopup(false)}>
-          <div className="ad-popup-card" onClick={(e) => e.stopPropagation()}>
-            <button className="ad-close" onClick={() => setShowAdPopup(false)}>✕</button>
-            <div className="ad-content">
-              <div className="ad-badge">OFFRE EXCLUSIVE</div>
-              <h2 className="ad-title">-70% sur tous les articles !</h2>
-              <p className="ad-desc">Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !</p>
-              <div className="ad-timer">Plus que quelques heures !</div>
-              <div className="ad-actions">
-                <button className="btn primary ad-cta" onClick={() => setShowAdPopup(false)}>{t("shop.open")}</button>
-                <button className="btn ghost ad-later" onClick={() => setShowAdPopup(false)}>Plus tard</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <FeaturedSection 
         trendingProducts={products.filter(p => p.hot)}
