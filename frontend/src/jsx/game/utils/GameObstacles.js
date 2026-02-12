@@ -92,7 +92,7 @@ export function spawnObstacle(scene) {
   // Spawner plusieurs bombes avec hauteurs aléatoires - PLUS DE BOMBES EN BAS
   const heightLevels = [
     540, // Très bas (plateforme - bonus difficulty)
-    420, // Bas (plateforme)
+    480, // Bas (plateforme)
   ];
 
   // Pondérer vers les hauteurs basses (70% de chance pour bas/moyen-bas)

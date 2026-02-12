@@ -163,7 +163,7 @@ export function isTouchingGround() {
  */
 export function handleJump(onJumpInput = null) {
   if (player && touchingGround) {
-    player.setVelocityY(-350);
+    player.setVelocityY(-300);
     touchingGround = false;
     
     if (onJumpInput) {
@@ -248,10 +248,7 @@ export function setupCollisions(scene, onTouchGround, onHitObstacle) {
     if (onTouchGround) onTouchGround();
   });
   if (!modeSolo) {
-  scene.physics.add.collider(opponent, platforms, () => {
-    handleTouchGround();
-    if (onTouchGround) onTouchGround();
-  });
+  scene.physics.add.collider(opponent, platforms);
 }
   
   // Les collisions avec les obstacles sont gérées ailleurs
