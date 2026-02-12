@@ -266,14 +266,14 @@ function App() {
               {t("account.title")}
             </NavLink>
           )}
+          <NavLink to="/shop" onClick={(e) => requestLeaveIfInMatch("/shop", e)}>
+            {t("common.shop")}
+          </NavLink>
           <NavLink
             to="/contacts"
             onClick={(e) => requestLeaveIfInMatch("/contacts", e)}
           >
             {t("common.contacts")}
-          </NavLink>
-          <NavLink to="/shop" onClick={(e) => requestLeaveIfInMatch("/shop", e)}>
-            {t("common.shop")}
           </NavLink>
         </nav>
       </header>

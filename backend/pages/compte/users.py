@@ -26,7 +26,7 @@ def get_user_sessions(username: str):
             "stage": int(r[2] or 0),
             "timer": int(r[3] or 0),
             "state": str(r[4]),
-            "playedAt": str(r[5]),
+            "playedAt": r[5],
         }
         for r in rows
     ]

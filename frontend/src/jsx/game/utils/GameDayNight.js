@@ -12,7 +12,6 @@ let moonSprite = null;
 let moonGlowSprite = null;
 let nightLights = [];
 let isNightTime = false;
-let horizonMask = null;
 
 const CYCLE_DURATION = 120000; // 120 secondes pour un cycle complet
 const SUN_DURATION = 60000; // Le soleil dure 60 secondes (0-60s)
@@ -25,14 +24,14 @@ const SUN_RADIUS = 45; // Rayon du soleil
 const MOON_RADIUS = 38; // Rayon de la lune
 // Phases lunaires
 const MOON_PHASES = [
-  { name: 'new', start: 0.0, end: 0.12 },
+  { name: 'new', start: 0, end: 0.12 },
   { name: 'waxing_crescent', start: 0.12, end: 0.25 },
   { name: 'first_quarter', start: 0.25, end: 0.37 },
   { name: 'waxing_gibbous', start: 0.37, end: 0.5 },
   { name: 'full', start: 0.5, end: 0.62 },
   { name: 'waning_gibbous', start: 0.62, end: 0.75 },
   { name: 'last_quarter', start: 0.75, end: 0.87 },
-  { name: 'waning_crescent', start: 0.87, end: 1.0 }
+  { name: 'waning_crescent', start: 0.87, end: 1 }
 ];
 /**
  * Initialise le système jour/nuit avec animations réalistes
@@ -111,7 +110,7 @@ function calculateHorizonVisibility(y, radius) {
 /**
  * Met à jour le cycle jour/nuit avec animations réalistes de lever/coucher
  */
-export function updateDayNightCycle(scene) {
+export function updateDayNightCycle() {
   if (!startTime || !skyTint) return;
   
   const elapsed = Date.now() - startTime;

@@ -51,7 +51,7 @@ function ReportModal({ isOpen, onClose }) {
         return response.json();
       })
       .then((data) => {
-        if (!data.userExist) {
+        if (!data.success) {
           setError(t("reportModal.incorrectUsername"));
         } else {
           alert(t("reportModal.reportSubmitted"));

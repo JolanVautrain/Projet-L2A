@@ -11,11 +11,15 @@ function Shop() {
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalProduct, setModalProduct] = useState(null);
+  const [modalProduct] = useState(null);
   const [countdown, setCountdown] = useState(60);
   const [showConfetti, setShowConfetti] = useState(false);
   const [saleCountdown, setSaleCountdown] = useState(6 * 3600); // initial 6 hours in seconds
-  const [saleActive, setSaleActive] = useState(true);
+  const [saleActive] = useState(true);
+
+  // Price multiplier: starts at 1.00, increases by 1% every 30s up to 2.00 (200%)
+  const [priceMultiplier, setPriceMultiplier] = useState(1);
+  const priceIncreaseRef = useRef(null);
 
   // Additional costs checkboxes (dark pattern)
   const [deliveryChecked, setDeliveryChecked] = useState(true);
@@ -237,19 +241,43 @@ function Shop() {
         const newCount = prev + change;
         return Math.max(10, Math.min(50, newCount)); // Keep between 10 and 50
       });
-    }, 15000); // Update every 15 seconds
+    }, 60000); // Update every 60 seconds
     
     return () => clearInterval(interval);
   }, []);
   
-  // Dark pattern: Gradual price increase (simulated scarcity) - Disabled
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     // Removed unused priceMultiplier state
-  //   }, 30000);
-  //   
-  //   return () => clearInterval(interval);
-  // }, []);
+  // Gradual price increase: +1% every 30s until 200%
+  useEffect(() => {
+    // safety: avoid multiple intervals
+    if (priceIncreaseRef.current) return undefined;
+    priceIncreaseRef.current = setInterval(() => {
+      setPriceMultiplier((prev) => {
+        if (prev >= 2) {
+          if (priceIncreaseRef.current) {
+            clearInterval(priceIncreaseRef.current);
+            priceIncreaseRef.current = null;
+          }
+          return prev;
+        }
+        const next = +(prev * 1.01).toFixed(6);
+        if (next >= 2) {
+          if (priceIncreaseRef.current) {
+            clearInterval(priceIncreaseRef.current);
+            priceIncreaseRef.current = null;
+          }
+          return 2;
+        }
+        return next;
+      });
+    }, 30000);
+
+    return () => {
+      if (priceIncreaseRef.current) {
+        clearInterval(priceIncreaseRef.current);
+        priceIncreaseRef.current = null;
+      }
+    };
+  }, []);
   
   // Dark pattern: Price increase warning banner
   useEffect(() => {
@@ -417,12 +445,33 @@ function Shop() {
     return () => clearInterval(sid);
   }, [saleActive, saleCountdown]);
 
-  // Charger les produits depuis le JSON avec traduction
-  const products = shopProductsData.products.map(p => ({
-    ...p,
-    title: t(p.titleKey),
-    desc: t(p.descKey),
-  }));
+  // Helper pour parser/formatter les prix et appliquer le multiplicateur
+  const parsePrice = (s) => {
+    if (s == null) return 0;
+    const cleaned = String(s).replace('€', '').replace(/\s/g, '').replace(',', '.');
+    const num = Number.parseFloat(cleaned);
+    return Number.isFinite(num) ? num : 0;
+  };
+  const formatPrice = (n) => {
+    return n.toFixed(2).replace('.', ',') + '€';
+  };
+
+  // Charger les produits depuis le JSON avec traduction et prix ajustés
+  const products = shopProductsData.products.map(p => {
+    const basePrice = parsePrice(p.price);
+    const scaledPrice = basePrice * priceMultiplier;
+    const price = formatPrice(scaledPrice);
+
+    const oldPrice = p.oldPrice ? formatPrice(parsePrice(p.oldPrice) * priceMultiplier) : undefined;
+
+    return {
+      ...p,
+      title: t(p.titleKey),
+      desc: t(p.descKey),
+      price,
+      oldPrice,
+    };
+  });
 
   const cartTotal = cart.reduce((sum, item) => {
     const price = Number.parseFloat(item.price.replace('€', '').replace(',', '.'));

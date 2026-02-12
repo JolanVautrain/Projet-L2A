@@ -4,7 +4,6 @@
 
 let backgroundLayers = [];
 let buildingContainers = [];
-let buildingScrollX = 0;
 let starsLayer = null;
 let shootingStars = [];
 let comets = [];

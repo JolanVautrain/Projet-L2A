@@ -42,7 +42,6 @@ import {
 } from "./utils/GamePhysics.js";
 import {
   initControls,
-  getCursors,
   isJumpRequested,
 } from "./utils/GameControls.js";
 import {
@@ -135,7 +134,6 @@ function create() {
 function update() {
   if (!gameScene || gameOver) return;
 
-  const username = localStorage.getItem("user");
   const player = getPlayer();
 
   if (!player) return;
