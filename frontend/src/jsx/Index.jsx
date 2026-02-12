@@ -49,6 +49,7 @@ import Game from "./game/Game.jsx";
 import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
 import Regle from "./regle/regle";
 import Shop from "./shop/Shop";
+import GameSolo from "./game/GameSolo.jsx";
 
 /**
  * Composant principal de l'application.
@@ -320,6 +321,14 @@ function App() {
           element={
             <RequireAuth user={userState}>
               <Game />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/gameSolo"
+          element={
+            <RequireAuth user={userState}>
+              <GameSolo />
             </RequireAuth>
           }
         />

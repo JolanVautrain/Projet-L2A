@@ -33,25 +33,31 @@ let touchingGround = false;
 let isAdminMode = false;
 let isInvincible = false;
 let invincibleStar = null;
+let modeSolo = true
 
 /**
  * Initialise les éléments de physique
  */
-export function initPhysics(scene, onAdminModeChange = null) {
+export function initPhysics(scene,solo=true, onAdminModeChange = null) {
+  modeSolo = solo
   // Ground
   platforms = scene.physics.add.staticGroup();
   platforms.create(400, 600, "ground").setScale(2).refreshBody();
+  if (!modeSolo) {
   platforms.create(400, 300, "ground").setScale(2).refreshBody();
+  }
 
   // Player - créé avec des graphics pixelisés
   player = scene.physics.add.sprite(120, 450, "dude");
   player.setCollideWorldBounds(true);
   player.setBounce(0);
 
+  if (!modeSolo) {
   // Opponent créé avec des graphics pixelisés
   opponent = scene.physics.add.sprite(120, 200, "opponent");
   opponent.setCollideWorldBounds(true);
   opponent.setBounce(0);
+  }
 
   // Animations simplifiées pour le style pixel
   scene.anims.create({
@@ -67,6 +73,7 @@ export function initPhysics(scene, onAdminModeChange = null) {
     frameRate: 20,
   });
 
+  if (!modeSolo) {
   scene.anims.create({
     key: "run_opp",
     frames: scene.anims.generateFrameNumbers("opponent", { start: 5, end: 8 }),
@@ -79,9 +86,10 @@ export function initPhysics(scene, onAdminModeChange = null) {
     frames: [{ key: "opponent", frame: 4 }],
     frameRate: 20,
   });
+  opponent.anims.play("run_opp");
+}
 
   player.anims.play("run");
-  opponent.anims.play("run_opp");
   touchingGround = false;
   isInvincible = false;
   
@@ -155,7 +163,7 @@ export function isTouchingGround() {
  */
 export function handleJump(onJumpInput = null) {
   if (player && touchingGround) {
-    player.setVelocityY(-500);
+    player.setVelocityY(-300);
     touchingGround = false;
     
     if (onJumpInput) {
@@ -239,10 +247,9 @@ export function setupCollisions(scene, onTouchGround, onHitObstacle) {
     handleTouchGround();
     if (onTouchGround) onTouchGround();
   });
-  scene.physics.add.collider(opponent, platforms, () => {
-    handleTouchGround();
-    if (onTouchGround) onTouchGround();
-  });
+  if (!modeSolo) {
+  scene.physics.add.collider(opponent, platforms);
+}
   
   // Les collisions avec les obstacles sont gérées ailleurs
   // car elles dépendent de l'invincibilité
