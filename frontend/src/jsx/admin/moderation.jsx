@@ -4,6 +4,7 @@ import { useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
 import { getActiveUser } from "../utils/userSession.js";
 import PageNotFound from "../autres/PageNotFound.jsx";
+import { apiUrl } from "../utils/apiClient.js";
 
 /**
  * Composant Moderation
@@ -23,6 +24,7 @@ function Moderation({ user }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [banDuration, setBanDuration] = useState("");
   const [banReason, setBanReason] = useState("");
+const [reports, setReports] = useState([]);
 
   const { t } = useLanguage();
   const apiBase = getApiBaseUrl();
@@ -36,6 +38,7 @@ function Moderation({ user }) {
     if (user === "admin") {
       setIsAdmin(true); // déclenche le rendu du composant
       loadAdminUsers(user);
+      loadReports();
     }
   }, [user]);
 
@@ -103,10 +106,19 @@ function Moderation({ user }) {
     }
   }; 
 
-  
+  const loadReports = async () => {
+  try {
+    const res = await fetch(apiUrl("report"));
+    if (!res.ok) throw new Error("Erreur chargement reports");
+    const data = await res.json();
+    setReports(data.reports);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
- const handleSubmit = (event) => {
-      event.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
       const data = new FormData(event.target);
       let xp = parseInt(data.get("number"), 10);
@@ -235,6 +247,252 @@ function Moderation({ user }) {
       </div>
     </div>
   );
+
+  const reportList = (
+    <div style={{ width: "100%" }}>
+      <div className="admin-tools__center">
+        <h4 style={{ textAlign: "center" }}>{t("account.manageUsers")}</h4>
+        <input
+          type="search"
+          placeholder={
+            t("account.searchPlaceholder") || "Rechercher un joueur..."
+          }
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="admin-users-search"
+        />
+        <table className="admin-users-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Admin</th>
+              <th>report_raison</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reports
+              .filter((u) =>
+                u.username.toLowerCase().includes(searchTerm.toLowerCase()),
+              )
+              .map((u) => (
+                <tr
+                  key={u.username}
+                  className={u.username === selectedUser ? "selected" : ""}
+                  onClick={() => setSelectedUser(u.username)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setSelectedUser(u.username);
+                  }}
+                >
+                  <td>{u.username}</td>
+                  <td>{u.is_admin ? "✓" : "-"}</td>
+                  <td>{u.report_reason ?? "-"}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+
+  const ban_user = (
+  <div className="admin-action">
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <input
+          type="number"
+          placeholder={
+            t("account.banDurationPlaceholder") ||
+            "Durée en heures (vide = permanent)"
+          }
+          value={banDuration}
+          onChange={(e) => setBanDuration(e.target.value)}
+          min="1"
+          style={{
+            padding: "10px 14px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.06)",
+            background: "rgba(255,255,255,0.02)",
+            color: "inherit",
+            flex: 1,
+            minWidth: "150px",
+          }}
+        />
+
+        <input
+          type="text"
+          placeholder={
+            t("account.banReasonPlaceholder") ||
+            "Raison du bannissement..."
+          }
+          value={banReason}
+          onChange={(e) => setBanReason(e.target.value)}
+          style={{
+            padding: "10px 14px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.06)",
+            background: "rgba(255,255,255,0.02)",
+            color: "inherit",
+            flex: 1,
+            minWidth: "200px",
+          }}
+        />
+      </div>
+
+      {selectedUser &&
+        selectedUser !== "admin" &&
+        !allUsers.find((u) => u.username === selectedUser)?.banned_until && (
+          <button
+            className="btn danger"
+            disabled={banUserLoading}
+            onClick={() => {
+              if (!banReason.trim()) {
+                alert(
+                  t("account.banReasonRequired") ||
+                    "La raison du bannissement est requise"
+                );
+                return;
+              }
+
+              const durationHours = banDuration
+                ? parseInt(banDuration)
+                : null;
+
+              if (durationHours !== null && durationHours <= 0) {
+                alert(
+                  t("account.invalidDuration") ||
+                    "La durée doit être positive"
+                );
+                return;
+              }
+
+              const banType = durationHours
+                ? `${durationHours}h`
+                : "permanent";
+
+              if (
+                confirm(
+                  t("account.confirmBanUser")
+                    ?.replace("{username}", selectedUser)
+                    ?.replace("{duration}", banType) ||
+                    `Bannir ${selectedUser} pour ${banType} ?`
+                )
+              ) {
+                setBanUserLoading(true);
+
+                fetch(`${apiBase}/admin/ban-user/${selectedUser}`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Admin-User": user,
+                  },
+                  body: JSON.stringify({
+                    duration_hours: durationHours,
+                    reason: banReason.trim(),
+                  }),
+                })
+                  .then((res) => {
+                    if (!res.ok) throw new Error("Erreur serveur");
+
+                    const updated = allUsers.map((u) =>
+                      u.username === selectedUser
+                        ? {
+                            ...u,
+                            banned_until: durationHours
+                              ? new Date(
+                                  Date.now() + durationHours * 3600000
+                                ).toISOString()
+                              : new Date(8640000000000000).toISOString(),
+                          }
+                        : u
+                    );
+
+                    setAllUsers(updated);
+                    setBanDuration("");
+                    setBanReason("");
+
+                    alert(
+                      t("account.banUserSuccess")?.replace(
+                        "{username}",
+                        selectedUser
+                      ) || `${selectedUser} a été banni.`
+                    );
+                  })
+                  .catch((e) =>
+                    alert((t("common.failedPrefix") || "Erreur: ") + e.message)
+                  )
+                  .finally(() => setBanUserLoading(false));
+              }
+            }}
+          >
+            {banUserLoading
+              ? t("common.saving")
+              : t("account.banUser") || "Bannir"}
+          </button>
+        )}
+
+      {selectedUser &&
+        allUsers.find((u) => u.username === selectedUser)?.banned_until && (
+          <button
+            className="btn warning"
+            disabled={unbanUserLoading}
+            onClick={() => {
+              if (
+                confirm(
+                  t("account.confirmUnbanUser")?.replace(
+                    "{username}",
+                    selectedUser
+                  ) || `Débannir ${selectedUser} ?`
+                )
+              ) {
+                setUnbanUserLoading(true);
+
+                fetch(`${apiBase}/admin/unban-user/${selectedUser}`, {
+                  method: "POST",
+                  headers: { "X-Admin-User": user },
+                })
+                  .then((res) => {
+                    if (!res.ok) throw new Error("Erreur serveur");
+
+                    const updated = allUsers.map((u) =>
+                      u.username === selectedUser
+                        ? { ...u, banned_until: null, ban_reason: null }
+                        : u
+                    );
+
+                    setAllUsers(updated);
+                    setBanDuration("");
+                    setBanReason("");
+
+                    alert(
+                      t("account.unbanUserSuccess")?.replace(
+                        "{username}",
+                        selectedUser
+                      ) || `${selectedUser} a été débanni.`
+                    );
+                  })
+                  .catch((e) =>
+                    alert((t("common.failedPrefix") || "Erreur: ") + e.message)
+                  )
+                  .finally(() => setUnbanUserLoading(false));
+              }
+            }}
+          >
+            {unbanUserLoading
+              ? t("common.saving")
+              : t("account.unbanUser") || "Débannir"}
+          </button>
+        )}
+    </div>
+
+    <p className="admin-action__desc">
+      {t("account.banManagementDesc") ||
+        "Bannir temporairement ou définitivement cet utilisateur."}
+    </p>
+  </div>
+);
+
+
   // Retour principal
   return isAdmin ? (
     <div className="admin-tools">
@@ -246,6 +504,8 @@ function Moderation({ user }) {
         {userList}
         {xp_form}
       </div>
+      <div className="admin-actions">{reportList}</div>
+<div className="admin-actions">{ban_user}</div>
     </div>
   ) : (
     <h2>Vous n'avez pas les droits admin</h2>
