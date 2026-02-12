@@ -274,9 +274,6 @@ function App() {
           <NavLink to="/shop" onClick={(e) => requestLeaveIfInMatch("/shop", e)}>
             {t("common.shop")}
           </NavLink>
-          <NavLink to="/regle" onClick={(e) => requestLeaveIfInMatch("/regle", e)}>
-            {t("rules.title")}
-          </NavLink>
         </nav>
       </header>
       {leaveMatchModalOpen && (
