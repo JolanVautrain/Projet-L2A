@@ -5,7 +5,6 @@ import { getApiBaseUrl } from "../utils/apiClient.js";
 import { getActiveUser } from "../utils/userSession.js";
 import PageNotFound from "../autres/PageNotFound.jsx";
 
-
 /**
  * Composant Moderation
  * Gère la modération des utilisateurs (XP, bans, admin, suppression de données)
@@ -23,29 +22,138 @@ function Moderation({ user }) {
   const [selectedUser, setSelectedUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [banDuration, setBanDuration] = useState("");
-const [banReason, setBanReason] = useState("");
+  const [banReason, setBanReason] = useState("");
 
-const { t } = useLanguage();
-const apiBase = getApiBaseUrl();
+  const { t } = useLanguage();
+  const apiBase = getApiBaseUrl();
 
-const [isAdmin, setIsAdmin] = useState(false);
-// Charger la liste des utilisateurs si admin
- useEffect(() => {
-  console.log("Checking admin for:", user);
-  if (!user) return;
+  const [isAdmin, setIsAdmin] = useState(false);
+  // Charger la liste des utilisateurs si admin
+  useEffect(() => {
+    console.log("Checking admin for:", user);
+    if (!user) return;
 
-  if (user === "admin") {
-    setIsAdmin(true); // déclenche le rendu du composant
-  }
-}, [user]);
+    if (user === "admin") {
+      setIsAdmin(true); // déclenche le rendu du composant
+      loadAdminUsers(user);
+    }
+  }, [user]);
 
+  // Fonction pour charger et enrichir les utilisateurs
+  const loadAdminUsers = async (currentUser) => {
+    try {
+      const res = await fetch(`${apiBase}/admin/users`, {
+        headers: { "X-Admin-User": currentUser },
+      });
+        // Silently ignore 401 (user not admin)
+        if (res.status === 401) {
+          return;
+        }
+      if (res.ok) {
+        const data = await res.json();
+        // Enrichir chaque utilisateur avec XP et stats (parallèle)
+        const enriched = await Promise.all(
+          data.map(async (u) => {
+            try {
+              const [xpRes, statsRes] = await Promise.all([
+                fetch(`${apiBase}/user/xp/${u.username}`),
+                fetch(`${apiBase}/user/stats/${u.username}`),
+              ]);
+              const xpJson =
+                xpRes && xpRes.ok
+                  ? await xpRes.json()
+                  : { xp: 0, level: 1 };
+              const statsJson =
+                statsRes && statsRes.ok
+                  ? await statsRes.json()
+                  : {
+                      totalGames: 0,
+                      totalScore: 0,
+                      bestScore: 0,
+                      averageScore: 0,
+                    };
+              return {
+                ...u,
+                xp: xpJson.xp || 0,
+                level: xpJson.level || 1,
+                totalGames: statsJson.totalGames || 0,
+                totalScore: statsJson.totalScore || 0,
+                bestScore: statsJson.bestScore || 0,
+                averageScore: statsJson.averageScore || 0,
+              };
+            } catch {
+              return {
+                ...u,
+                xp: 0,
+                level: 1,
+                totalGames: 0,
+                totalScore: 0,
+                bestScore: 0,
+                averageScore: 0,
+              };
+            }
+          })
+        );
+        setAllUsers(enriched);
+        if (enriched.length > 0 && !selectedUser) setSelectedUser(enriched[0].username);
+        return enriched;
+      }
+    } catch (err) {
+      console.warn("Failed to load users", err);
+    }
+  }; 
 
+  
 
-  // Placeholder pour le formulaire XP
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("XP form submitted (à implémenter)");
-  };
+ const handleSubmit = (event) => {
+      event.preventDefault();
+
+      const data = new FormData(event.target);
+      let xp = parseInt(data.get("number"), 10);
+
+      if (data.get("sub_xp")) {
+        xp = -xp;
+      }
+
+      if (
+        selectedUser &&
+        confirm(
+          t("account.confirmAwardXp")
+            .replace("{username}", selectedUser)
+            .replace("{xp}", xp)
+        )
+      ) {
+        setAwardXpLoading(true);
+
+        fetch(`${apiBase}/user/xp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-User": user,
+          },
+          body: JSON.stringify({
+            username: selectedUser,
+            xp: xp,
+          }),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Erreur serveur");
+            return res.json();
+          })
+          .then(() => {
+            alert(
+              t("account.awardXpSuccess")
+                .replace("{username}", selectedUser)
+                .replace("{xp}", xp)
+            );
+            // Rafraîchir la liste des utilisateurs après succès
+            loadAdminUsers(user);
+          })
+          .catch((e) => alert(t("common.failedPrefix") + e.message))
+          .finally(() => setAwardXpLoading(false));
+      }
+    };
+
 
   // Composants internes
   const xp_form = (
@@ -77,7 +185,9 @@ const [isAdmin, setIsAdmin] = useState(false);
         <h4 style={{ textAlign: "center" }}>{t("account.manageUsers")}</h4>
         <input
           type="search"
-          placeholder={t("account.searchPlaceholder") || "Rechercher un joueur..."}
+          placeholder={
+            t("account.searchPlaceholder") || "Rechercher un joueur..."
+          }
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="admin-users-search"
@@ -97,7 +207,9 @@ const [isAdmin, setIsAdmin] = useState(false);
           </thead>
           <tbody>
             {allUsers
-              .filter((u) => u.username.toLowerCase().includes(searchTerm.toLowerCase()))
+              .filter((u) =>
+                u.username.toLowerCase().includes(searchTerm.toLowerCase()),
+              )
               .map((u) => (
                 <tr
                   key={u.username}
@@ -123,7 +235,6 @@ const [isAdmin, setIsAdmin] = useState(false);
       </div>
     </div>
   );
-
   // Retour principal
   return isAdmin ? (
     <div className="admin-tools">
@@ -136,9 +247,10 @@ const [isAdmin, setIsAdmin] = useState(false);
         {xp_form}
       </div>
     </div>
-  ) : <h2>Vous n'avez pas les droits admin</h2>;
+  ) : (
+    <h2>Vous n'avez pas les droits admin</h2>
+  );
 }
-  
 
 Moderation.propTypes = {
   user: PropTypes.string,
