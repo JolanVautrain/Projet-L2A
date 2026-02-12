@@ -178,7 +178,13 @@
     "joinTheGame": "Rejoins le jeu des warriors",
     "connectToSave": "Connecte-toi pour jouer et sauvegarder ta progression pendant ton ascension.",
     "oneClickConnect": "3 clic suffit pour créer un compte et 10 clic pour supprimer ton compte après attestation sur l'honneur a envoyé au support par courriel recommandé.",
-    "openLogin": "1 compte créer = 1 arbre planter"
+    "openLogin": "1 compte créer = 1 arbre planter",
+    "adPopupBadge": "OFFRE EXCLUSIVE",
+    "adPopupTitle": "-70% sur tous les articles !",
+    "adPopupDesc": "Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !",
+    "adPopupTimer": "Plus que quelques heures !",
+    "adPopupShopBtn": "VOIR LA BOUTIQUE",
+    "adPopupLaterBtn": "Plus tard"
   },
   "languageNames": {
     "fr": "Français",

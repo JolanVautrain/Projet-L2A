@@ -90,28 +90,28 @@ function Accueil({ user, setUser }) {
     }
   }, [location]);
 
-  // Show advertising popup once per session, auto-hide after 15s
+  // Gère l'affichage d'une popup publicitaire pour la boutique, avec mémorisation en sessionStorage
   const adTimerRef = useRef(null);
   
   useEffect(() => {
     const key = "ad_popup_shown_v1";
     const already = sessionStorage.getItem(key);
     if (!already) {
-      // Show popup after 3 seconds, mark as seen, auto-close after 15s
       const showTimer = setTimeout(() => {
         setShowAdPopup(true);
         try {
           sessionStorage.setItem(key, "1");
-        } catch (e) {
-          // ignore storage errors
+        } catch (e) { // type: ignore
+          // Si sessionStorage n'est pas disponible, on ignore l'erreur et on ne mémorise pas
         }
-        // Auto-close after 15 seconds
+          // Ferme la popup après 60 secondes
         adTimerRef.current = setTimeout(() => {
           setShowAdPopup(false);
           adTimerRef.current = null;
-        }, 15000);
+        }, 60000);
       }, 3000);
       
+      // Nettoie les timers si le composant est démonté avant l'affichage ou la fermeture de la popup
       return () => {
         clearTimeout(showTimer);
         if (adTimerRef.current) {
@@ -123,6 +123,7 @@ function Accueil({ user, setUser }) {
     return undefined;
   }, []);
 
+  // Ferme la popup publicitaire et nettoie le timer de fermeture si nécessaire
   const closeAdPopup = () => {
     setShowAdPopup(false);
     if (adTimerRef.current) {
@@ -130,6 +131,7 @@ function Accueil({ user, setUser }) {
       adTimerRef.current = null;
     }
   };
+  // Redirige vers la boutique et ferme la popup
   const goToShop = () => {
     setShowAdPopup(false);
     navigate('/shop');
@@ -237,22 +239,18 @@ function Accueil({ user, setUser }) {
       </section>
       <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} openRegister={openRegister} />
       <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }} />
-      
-      {/* Advertising popup for shop */}
       {showAdPopup && (
         <div className="ad-popup-overlay" onClick={closeAdPopup}>
           <div className="ad-popup-card" onClick={(e) => e.stopPropagation()}>
             <button className="ad-close" onClick={closeAdPopup}>✕</button>
             <div className="ad-content">
-              <div className="ad-badge">OFFRE EXCLUSIVE</div>
-              <h2 className="ad-title">-70% sur tous les articles !</h2>
-              <p className="ad-desc">Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !</p>
-              <div className="ad-timer">Plus que quelques heures !</div>
-              <button className="btn primary ad-cta" onClick={goToShop}>
-                🛒 VOIR LA BOUTIQUE
+              <div className="ad-badge">{t("accueil.adPopupBadge")}</div>
+              <h2 className="ad-title">{t("accueil.adPopupTitle")}</h2>
+              <p className="ad-desc">{t("accueil.adPopupDesc")}</p>
+              <div className="ad-timer">{t("accueil.adPopupTimer")}</div>
+              <button className="btn primary ad-cta" onClick={goToShop}> {t("accueil.adPopupShopBtn")}
               </button>
-              <button className="btn ghost ad-later" onClick={closeAdPopup}>
-                Plus tard
+              <button className="btn ghost ad-later" onClick={closeAdPopup}>{t("accueil.adPopupLaterBtn")}
               </button>
             </div>
           </div>
