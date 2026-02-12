@@ -215,6 +215,17 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
                 FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
             );"""
         )
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS purchases (
+                id SERIAL PRIMARY KEY,
+                username varchar(100) NOT NULL,
+                product_id varchar(100) NOT NULL,
+                product_name TEXT NOT NULL,
+                price varchar(50) NOT NULL,
+                purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            );"""
+        )
 
         init_conn.commit()
     except psycopg2.Error as err:
@@ -243,6 +254,7 @@ def check_and_recreate_schema() -> None:
         "user_sessions",
         "recovery_codes",
         "issue_reports",
+        "purchases",
     ]
     try:
         with get_db_connection() as conn, get_db_cursor(conn) as cur:

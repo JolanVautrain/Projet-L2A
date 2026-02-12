@@ -18,9 +18,9 @@
   border: 1px solid rgba(102, 227, 184, 0.18);
   border-radius: 18px;
   box-shadow: 0 18px 44px rgba(0,0,0,0.45);
-  padding: 32px 28px 24px;
-  min-width: 320px;
-  max-width: 95vw;
+  padding: 24px 20px 16px;
+  min-width: 280px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -38,7 +38,7 @@
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #66e3b8;
   position: absolute;
   left: 50%;
@@ -102,27 +102,19 @@
   outline: none;
 }
 
-.modal-error {
-  color: #ffffff;
-  background: #dc3545;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 0.98rem;
-  text-align: center;
-  font-weight: 600;
-}
+
 
 .btn.primary {
   width: 100%;
   margin-top: 8px;
-  font-size: 1.08rem;
+  font-size: 1rem;
 }
 
 /* Wider modal for registration so the title stays on one line */
 .register-modal .modal-card {
-  min-width: 480px;
-  max-width: 720px;
-  padding: 36px 36px 28px;
+  min-width: 420px;
+  max-width: 600px;
+  padding: 28px 24px 20px;
 }
 
 /* Center the register link/button below the login form */
@@ -145,19 +137,20 @@
 
 @media (max-width: 500px) {
   .modal-card {
-    padding: 18px 8px 14px;
+    padding: 14px 10px 12px;
     min-width: 0;
+    max-width: 92vw;
   }
 }
 
-/* Add 50px spacing between the login title and the first field, only for login modal */
+/* Reduced spacing between the login title and the first field */
 .login-modal.styled-modal:not(.register-modal) .modal-header {
-  margin-bottom: 50px;
+  margin-bottom: 28px;
 }
 
-/* Same spacing for the register modal */
+/* Slightly reduced spacing for the register modal */
 .login-modal.styled-modal.register-modal .modal-header {
-  margin-bottom: 50px;
+  margin-bottom: 32px;
 }
 /* Success message */
 .modal-success-message {

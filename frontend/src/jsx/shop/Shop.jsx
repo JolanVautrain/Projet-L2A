@@ -91,8 +91,30 @@ function Shop() {
     return p.category === activeFilter;
   });
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     setShowCart(false);
+    const user = getActiveUser();
+    
+    // Enregistrer chaque achat dans la base de données
+    if (user) {
+      for (const item of cart) {
+        try {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/shop/purchase`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: user,
+              product_id: item.id,
+              product_name: t(item.titleKey),
+              price: item.price,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to record purchase:', error);
+        }
+      }
+    }
+    
     const lootboxes = cart.filter(item => item.isLootbox);
     
     if (lootboxes.length > 0) {
@@ -107,6 +129,7 @@ function Shop() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3200);
     }
+    // Note: localStorage backup supprimé, on utilise maintenant la BDD
     clearCart();
   };
 

@@ -24,7 +24,9 @@ function Moderation({ user }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [banDuration, setBanDuration] = useState("");
   const [banReason, setBanReason] = useState("");
-const [reports, setReports] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [selectedUserPurchases, setSelectedUserPurchases] = useState([]);
+  const [cancelPurchaseLoading, setCancelPurchaseLoading] = useState(null);
 
   const { t } = useLanguage();
   const apiBase = getApiBaseUrl();
@@ -41,6 +43,13 @@ const [reports, setReports] = useState([]);
       loadReports();
     }
   }, [user]);
+
+  // Charger l'historique d'achat quand l'utilisateur sélectionné change
+  useEffect(() => {
+    if (selectedUser) {
+      loadUserPurchases(selectedUser);
+    }
+  }, [selectedUser]);
 
   // Fonction pour charger et enrichir les utilisateurs
   const loadAdminUsers = async (currentUser) => {
@@ -116,6 +125,43 @@ const [reports, setReports] = useState([]);
     console.error(err);
   }
 };
+
+  const loadUserPurchases = async (username) => {
+    if (!username) {
+      setSelectedUserPurchases([]);
+      return;
+    }
+    try {
+      const res = await fetch(`${apiBase}/shop/purchases/${username}`);
+      if (!res.ok) throw new Error("Erreur chargement purchases utilisateur");
+      const data = await res.json();
+      setSelectedUserPurchases(data.purchases);
+    } catch (err) {
+      console.error(err);
+      setSelectedUserPurchases([]);
+    }
+  };
+
+  const handleCancelPurchase = async (purchaseId) => {
+    if (!confirm("Êtes-vous sûr de vouloir annuler cet achat ?")) return;
+
+    setCancelPurchaseLoading(purchaseId);
+    try {
+      const res = await fetch(`${apiBase}/shop/admin/purchase/${purchaseId}`, {
+        method: "DELETE",
+        headers: { "X-Admin-User": user },
+      });
+      
+      if (!res.ok) throw new Error("Erreur annulation achat");
+      
+      alert("Achat annulé avec succès");
+      loadUserPurchases(selectedUser); // Recharger la liste de l'utilisateur
+    } catch (err) {
+      alert("Erreur: " + err.message);
+    } finally {
+      setCancelPurchaseLoading(null);
+    }
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -291,6 +337,55 @@ const [reports, setReports] = useState([]);
               ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  )
+
+  const userPurchaseHistory = (
+    <div style={{ width: "100%" }}>
+      <div className="admin-tools__center">
+        <h4 style={{ textAlign: "center" }}>
+          Historique d'Achats - {selectedUser || "Aucun utilisateur sélectionné"}
+        </h4>
+        {selectedUserPurchases.length > 0 ? (
+          <div className="admin-users-list">
+            <table className="admin-users-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Produit</th>
+                  <th>Prix</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedUserPurchases.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.id}</td>
+                    <td>{p.product_name}</td>
+                    <td>{p.price}</td>
+                    <td>{new Date(p.purchased_at).toLocaleString('fr-FR')}</td>
+                    <td>
+                      <button
+                        className="btn danger"
+                        style={{ padding: "4px 8px", fontSize: "0.85rem" }}
+                        disabled={cancelPurchaseLoading === p.id}
+                        onClick={() => handleCancelPurchase(p.id)}
+                      >
+                        {cancelPurchaseLoading === p.id ? "..." : "Annuler"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p style={{ textAlign: "center", color: "rgba(255,255,255,0.6)" }}>
+            {selectedUser ? "Aucun achat trouvé pour cet utilisateur" : "Sélectionnez un utilisateur dans le tableau ci-dessus"}
+          </p>
+        )}
       </div>
     </div>
   )
@@ -504,8 +599,9 @@ const [reports, setReports] = useState([]);
         {userList}
         {xp_form}
       </div>
+      <div className="admin-actions">{userPurchaseHistory}</div>
       <div className="admin-actions">{reportList}</div>
-<div className="admin-actions">{ban_user}</div>
+      <div className="admin-actions">{ban_user}</div>
     </div>
   ) : (
     <h2>Vous n'avez pas les droits admin</h2>

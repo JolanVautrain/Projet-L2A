@@ -37,12 +37,15 @@ function Account({ user, setUser }) {
   const [showNewCode, setShowNewCode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState("");
+  const [ownsAvatarPack, setOwnsAvatarPack] = useState(false);
+  const [userPurchases, setUserPurchases] = useState([]);
   const navigate = useNavigate();
   const { t } = useLanguage();
   const apiBase = getApiBaseUrl();
 
   // Liste des avatars disponibles (sans admin.jpg pour utilisateurs normaux)
   const availableAvatars = [
+    "samourai.png",
     "businessman1.png",
     "fireman.png",
     "fireman_temu.png",
@@ -54,9 +57,38 @@ function Account({ user, setUser }) {
     "politician_men.png",
     "politician_woman.png",
     "rescue.png",
-    "samourai.png",
     "worker.png",
   ];
+
+  // Vérifier si l'utilisateur possède le pack d'avatars depuis la BDD
+  useEffect(() => {
+    if (user && user !== "admin") {
+      fetch(`${apiBase}/shop/has-product/${user}/avatar-logo`)
+        .then(res => res.json())
+        .then(data => {
+          setOwnsAvatarPack(data.has_product || false);
+        })
+        .catch(err => {
+          console.error("Failed to check avatar pack ownership:", err);
+          setOwnsAvatarPack(false);
+        });
+    }
+  }, [user, apiBase]);
+
+  // Charger l'historique d'achats de l'utilisateur
+  useEffect(() => {
+    if (user) {
+      fetch(`${apiBase}/shop/purchases/${user}`)
+        .then(res => res.json())
+        .then(data => {
+          setUserPurchases(data.purchases || []);
+        })
+        .catch(err => {
+          console.error("Failed to load purchase history:", err);
+          setUserPurchases([]);
+        });
+    }
+  }, [user, apiBase]);
 
   // Charger l'avatar depuis localStorage
   useEffect(() => {
@@ -71,14 +103,21 @@ function Account({ user, setUser }) {
       const savedAvatar = localStorage.getItem(`avatar_${user}`);
       // Empêcher les utilisateurs normaux d'utiliser admin.jpg
       if (savedAvatar && savedAvatar !== "admin.jpg" && availableAvatars.includes(savedAvatar)) {
-        setSelectedAvatar(savedAvatar);
+        // si l'avatar sauvegardé est autorisé (samourai toujours autorisé) ou l'utilisateur possède le pack
+        if (savedAvatar === "samourai.png" || ownsAvatarPack) {
+          setSelectedAvatar(savedAvatar);
+        } else {
+          // le pack n'est pas possédé : forcer samourai
+          setSelectedAvatar("samourai.png");
+          localStorage.setItem(`avatar_${user}`, "samourai.png");
+        }
       } else {
-        // Avatar par défaut
-        setSelectedAvatar(availableAvatars[0]);
-        localStorage.setItem(`avatar_${user}`, availableAvatars[0]);
+        // Avatar par défaut : samourai
+        setSelectedAvatar("samourai.png");
+        localStorage.setItem(`avatar_${user}`, "samourai.png");
       }
     }
-  }, [user]);
+  }, [user, ownsAvatarPack]);
 
   // Fonction pour sélectionner un avatar
   const handleAvatarSelect = (avatar) => {
@@ -91,13 +130,17 @@ function Account({ user, setUser }) {
     if (avatar === "admin.jpg") {
       return;
     }
-    
+    if (avatar !== "samourai.png" && !ownsAvatarPack) {
+      // Ne pas permettre la sélection ; rediriger vers la boutique pour achat
+      navigate('/shop');
+      return;
+    }
+
     setSelectedAvatar(avatar);
     if (user) {
       localStorage.setItem(`avatar_${user}`, avatar);
-      
       // Déclencher un événement personnalisé pour actualiser l'avatar dans la navbar
-      window.dispatchEvent(new CustomEvent("avatarChanged", { detail: { avatar, username: user } }));
+      globalThis.dispatchEvent(new CustomEvent("avatarChanged", { detail: { avatar, username: user } }));
     }
   };
 
@@ -315,26 +358,35 @@ function Account({ user, setUser }) {
             <div className="avatar-selector">
               <h3>{t("account.chooseAvatar") || "Choisir votre avatar"}</h3>
               <div className="avatar-grid">
-                {availableAvatars.map((avatar) => (
-                  <div
-                    key={avatar}
-                    className={`avatar-option ${selectedAvatar === avatar ? "selected" : ""}`}
-                    onClick={() => handleAvatarSelect(avatar)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        handleAvatarSelect(avatar);
-                      }
-                    }}
-                  >
-                    <img
-                      src={`/assets/avatar/${avatar}`}
-                      alt={avatar.replace(".png", "")}
-                      className="avatar-img"
-                    />
-                  </div>
-                ))}
+                {availableAvatars.map((avatar) => {
+                  const locked = avatar !== "samourai.png" && !ownsAvatarPack;
+                  return (
+                    <div
+                      key={avatar}
+                      className={`avatar-option ${selectedAvatar === avatar ? "selected" : ""} ${locked ? "locked" : ""}`}
+                      onClick={() => handleAvatarSelect(avatar)}
+                      role="button"
+                      tabIndex={0}
+                      title={locked ? (t("account.avatarPackRequired") || "Pack avatar cyber requis — acheter dans la boutique") : avatar.replace(".png", "")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          handleAvatarSelect(avatar);
+                        }
+                      }}
+                    >
+                      <img
+                        src={`/assets/avatar/${avatar}`}
+                        alt={avatar.replace(".png", "")}
+                        className="avatar-img"
+                      />
+                      {locked && (
+                        <div className="avatar-lock" aria-hidden>
+                          <span className="lock-icon">🔒</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -352,6 +404,52 @@ function Account({ user, setUser }) {
           )}
           
           <LanguageSelector />
+          
+          {/* Historique d'achats */}
+          <div className="purchase-history-section">
+            <h3>{t("account.purchaseHistory") || "Historique d'achats"}</h3>
+            {userPurchases.length > 0 ? (
+              <div style={{ overflowX: "auto", marginTop: "12px" }}>
+                <table className="purchase-history-table" style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  background: "rgba(255,255,255,0.02)",
+                  borderRadius: "10px",
+                  overflow: "hidden"
+                }}>
+                  <thead>
+                    <tr style={{
+                      background: "rgba(255,255,255,0.05)",
+                      borderBottom: "1px solid rgba(255,255,255,0.1)"
+                    }}>
+                      <th style={{ padding: "12px", textAlign: "left" }}>ID</th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>{t("shop.product") || "Produit"}</th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>{t("shop.price") || "Prix"}</th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>{t("common.date") || "Date"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userPurchases.map((purchase) => (
+                      <tr key={purchase.id} style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.05)"
+                      }}>
+                        <td style={{ padding: "12px" }}>{purchase.id}</td>
+                        <td style={{ padding: "12px" }}>{purchase.product_name}</td>
+                        <td style={{ padding: "12px" }}>{purchase.price}</td>
+                        <td style={{ padding: "12px" }}>
+                          {new Date(purchase.purchased_at).toLocaleString('fr-FR')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p style={{ color: "rgba(255,255,255,0.6)", marginTop: "8px" }}>
+                {t("account.noPurchases") || "Aucun achat effectué"}
+              </p>
+            )}
+          </div>
           
           {/* Codes de récupération */}
           <div className="recovery-codes-section">

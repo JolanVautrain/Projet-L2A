@@ -19,6 +19,7 @@ from pages.classement import scores  # type: ignore
 from pages.compte import users  # type: ignore
 from pages.classement import topUsers  # type: ignore
 from pages.report import report  # type: ignore
+from pages.shop import shop  # type: ignore
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -72,6 +73,7 @@ app.register_blueprint(users.bp)
 app.register_blueprint(admin.bp)
 app.register_blueprint(topUsers.bp)
 app.register_blueprint(report.bp)
+app.register_blueprint(shop.bp)
 
 # Ensure database schema exists
 db.check_and_recreate_schema()

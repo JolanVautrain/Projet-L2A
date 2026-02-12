@@ -176,6 +176,31 @@
   border-radius: 8px;
 }
 
+.avatar-option.locked {
+  opacity: 0.6;
+  cursor: pointer;
+}
+.avatar-option.locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+.avatar-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(2,8,26,0.45), rgba(2,8,26,0.35));
+  border-radius: 12px;
+}
+.avatar-lock .lock-icon {
+  font-size: 28px;
+  background: rgba(0,0,0,0.45);
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: #fff;
+}
+
 /* Admin avatar unique */
 .admin-avatar-display {
   display: flex;
