@@ -150,7 +150,7 @@ function Accueil({ user, setUser }) {
             <Link className="btn primary rainbow" to="/lobby">
                 {t("accueil.startGame")}
             </Link>
-            <Link className="btn primary rainbow" to="/game">
+            <Link className="btn primary rainbow" to="/gameSolo">
                 {t("accueil.startGameSolo")}
               </Link>
             <Link className="btn accent" to="/regle">

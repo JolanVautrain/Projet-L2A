@@ -172,7 +172,7 @@ function create() {
   initDayNightSystem(this);
   initWeatherSystem(this);
   createBackgroundSystem(this);
-  initPhysics(this);
+  initPhysics(this,false);
   initObstacles(this);
   initControls(this, handleAdminInvincible);
   initParticles(this);
