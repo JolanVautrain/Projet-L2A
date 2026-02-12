@@ -90,18 +90,18 @@ function Accueil({ user, setUser }) {
     }
   }, [location]);
 
-  // Show advertising popup once per user journey, auto-hide after 15s
+  // Show advertising popup once per session, auto-hide after 15s
   const adTimerRef = useRef(null);
   
   useEffect(() => {
     const key = "ad_popup_shown_v1";
-    const already = localStorage.getItem(key);
+    const already = sessionStorage.getItem(key);
     if (!already) {
       // Show popup after 3 seconds, mark as seen, auto-close after 15s
       const showTimer = setTimeout(() => {
         setShowAdPopup(true);
         try {
-          localStorage.setItem(key, "1");
+          sessionStorage.setItem(key, "1");
         } catch (e) {
           // ignore storage errors
         }
