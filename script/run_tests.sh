@@ -1,9 +1,6 @@
 #!/bin/bash
-
-###############################################################################
-# Script de test complet pour Sail Weather
+# Script de test complet pour G34
 # Ce script exécute tous les tests (backend et frontend) avec génération de rapports
-###############################################################################
 
 set -e  # Arrêt en cas d'erreur
 
@@ -12,7 +9,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m' # Pas de couleur
 
 # Variables
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -360,7 +357,7 @@ echo "║                  TESTS TERMINÉS                            ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-echo "📊 Rapports disponibles dans: $REPORTS_DIR"
+echo "Rapports disponibles dans: $REPORTS_DIR"
 echo ""
 echo "Fichiers principaux:"
 echo "  - pytest-backend.log       (logs tests backend)"
@@ -373,7 +370,7 @@ echo "  - htmlcov-backend/         (couverture backend HTML)"
 echo "  - htmlcov-frontend/        (couverture frontend HTML)"
 echo ""
 echo "Pour voir la couverture de code:"
-echo "  👉 Ouvrez: $REPORTS_DIR/htmlcov/index.html"
+echo "    Ouvrez: $REPORTS_DIR/htmlcov/index.html"
 echo ""
 
 # Le cleanup sera automatiquement appelé grâce au trap

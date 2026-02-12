@@ -17,7 +17,7 @@ from core import admin, db, utils  # type: ignore
 from pages.accueil import auth, game  # type: ignore
 from pages.classement import scores  # type: ignore
 from pages.compte import users  # type: ignore
-from pages.classement import topUsers # type: ignore
+from pages.classement import topUsers  # type: ignore
 from pages.report import report  # type: ignore
 
 app = Flask(__name__)
@@ -39,7 +39,12 @@ def after_request(response):
             "http://127.0.0.1:5000",
             "http://localhost:15256",
             "http://127.0.0.1:15256",
+            "http://192.168.60.202:15256",
+            "http://192.168.60.200:15256",
+            "http://192.168.60.302:15256",
             "http://192.168.60.220:15256",
+            "http://192.168.60.021:15256",
+            "http://192.168.60.201:15256",
         ]
 
         # Check if origin is explicitly allowed or matches pattern

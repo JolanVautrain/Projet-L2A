@@ -37,6 +37,7 @@ services:
       context: ../backend
       dockerfile: ../docker/backend/Dockerfile
       args:
+        - BUILD_ENV=prod
         - FLASK_ENV=production
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-l2a_user}
