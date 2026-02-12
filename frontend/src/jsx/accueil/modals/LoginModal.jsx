@@ -23,7 +23,33 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
    * 
    * @param {Event} e
    */
-  const submitLogin = () => {
+  const processBanMessage = (data) => {
+    const bannedUntil = data.banned_until ? new Date(data.banned_until) : null;
+    const now = new Date();
+    let duration = "permanent";
+    if (bannedUntil && bannedUntil.toString() !== "Invalid Date") {
+      if (bannedUntil.getTime() !== new Date(8640000000000000).getTime()) {
+        const hours = Math.ceil((bannedUntil - now) / (1000 * 60 * 60));
+        duration = `${Math.max(1, hours)}h`;
+      }
+    }
+    const baseMessage = t("loginModal.accountBanned");
+    return `${baseMessage.replace("{duration}", duration)}\n${t("loginModal.banReason")}: ${data.ban_reason || t("common.noData")}`;
+  };
+
+  const handleLoginSuccess = (userTrim, data) => {
+    action(userTrim, data.session_token);
+    if (typeof afterLogin === "function") {
+      try {
+        afterLogin(userTrim);
+      } catch (err) {
+        console.error("afterLogin callback failed", err);
+      }
+    }
+    if (typeof onClose === "function") onClose();
+  };
+
+  const submitLogin = async () => {
     const userTrim = username.trim();
     const passTrim = password.trim();
     // Validation basique des champs
@@ -31,73 +57,47 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
       setError(t("loginModal.usernamePasswordRequired"));
       return;
     }
-    // Envoi de la requête de connexion au backend
+
     setLoading(true);
     setError("");
-    fetch(apiUrl("/login"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: userTrim,
-        password: passTrim,
-      }),
-    })
-      // Traitement de la réponse
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Erreur HTTP: " + response.status);
-        }
-        return response.json();
-      })
-      // Analyse des données reçues
-      .then((data) => {
-        if (!data.userExist) {
-          setError(t("loginModal.incorrectUsername"));
-        } else if (data.banned) {
-          // User is banned
-          const bannedUntil = data.banned_until ? new Date(data.banned_until) : null;
-          const now = new Date();
-          let duration = "permanent";
 
-          if (bannedUntil && bannedUntil.toString() !== "Invalid Date") {
-            if (bannedUntil.getTime() !== new Date(8640000000000000).getTime()) {
-              // Temporary ban - calculate remaining hours
-              const hours = Math.ceil((bannedUntil - now) / (1000 * 60 * 60));
-              duration = `${Math.max(1, hours)}h`;
-            }
-          }
+    try {
+      const response = await fetch(apiUrl("/login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: userTrim, password: passTrim }),
+      });
 
-          const baseMessage = t("loginModal.accountBanned");
-          const banMessage = `${baseMessage.replace("{duration}", duration)}\n${t("loginModal.banReason")}: ${data.ban_reason || t("common.noData")}`;
-          setError(banMessage);
-        } else if (data.passwordIsCorrect === false) {
-          setError(t("loginModal.incorrectPassword"));
-        } else {
-          // renvoie le nom d'utilisateur au parent pour affichage dans le header
-          action(userTrim, data.session_token);
-          // appeler un callback optionnel après connexion réussie (ex: redirection)
-          try {
-            if (typeof afterLogin === "function") afterLogin(userTrim);
-          } catch (err) {
-            console.error("afterLogin callback failed", err);
-          }
-          // ferme la modal automatiquement après connexion réussie
-          if (typeof onClose === "function") onClose();
-        }
-      })
-      // Gestion des erreurs réseau ou autres
-      .catch((err) => {
-        setError(t("loginModal.connectionError"));
-        console.error("Erreur:", err);
-      })
-      .finally(() => setLoading(false));
+      if (!response.ok) throw new Error("Erreur HTTP: " + response.status);
+      const data = await response.json();
+
+      if (!data.userExist) {
+        setError(t("loginModal.incorrectUsername"));
+        return;
+      }
+
+      if (data.banned) {
+        setError(processBanMessage(data));
+        return;
+      }
+
+      if (data.passwordIsCorrect === false) {
+        setError(t("loginModal.incorrectPassword"));
+        return;
+      }
+
+      handleLoginSuccess(userTrim, data);
+    } catch (err) {
+      setError(t("loginModal.connectionError"));
+      console.error("Erreur:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    submitLogin(false);
+    submitLogin();
   };
   // Ne rien rendre si la modal n'est pas ouverte
   if (!isOpen) return null;

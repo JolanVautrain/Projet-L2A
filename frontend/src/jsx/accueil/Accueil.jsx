@@ -101,7 +101,7 @@ function Accueil({ user, setUser }) {
         setShowAdPopup(true);
         try {
           sessionStorage.setItem(key, "1");
-        } catch (e) { // type: ignore
+        } catch {
           // Si sessionStorage n'est pas disponible, on ignore l'erreur et on ne mémorise pas
         }
           // Ferme la popup après 60 secondes
@@ -131,6 +131,19 @@ function Accueil({ user, setUser }) {
       adTimerRef.current = null;
     }
   };
+  // Ferme la popup par la touche Échap pour accessibilité clavier
+  // Utilise un écouteur global uniquement lorsque la popup est affichée
+  useEffect(() => {
+    if (!showAdPopup) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeAdPopup();
+      }
+    };
+    globalThis.addEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
+  }, [showAdPopup]);
   // Redirige vers la boutique et ferme la popup
   const goToShop = () => {
     setShowAdPopup(false);
@@ -240,8 +253,8 @@ function Accueil({ user, setUser }) {
       <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} openRegister={openRegister} />
       <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }} />
       {showAdPopup && (
-        <div className="ad-popup-overlay" onClick={closeAdPopup}>
-          <div className="ad-popup-card" onClick={(e) => e.stopPropagation()}>
+        <div className="ad-popup-overlay" aria-hidden="true" onClick={closeAdPopup}>
+          <div className="ad-popup-card" aria-hidden="true" onClick={(e) => e.stopPropagation()}>
             <button className="ad-close" onClick={closeAdPopup}>✕</button>
             <div className="ad-content">
               <div className="ad-badge">{t("accueil.adPopupBadge")}</div>

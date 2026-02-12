@@ -32,12 +32,14 @@ const GameWaitingRoom = () => {
       return;
     }
 
-    const storedMatchId = sessionStorage.getItem("activeMatchId");
     const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
-    if (storedMatchId && !confirmedLeaving) {
-      navigate("/game");
-      return;
+    
+    // Nettoyer les données stales d'une session précédente
+    if (!confirmedLeaving) {
+      sessionStorage.removeItem("activeMatchId");
+      sessionStorage.removeItem("serverTimeOffsetMs");
     }
+    
     if (confirmedLeaving) {
       sessionStorage.removeItem("confirmedLeavingGame");
     }
@@ -55,7 +57,6 @@ const GameWaitingRoom = () => {
       }
       console.log("[!] Connected to lobby WS");
       ws.send(JSON.stringify({ type: "join_lobby", username }));
-      ws.send(JSON.stringify({ type: "join", username }));
     };
 
     ws.onmessage = (event) => {

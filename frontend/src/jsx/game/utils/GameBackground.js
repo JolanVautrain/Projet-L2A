@@ -4,6 +4,7 @@
 
 let backgroundLayers = [];
 let buildingContainers = [];
+let buildingScrollX = 0; // type: ignore
 let starsLayer = null;
 let shootingStars = [];
 let comets = [];
@@ -16,7 +17,6 @@ let skyGradient = null;
 export function createBackgroundSystem(scene) {
   backgroundLayers = [];
   buildingContainers = [];
-  buildingScrollX = 0;
   shootingStars = [];
   comets = [];
   

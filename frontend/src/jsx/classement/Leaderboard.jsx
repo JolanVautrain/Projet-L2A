@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
@@ -7,14 +7,13 @@ import { getApiBaseUrl } from "../utils/apiClient.js";
 import SortableTable from "../utils/SortableTable.jsx";
 
 function Leaderboard({ user, setUser }) {
-  // Runtime API base: uses VITE_BACKEND_URL or constructs dynamically from window.location
   const apiBase = getApiBaseUrl();
   const [topUsers, setTopUsers] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -80,7 +79,7 @@ function Leaderboard({ user, setUser }) {
           onClose={closeLogin}
           action={setUser || (() => {})}
           afterLogin={() => {
-            /* no-op: setUser already updates leaderboard */
+            // Après connexion, on peut soit rester sur le classement, soit rediriger vers une page de profil ou autre. Ici on reste sur le classement.
           }}
           openRegister={openRegister}
         />
@@ -103,20 +102,7 @@ function Leaderboard({ user, setUser }) {
       </div>
     );
   }
-  // Fonction pour formater la date selon la langue
-  const formatDate = (dateStr) => {
-    const locale = language === "en" ? "en-US" : "fr-FR";
-    return new Date(dateStr).toLocaleString(locale, {
-      timeZone: "Europe/Paris",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
+  
   const columnsGames = [
     { key: "rank", label: t("leaderboard.rank") },
     { key: "username", label: t("leaderboard.username") },
@@ -139,7 +125,6 @@ function Leaderboard({ user, setUser }) {
   return (
     <div className="leaderboard">
       <h1>{t("leaderboard.title")}</h1>
-      {/* Section : Tous les temps du joueur connecté */}
       {user && userSessions.length > 0 && (
         <>
           <div className="leaderboard__panel">

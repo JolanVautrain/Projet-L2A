@@ -2,7 +2,6 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
 import { apiUrl } from "../../utils/apiClient.js";
-import { useNavigate } from "react-router-dom";
 
 /** 
  * Composant ReportModal
@@ -51,13 +50,13 @@ function ReportModal({ isOpen, onClose }) {
         return response.json();
       })
       .then((data) => {
-        if (!data.success) {
-          setError(t("reportModal.incorrectUsername"));
-        } else {
+        if (data.success) {
           alert(t("reportModal.reportSubmitted"));
           onClose();
           setUsername("");
           setAccusation("");
+        } else {
+          setError(t("reportModal.incorrectUsername"));
         }
       })
       .catch((err) => {

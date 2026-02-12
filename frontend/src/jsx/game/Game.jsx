@@ -419,6 +419,17 @@ function Game() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
+  // Vérifier si l'utilisateur essaie d'accéder directement sans passer par le lobby
+  useEffect(() => {
+    const storedMatchId = sessionStorage.getItem("activeMatchId");
+    const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
+    
+    // Si pas de matchId et pas de replay confirmé, rediriger vers le lobby
+    if (!storedMatchId && !confirmedLeaving) {
+      navigate("/lobby", { replace: true });
+    }
+  }, [navigate]);
+
   useEffect(() => {
     const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
     if (confirmedLeaving) {

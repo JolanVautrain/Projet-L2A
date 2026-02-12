@@ -5,7 +5,6 @@ import {
   NavLink,
   Navigate,
   useNavigate,
-  useLocation,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useLanguage } from "./autres/Language.jsx";
@@ -63,9 +62,6 @@ function App() {
   const [userState, setUserState] = useState(() => getActiveUser());
   const [navbarAvatarKey, setNavbarAvatarKey] = useState(0); // Force le rendu de l'avatar
   const navigate = useNavigate();
-  const location = useLocation();
-  const [leaveMatchModalOpen, setLeaveMatchModalOpen] = useState(false);
-  const [leaveMatchTarget, setLeaveMatchTarget] = useState(null);
 
   /**
    * Met à jour l'utilisateur et le stocke dans le localStorage.
@@ -119,51 +115,15 @@ function App() {
       }
     };
 
-    window.addEventListener("avatarChanged", handleAvatarChange);
+    globalThis.addEventListener("avatarChanged", handleAvatarChange);
     return () => {
-      window.removeEventListener("avatarChanged", handleAvatarChange);
+      globalThis.removeEventListener("avatarChanged", handleAvatarChange);
     };
   }, [userState]);
 
-  useEffect(() => {
-    const handleLeaveRequest = (event) => {
-      const target = event?.detail?.target || "/";
-      const activeMatchId = sessionStorage.getItem("activeMatchId");
-      const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
-      if (!activeMatchId || confirmedLeaving) {
-        navigate(target);
-        return;
-      }
-      setLeaveMatchTarget(target);
-      setLeaveMatchModalOpen(true);
-    };
 
-    globalThis.addEventListener("request-leave-match", handleLeaveRequest);
-    return () => {
-      globalThis.removeEventListener("request-leave-match", handleLeaveRequest);
-    };
-  }, [navigate]);
 
-  const requestLeaveIfInMatch = (target, event) => {
-    // Plus de popup de confirmation - permettre la navigation directement
-    return true;
-  };
 
-  const confirmLeaveMatch = () => {
-    sessionStorage.setItem("confirmedLeavingGame", "1");
-    sessionStorage.removeItem("activeMatchId");
-    sessionStorage.removeItem("serverTimeOffsetMs");
-    const target = leaveMatchTarget || "/";
-    setLeaveMatchModalOpen(false);
-    setLeaveMatchTarget(null);
-    navigate(target);
-  };
-
-  const cancelLeaveMatch = () => {
-    setLeaveMatchModalOpen(false);
-    setLeaveMatchTarget(null);
-    globalThis.dispatchEvent(new CustomEvent("leave-match-cancelled"));
-  };
 
   useEffect(() => {
     if (!userState) return undefined;
@@ -277,21 +237,7 @@ function App() {
           </NavLink>
         </nav>
       </header>
-      {leaveMatchModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>{t("game.confirmLeaveMatch")}</h2>
-            <div className="modal-buttons">
-              <button className="btn ghost" onClick={cancelLeaveMatch}>
-                {t("common.cancel")}
-              </button>
-              <button className="btn accent" onClick={confirmLeaveMatch}>
-                {t("common.confirm")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
       <Routes>
         <Route
           path="/"
