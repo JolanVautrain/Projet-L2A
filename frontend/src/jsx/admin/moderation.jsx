@@ -4,7 +4,7 @@ import { useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
 import { getActiveUser } from "../utils/userSession.js";
 import PageNotFound from "../autres/PageNotFound.jsx";
-
+import { apiUrl } from "../utils/apiClient.js";
 
 /**
  * Composant Moderation
@@ -23,29 +23,149 @@ function Moderation({ user }) {
   const [selectedUser, setSelectedUser] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [banDuration, setBanDuration] = useState("");
-const [banReason, setBanReason] = useState("");
+  const [banReason, setBanReason] = useState("");
+const [reports, setReports] = useState([]);
 
-const { t } = useLanguage();
-const apiBase = getApiBaseUrl();
+  const { t } = useLanguage();
+  const apiBase = getApiBaseUrl();
 
-const [isAdmin, setIsAdmin] = useState(false);
-// Charger la liste des utilisateurs si admin
- useEffect(() => {
-  console.log("Checking admin for:", user);
-  if (!user) return;
+  const [isAdmin, setIsAdmin] = useState(false);
+  // Charger la liste des utilisateurs si admin
+  useEffect(() => {
+    console.log("Checking admin for:", user);
+    if (!user) return;
 
-  if (user === "admin") {
-    setIsAdmin(true); // déclenche le rendu du composant
+    if (user === "admin") {
+      setIsAdmin(true); // déclenche le rendu du composant
+      loadAdminUsers(user);
+      loadReports();
+    }
+  }, [user]);
+
+  // Fonction pour charger et enrichir les utilisateurs
+  const loadAdminUsers = async (currentUser) => {
+    try {
+      const res = await fetch(`${apiBase}/admin/users`, {
+        headers: { "X-Admin-User": currentUser },
+      });
+        // Silently ignore 401 (user not admin)
+        if (res.status === 401) {
+          return;
+        }
+      if (res.ok) {
+        const data = await res.json();
+        // Enrichir chaque utilisateur avec XP et stats (parallèle)
+        const enriched = await Promise.all(
+          data.map(async (u) => {
+            try {
+              const [xpRes, statsRes] = await Promise.all([
+                fetch(`${apiBase}/user/xp/${u.username}`),
+                fetch(`${apiBase}/user/stats/${u.username}`),
+              ]);
+              const xpJson =
+                xpRes && xpRes.ok
+                  ? await xpRes.json()
+                  : { xp: 0, level: 1 };
+              const statsJson =
+                statsRes && statsRes.ok
+                  ? await statsRes.json()
+                  : {
+                      totalGames: 0,
+                      totalScore: 0,
+                      bestScore: 0,
+                      averageScore: 0,
+                    };
+              return {
+                ...u,
+                xp: xpJson.xp || 0,
+                level: xpJson.level || 1,
+                totalGames: statsJson.totalGames || 0,
+                totalScore: statsJson.totalScore || 0,
+                bestScore: statsJson.bestScore || 0,
+                averageScore: statsJson.averageScore || 0,
+              };
+            } catch {
+              return {
+                ...u,
+                xp: 0,
+                level: 1,
+                totalGames: 0,
+                totalScore: 0,
+                bestScore: 0,
+                averageScore: 0,
+              };
+            }
+          })
+        );
+        setAllUsers(enriched);
+        if (enriched.length > 0 && !selectedUser) setSelectedUser(enriched[0].username);
+        return enriched;
+      }
+    } catch (err) {
+      console.warn("Failed to load users", err);
+    }
+  }; 
+
+  const loadReports = async () => {
+  try {
+    const res = await fetch(apiUrl("report"));
+    if (!res.ok) throw new Error("Erreur chargement reports");
+    const data = await res.json();
+    setReports(data.reports);
+  } catch (err) {
+    console.error(err);
   }
-}, [user]);
+};
 
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
+      const data = new FormData(event.target);
+      let xp = parseInt(data.get("number"), 10);
 
-  // Placeholder pour le formulaire XP
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("XP form submitted (à implémenter)");
-  };
+      if (data.get("sub_xp")) {
+        xp = -xp;
+      }
+
+      if (
+        selectedUser &&
+        confirm(
+          t("account.confirmAwardXp")
+            .replace("{username}", selectedUser)
+            .replace("{xp}", xp)
+        )
+      ) {
+        setAwardXpLoading(true);
+
+        fetch(`${apiBase}/user/xp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-User": user,
+          },
+          body: JSON.stringify({
+            username: selectedUser,
+            xp: xp,
+          }),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Erreur serveur");
+            return res.json();
+          })
+          .then(() => {
+            alert(
+              t("account.awardXpSuccess")
+                .replace("{username}", selectedUser)
+                .replace("{xp}", xp)
+            );
+            // Rafraîchir la liste des utilisateurs après succès
+            loadAdminUsers(user);
+          })
+          .catch((e) => alert(t("common.failedPrefix") + e.message))
+          .finally(() => setAwardXpLoading(false));
+      }
+    };
+
 
   // Composants internes
   const xp_form = (
@@ -77,7 +197,9 @@ const [isAdmin, setIsAdmin] = useState(false);
         <h4 style={{ textAlign: "center" }}>{t("account.manageUsers")}</h4>
         <input
           type="search"
-          placeholder={t("account.searchPlaceholder") || "Rechercher un joueur..."}
+          placeholder={
+            t("account.searchPlaceholder") || "Rechercher un joueur..."
+          }
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="admin-users-search"
@@ -97,7 +219,9 @@ const [isAdmin, setIsAdmin] = useState(false);
           </thead>
           <tbody>
             {allUsers
-              .filter((u) => u.username.toLowerCase().includes(searchTerm.toLowerCase()))
+              .filter((u) =>
+                u.username.toLowerCase().includes(searchTerm.toLowerCase()),
+              )
               .map((u) => (
                 <tr
                   key={u.username}
@@ -124,6 +248,251 @@ const [isAdmin, setIsAdmin] = useState(false);
     </div>
   );
 
+  const reportList = (
+    <div style={{ width: "100%" }}>
+      <div className="admin-tools__center">
+        <h4 style={{ textAlign: "center" }}>{t("account.manageUsers")}</h4>
+        <input
+          type="search"
+          placeholder={
+            t("account.searchPlaceholder") || "Rechercher un joueur..."
+          }
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="admin-users-search"
+        />
+        <table className="admin-users-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Admin</th>
+              <th>report_raison</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reports
+              .filter((u) =>
+                u.username.toLowerCase().includes(searchTerm.toLowerCase()),
+              )
+              .map((u) => (
+                <tr
+                  key={u.username}
+                  className={u.username === selectedUser ? "selected" : ""}
+                  onClick={() => setSelectedUser(u.username)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setSelectedUser(u.username);
+                  }}
+                >
+                  <td>{u.username}</td>
+                  <td>{u.is_admin ? "✓" : "-"}</td>
+                  <td>{u.report_reason ?? "-"}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+
+  const ban_user = (
+  <div className="admin-action">
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <input
+          type="number"
+          placeholder={
+            t("account.banDurationPlaceholder") ||
+            "Durée en heures (vide = permanent)"
+          }
+          value={banDuration}
+          onChange={(e) => setBanDuration(e.target.value)}
+          min="1"
+          style={{
+            padding: "10px 14px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.06)",
+            background: "rgba(255,255,255,0.02)",
+            color: "inherit",
+            flex: 1,
+            minWidth: "150px",
+          }}
+        />
+
+        <input
+          type="text"
+          placeholder={
+            t("account.banReasonPlaceholder") ||
+            "Raison du bannissement..."
+          }
+          value={banReason}
+          onChange={(e) => setBanReason(e.target.value)}
+          style={{
+            padding: "10px 14px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.06)",
+            background: "rgba(255,255,255,0.02)",
+            color: "inherit",
+            flex: 1,
+            minWidth: "200px",
+          }}
+        />
+      </div>
+
+      {selectedUser &&
+        selectedUser !== "admin" &&
+        !allUsers.find((u) => u.username === selectedUser)?.banned_until && (
+          <button
+            className="btn danger"
+            disabled={banUserLoading}
+            onClick={() => {
+              if (!banReason.trim()) {
+                alert(
+                  t("account.banReasonRequired") ||
+                    "La raison du bannissement est requise"
+                );
+                return;
+              }
+
+              const durationHours = banDuration
+                ? parseInt(banDuration)
+                : null;
+
+              if (durationHours !== null && durationHours <= 0) {
+                alert(
+                  t("account.invalidDuration") ||
+                    "La durée doit être positive"
+                );
+                return;
+              }
+
+              const banType = durationHours
+                ? `${durationHours}h`
+                : "permanent";
+
+              if (
+                confirm(
+                  t("account.confirmBanUser")
+                    ?.replace("{username}", selectedUser)
+                    ?.replace("{duration}", banType) ||
+                    `Bannir ${selectedUser} pour ${banType} ?`
+                )
+              ) {
+                setBanUserLoading(true);
+
+                fetch(`${apiBase}/admin/ban-user/${selectedUser}`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "X-Admin-User": user,
+                  },
+                  body: JSON.stringify({
+                    duration_hours: durationHours,
+                    reason: banReason.trim(),
+                  }),
+                })
+                  .then((res) => {
+                    if (!res.ok) throw new Error("Erreur serveur");
+
+                    const updated = allUsers.map((u) =>
+                      u.username === selectedUser
+                        ? {
+                            ...u,
+                            banned_until: durationHours
+                              ? new Date(
+                                  Date.now() + durationHours * 3600000
+                                ).toISOString()
+                              : new Date(8640000000000000).toISOString(),
+                          }
+                        : u
+                    );
+
+                    setAllUsers(updated);
+                    setBanDuration("");
+                    setBanReason("");
+
+                    alert(
+                      t("account.banUserSuccess")?.replace(
+                        "{username}",
+                        selectedUser
+                      ) || `${selectedUser} a été banni.`
+                    );
+                  })
+                  .catch((e) =>
+                    alert((t("common.failedPrefix") || "Erreur: ") + e.message)
+                  )
+                  .finally(() => setBanUserLoading(false));
+              }
+            }}
+          >
+            {banUserLoading
+              ? t("common.saving")
+              : t("account.banUser") || "Bannir"}
+          </button>
+        )}
+
+      {selectedUser &&
+        allUsers.find((u) => u.username === selectedUser)?.banned_until && (
+          <button
+            className="btn warning"
+            disabled={unbanUserLoading}
+            onClick={() => {
+              if (
+                confirm(
+                  t("account.confirmUnbanUser")?.replace(
+                    "{username}",
+                    selectedUser
+                  ) || `Débannir ${selectedUser} ?`
+                )
+              ) {
+                setUnbanUserLoading(true);
+
+                fetch(`${apiBase}/admin/unban-user/${selectedUser}`, {
+                  method: "POST",
+                  headers: { "X-Admin-User": user },
+                })
+                  .then((res) => {
+                    if (!res.ok) throw new Error("Erreur serveur");
+
+                    const updated = allUsers.map((u) =>
+                      u.username === selectedUser
+                        ? { ...u, banned_until: null, ban_reason: null }
+                        : u
+                    );
+
+                    setAllUsers(updated);
+                    setBanDuration("");
+                    setBanReason("");
+
+                    alert(
+                      t("account.unbanUserSuccess")?.replace(
+                        "{username}",
+                        selectedUser
+                      ) || `${selectedUser} a été débanni.`
+                    );
+                  })
+                  .catch((e) =>
+                    alert((t("common.failedPrefix") || "Erreur: ") + e.message)
+                  )
+                  .finally(() => setUnbanUserLoading(false));
+              }
+            }}
+          >
+            {unbanUserLoading
+              ? t("common.saving")
+              : t("account.unbanUser") || "Débannir"}
+          </button>
+        )}
+    </div>
+
+    <p className="admin-action__desc">
+      {t("account.banManagementDesc") ||
+        "Bannir temporairement ou définitivement cet utilisateur."}
+    </p>
+  </div>
+);
+
+
   // Retour principal
   return isAdmin ? (
     <div className="admin-tools">
@@ -135,10 +504,13 @@ const [isAdmin, setIsAdmin] = useState(false);
         {userList}
         {xp_form}
       </div>
+      <div className="admin-actions">{reportList}</div>
+<div className="admin-actions">{ban_user}</div>
     </div>
-  ) : <h2>Vous n'avez pas les droits admin</h2>;
+  ) : (
+    <h2>Vous n'avez pas les droits admin</h2>
+  );
 }
-  
 
 Moderation.propTypes = {
   user: PropTypes.string,
