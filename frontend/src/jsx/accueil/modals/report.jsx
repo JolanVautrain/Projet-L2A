@@ -2,6 +2,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
 import { apiUrl } from "../../utils/apiClient.js";
+import { useNavigate } from "react-router-dom";
 
 /** 
  * Composant ReportModal
@@ -30,20 +31,22 @@ function ReportModal({ isOpen, onClose }) {
 
     setLoading(true);
     setError("");
+    console.log("API URL:", apiUrl("report"));
 
-    fetch(apiUrl("/report"), {
+    fetch(apiUrl("report"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         username: userTrim,
-        accusation: accTrim,
+        issue: accTrim,
       }),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) {
-          throw new Error("Erreur HTTP: " + response.status);
+            const text = await response.text();
+            throw new Error("Erreur HTTP: " + response.status + " - " + text);
         }
         return response.json();
       })

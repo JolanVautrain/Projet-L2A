@@ -31,7 +31,7 @@ export function initObstacles(scene) {
 
 export function setMultiplayerMode(enabled) {
   multiplayerMode = Boolean(enabled);
-  modeSolo = false
+  modeSolo = enabled
 }
 
 /**

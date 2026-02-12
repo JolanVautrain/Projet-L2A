@@ -206,6 +206,16 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
         )
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS issue_reports (
+                id SERIAL PRIMARY KEY,
+                username varchar(100) NOT NULL,
+                issue TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            );"""
+        )
+
         init_conn.commit()
     except psycopg2.Error as err:
         logger.exception("Failed to initialize database: %s", err)
@@ -232,6 +242,7 @@ def check_and_recreate_schema() -> None:
         "user_inputs",
         "user_sessions",
         "recovery_codes",
+        "issue_reports",
     ]
     try:
         with get_db_connection() as conn, get_db_cursor(conn) as cur:
