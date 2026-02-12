@@ -50,6 +50,7 @@ import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
 import Regle from "./regle/regle";
 import Shop from "./shop/Shop";
 import GameSolo from "./game/GameSolo.jsx";
+import Moderation from "./admin/moderation.jsx";
 
 /**
  * Composant principal de l'application.
@@ -333,6 +334,7 @@ function App() {
         <Route path="/*" element={<PageNotFound />} />
         <Route path="/regle" element={<Regle />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/moderation" element={<Moderation user={userState} />} />
       </Routes>
     </>
   );
