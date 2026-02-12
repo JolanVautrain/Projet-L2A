@@ -262,7 +262,7 @@ function Accueil({ user, setUser }) {
 
 export default Accueil;
 
-// PropTypes validation pour le composant Accueil
+// PropTypes pour le composant Accueil
 Accueil.propTypes = {
   user: PropTypes.string,
   setUser: PropTypes.func.isRequired,

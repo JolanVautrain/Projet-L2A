@@ -10,7 +10,7 @@ export function calculateXPReward(finalScore, stage, timerSeconds) {
   // Score base : 1 XP par 10 points (minimum 5)
   const baseXP = Math.max(5, Math.floor(finalScore / 10));
   
-  // Stage bonus : croissance exponentielle mais progressive
+  // Stage bonus : croissance exponentielle
   // Stage 1: 1 XP, Stage 5: 10 XP, Stage 10: 30 XP, Stage 20: 100 XP
   const stageBonus = Math.floor(Math.pow(stage, 1.6));
   

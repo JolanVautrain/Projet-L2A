@@ -210,10 +210,6 @@ export function createShockWave(scene, x, y) {
   wave.setStrokeStyle(2, 0x00ffff, 0.8);
   wave.setDepth(5);
   
-  // Animer l'onde
-  let radius = 10;
-  const maxRadius = 100;
-  
   particles.push({
     sprite: wave,
     vx: 0,

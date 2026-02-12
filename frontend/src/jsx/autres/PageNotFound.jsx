@@ -15,7 +15,7 @@ function PageNotFound() {
   const eyesDataRef = useRef([]);
   const [speakingId, setSpeakingId] = useState(null);
   const [clickedId, setClickedId] = useState(null);
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // Textes parlés par les différentes figures
   const speeches = {

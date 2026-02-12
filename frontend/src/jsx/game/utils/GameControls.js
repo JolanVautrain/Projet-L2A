@@ -3,8 +3,6 @@
  */
 
 let cursors = null;
-let key3Pressed = false;
-let key4Pressed = false;
 let onInvincibleToggle = null;
 let keyInvincible = null;
 

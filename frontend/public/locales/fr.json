@@ -35,7 +35,10 @@
     "atStage": "au stage",
     "time": "Temps",
     "confirmLeaveMatch": "Êtes-vous sûr(e) de vouloir quitter la partie?",
-    "opponentDisconnected": "L'adversaire s'est déconnecté"
+    "opponentDisconnected": "L'adversaire s'est déconnecté",
+    "wonTitle": "Victoire !",
+    "wonMessage": "Vous avez atteint le score de",
+    "wonMessageSuite": "au stage."
   },
   "leaderboard": {
     "username": "Nom d'utilisateur",

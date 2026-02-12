@@ -122,9 +122,7 @@ const GameWaitingRoom = () => {
     <div className="lobby-overlay">
       <h2>{t("lobby.title")}</h2>
       <h3>{t("lobby.description")}</h3>
-      <p>{t("lobby.players")}: {playerCount} / {MIN_PLAYERS}</p>
-      
-      {/* Affichage de l'avatar en mode recherche ou versus */}
+      <p>{t("lobby.players")}: {playerCount} / {MIN_PLAYERS}</p>      
       {matchReady && opponentUsername ? (
         <div className="versus-container">
           <div className="player-avatar-box">
@@ -158,7 +156,6 @@ const GameWaitingRoom = () => {
           </div>
         </div>
       )}
-      
       <div className="sea">
         <div className="circle-wrapper">
             <div className="bubble"></div>
