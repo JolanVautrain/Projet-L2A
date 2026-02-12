@@ -57,28 +57,31 @@
 
 .sale-banner{
   display:inline-block;
-  background: linear-gradient(90deg,#ffb86b,#ff6b6b);
-  color:#081227;
-  padding:8px 16px;
-  border-radius:999px;
-  font-weight:700;
-  margin:0 auto 12px auto;
-  box-shadow: 0 8px 24px rgba(255,107,107,0.4);
-  animation: bannerPulse 2s infinite, bannerShake 0.5s infinite;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 50%, #ffb86b 100%);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-weight: 700;
+  margin: 0 auto 12px auto;
+  box-shadow: 0 12px 40px rgba(255, 107, 107, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: bannerPulse 2s infinite, bannerGlow 3s infinite;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  font-size: 1.05rem;
+  letter-spacing: 0.5px;
 }
 
 @keyframes bannerPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  50% { transform: scale(1.04); }
 }
 
-@keyframes bannerShake {
-  0%, 100% { transform: translateX(0) rotate(-1deg); }
-  25% { transform: translateX(-2px) rotate(-1deg); }
-  75% { transform: translateX(2px) rotate(-1deg); }
+@keyframes bannerGlow {
+  0%, 100% { box-shadow: 0 12px 40px rgba(255, 107, 107, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+  50% { box-shadow: 0 12px 60px rgba(255, 107, 107, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.5); }
 }
 .sale-banner.ended{ background: linear-gradient(90deg,#6b7280,#3b4250); color:#fff }
-.sale-timer{ margin-left:8px; color:#081227; background:#fff3; padding:4px 8px; border-radius:6px }
+.sale-timer{ margin-left: 8px; color: #fff; background: rgba(0, 0, 0, 0.2); padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 1.1rem; }
 
 /* Dark pattern: Price increase warning banner */
 .price-warning-banner{
@@ -366,6 +369,7 @@
   max-width: 620px;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
   background: linear-gradient(180deg,#081827,#0b2b3e);
   border-radius: 12px;
   padding: 18px;
@@ -435,8 +439,11 @@
   text-align:center;
 }
 
-.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; }
+.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap; overflow: hidden; }
 .modal-actions .timer{ color:#ffe4b5; font-weight:700 }
+.modal-actions .btn.primary {
+  overflow: hidden;
+}
 .modal-actions .btn.accent{
   flex:1;
   font-weight:800;

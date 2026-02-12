@@ -10,10 +10,10 @@ export function getApiBaseUrl() {
   }
 
   // Priorité 2: Construction dynamique basée sur window.location
-  if (typeof window !== 'undefined' && window.location) {
-    const protocol = window.location.protocol; // http: ou https:
-    const host = window.location.hostname;
-    const port = window.location.port ? `:${window.location.port}` : '';
+  if (typeof globalThis !== 'undefined' && globalThis.location) {
+    const protocol = globalThis.location.protocol; // http: ou https:
+    const host = globalThis.location.hostname;
+    const port = globalThis.location.port ? `:${globalThis.location.port}` : '';
     return `${protocol}//${host}${port}/api`;
   }
 

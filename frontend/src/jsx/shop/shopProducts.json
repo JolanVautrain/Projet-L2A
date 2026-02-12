@@ -8,8 +8,9 @@
       "oldPrice": "9.99€",
       "img": "/assets/star.png",
       "stock": 3,
-      "badge": "Nouveauté",
       "hot": true,
+      "trending": true,
+      "category": "skins",
       "isLootbox": false
     },
     {
@@ -20,8 +21,9 @@
       "oldPrice": "4.99€",
       "img": "/assets/bomb.png",
       "stock": 12,
-      "badge": "Promo",
       "hot": true,
+      "trending": true,
+      "category": "items",
       "isLootbox": false
     },
     {
@@ -32,8 +34,9 @@
       "oldPrice": "5.99€",
       "img": "/assets/logo.png",
       "stock": 1,
-      "badge": "Dernier",
       "hot": true,
+      "trending": true,
+      "category": "items",
       "isLootbox": false
     },
     {
@@ -44,7 +47,7 @@
       "oldPrice": "2.99€",
       "img": "/assets/shop/lootbox-basic.svg",
       "stock": 50,
-      "badge": "Mystère",
+      "category": "lootboxes",
       "isLootbox": true
     },
     {
@@ -55,7 +58,7 @@
       "oldPrice": "9.99€",
       "img": "/assets/shop/lootbox.png",
       "stock": 12,
-      "badge": "Rare",
+      "category": "lootboxes",
       "isLootbox": true
     },
     {
@@ -66,8 +69,8 @@
       "oldPrice": "3.99€",
       "img": "/assets/star.png",
       "stock": 100,
-      "badge": "XP",
       "hot": false,
+      "category": "boosters",
       "isLootbox": false
     },
     {
@@ -78,8 +81,9 @@
       "oldPrice": "19.99€",
       "img": "/assets/logo.png",
       "stock": 20,
-      "badge": "Level",
       "hot": true,
+      "trending": true,
+      "category": "boosters",
       "isLootbox": false
     }
   ],

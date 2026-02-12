@@ -1,0 +1,132 @@
+/* ProductCard Animations Améliorées */
+.product-card {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: cardFadeIn 0.5s ease-out;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+}
+
+.product-img {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease;
+}
+
+.product-card:hover .product-img {
+  transform: scale(1.1) rotate(2deg);
+  filter: brightness(1.1) drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
+}
+
+.product-body {
+  animation: bodySlideIn 0.5s ease-out 0.1s both;
+}
+
+@keyframes bodySlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-reviews, .viewer-count {
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn.primary {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: visible;
+}
+
+.btn.primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.product-price {
+  animation: priceGlow 2s ease-in-out infinite;
+}
+
+@keyframes priceGlow {
+  0%, 100% {
+    text-shadow: 0 0 0px rgba(255, 107, 107, 0);
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+  }
+}
+
+.stock-bar-fill {
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  animation: fillWidth 0.8s ease-out;
+}
+
+@keyframes fillWidth {
+  from {
+    width: 0;
+  }
+}
+
+.stock-text {
+  animation: stockPulse 1.5s ease-in-out;
+}
+
+@keyframes stockPulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.low-stock .stock-bar-fill {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  animation: warningPulse 1s ease-in-out infinite;
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    box-shadow: 0 0 0px rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+}
+
+.viewer-count strong {
+  transition: color 0.3s ease;
+}
+
+.product-card:hover .viewer-count strong {
+  color: #ff6b6b;
+  font-weight: 700;
+}
