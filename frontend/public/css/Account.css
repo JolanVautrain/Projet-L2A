@@ -114,6 +114,7 @@
   color: #66e3b8;
   font-size: 1.2rem;
   font-weight: 700;
+  text-align: center;
 }
 
 .avatar-grid {
@@ -206,16 +207,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 20px;
+  text-align: center;
+  max-width: 200px;
+  margin: 0 auto;
+  overflow: hidden;
 }
 
 .admin-avatar-img {
-  width: 150px;
-  height: 150px;
+  width: 150px !important;
+  height: 150px !important;
+  min-width: 150px !important;
+  min-height: 150px !important;
+  max-width: 150px !important;
+  max-height: 150px !important;
   object-fit: cover;
+  object-position: center;
   border-radius: 16px;
   border: 4px solid #66e3b8;
   box-shadow: 0 8px 30px rgba(102, 227, 184, 0.4);
+  display: block;
+  overflow: hidden;
 }
 
 /* Center wrapper for select */

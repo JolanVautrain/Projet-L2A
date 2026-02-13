@@ -98,6 +98,7 @@ header {
   background: transparent !important;
   transition: all 0.2s ease;
   border: 2px solid transparent;
+  overflow: hidden;
 }
 
 .nav-user-profile:hover {
@@ -112,13 +113,20 @@ header {
 }
 
 .nav-avatar {
-  width: 48px;
-  height: 48px;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  max-width: 48px !important;
+  max-height: 48px !important;
   border-radius: 10px;
   object-fit: cover;
+  object-position: center;
   border: 2px solid rgba(102, 227, 184, 0.3);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
+  display: block;
+  overflow: hidden;
 }
 
 .nav-user-profile:hover .nav-avatar {
@@ -131,6 +139,7 @@ header {
   font-weight: 700;
   color: #d5ddf4;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .nav-user-profile:hover .nav-username {
@@ -183,8 +192,12 @@ header {
   }
   
   .nav-avatar {
-    width: 40px;
-    height: 40px;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
   }
   
   .nav-username {

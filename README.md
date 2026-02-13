@@ -67,3 +67,10 @@ il suffit de faire la commande :
 ```bash
 ./script/script/install_requirements_V2.sh
 ```
+
+## En cas de probleme de css sur le navigateur lors du développement
+
+il suffit de purger complétement le cache du site :
+```
+CRTL + MAJ + R
+```

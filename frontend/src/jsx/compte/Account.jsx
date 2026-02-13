@@ -397,6 +397,8 @@ function Account({ user, setUser }) {
                   src="/assets/avatar/admin.jpg"
                   alt="Admin Avatar"
                   className="admin-avatar-img"
+                  width="150"
+                  height="150"
                 />
                 <p style={{color: "#66e3b8", marginTop: "12px"}}>Avatar unique et non modifiable</p>
               </div>
