@@ -1,16 +1,19 @@
 """Shared utilities for API routes."""
 
 import logging
+import os
+from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Callable
 
 import psycopg2  # type: ignore
-from psycopg2 import OperationalError  # type: ignore
 from flask import Response, jsonify, request
+from psycopg2 import OperationalError  # type: ignore
 
 BAD_REQUEST = "Bad Request"
 DATABASE_ERROR = "Database error"
 INTERNAL_SERVER_ERROR = "Internal Server Error"
+SESSION_TIMEOUT_MINUTES = int(os.environ.get("SESSION_TIMEOUT_MINUTES", "60"))
 
 
 def make_response(data: Any, status: int = 200) -> Response:
@@ -23,6 +26,8 @@ def handle_db_errors(f: Callable[..., Response]) -> Callable[..., Response]:
     @wraps(f)
     def wrapper(*args: Any, **kwargs: Any) -> Response:
         try:
+            if request.method != "OPTIONS":
+                touch_session_from_headers()
             return f(*args, **kwargs)
         except OperationalError:
             return make_response({"error": DATABASE_ERROR}, 500)
@@ -62,6 +67,53 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
         return make_response({"error": "unauthorized"}, 401)
 
     return wrapper
+
+
+def is_session_active(last_seen: datetime | str | None) -> bool:
+    if not last_seen:
+        return False
+    if isinstance(last_seen, str):
+        last_seen = datetime.fromisoformat(last_seen)
+
+    if isinstance(last_seen, datetime) and last_seen.tzinfo:
+        now = datetime.now(last_seen.tzinfo)
+    else:
+        now = datetime.now()
+
+    return now - last_seen <= timedelta(minutes=SESSION_TIMEOUT_MINUTES)
+
+
+def touch_session_from_headers() -> None:
+    user = request.headers.get("X-Session-User")
+    token = request.headers.get("X-Session-Token")
+    if not user or not token:
+        return
+
+    try:
+        from . import db
+
+        with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
+            cur.execute(
+                "SELECT last_seen FROM user_sessions WHERE username = %s AND session_token = %s",
+                (user, token),
+            )
+            row = cur.fetchone()
+            if not row:
+                return
+
+            if not is_session_active(row[0]):
+                cur.execute(
+                    "DELETE FROM user_sessions WHERE username = %s AND session_token = %s",
+                    (user, token),
+                )
+            else:
+                cur.execute(
+                    "UPDATE user_sessions SET last_seen = CURRENT_TIMESTAMP WHERE username = %s",
+                    (user,),
+                )
+            conn.commit()
+    except Exception as err:
+        logging.debug("Failed to touch session: %s", err)
 
 
 def parse_optional_int(data: dict[str, Any], key: str) -> int | None:

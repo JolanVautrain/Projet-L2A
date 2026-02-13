@@ -1,0 +1,77 @@
+import PropTypes from 'prop-types';
+import { SavingsBadge } from './SavingsBadge.jsx';
+import { TrendingBadge } from './TrendingBadge.jsx';
+import './ProductCard.css';
+
+export function ProductCard({ product, onAddToCart, saleActive, viewerCount, reviewCount }) {
+  return (
+    <article className={`product-card ${product.stock <= 2 ? 'low-stock' : ''} ${product.hot ? 'hot-deal' : ''}`}>
+      <div className="product-deco" aria-hidden>
+        <span className="spark" />
+        <span className="spark" />
+        <span className="spark" />
+      </div>
+      
+      {product.hot && <TrendingBadge type="hot" text="🔥 TENDANCE" />}
+      {product.oldPrice && <SavingsBadge originalPrice={product.price} originalOldPrice={product.oldPrice} />}
+      
+      <img src={product.img} alt="" className="product-img" />
+      <div className="product-body">
+        <h4>{product.title}</h4>
+        <p>{product.desc}</p>
+        <div className="product-actions">
+          <div className="price-block">
+            {product.oldPrice && <span className="product-old-price">{product.oldPrice}</span>}
+            <span className="product-price">{product.price}</span>
+          </div>
+          <button
+            onClick={() => onAddToCart(product)}
+            disabled={!saleActive || product.stock === 0}
+            className={`btn primary ${product.stock <= 2 ? 'pulse' : ''} ${(!saleActive || product.stock === 0) ? 'disabled' : ''}`}
+          >
+            {(!saleActive || product.stock === 0) ? 'Épuisé' : '➕ Ajouter au panier'}
+          </button>
+        </div>
+        {product.stock !== undefined && (
+          <div className="stock-line">
+            {product.stock > 0 ? (
+              <span className="stock-text">{`Seulement ${product.stock} restants`}</span>
+            ) : (
+              <span className="stock-text sold-out">Épuisé</span>
+            )}
+          </div>
+        )}
+        <div className="product-reviews">
+          <div className="stars">★★★★★</div>
+          <span className="review-count">{reviewCount} avis</span>
+        </div>
+        <div className="viewer-count">
+          <strong>{viewerCount}</strong> personnes regardent cet article
+        </div>
+        {product.stock !== undefined && product.stock > 0 && (
+          <div className="stock-bar">
+            <div className="stock-bar-fill" style={{ width: `${(product.stock / 50) * 100}%` }}></div>
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+ProductCard.propTypes = {
+  product: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    img: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    desc: PropTypes.string.isRequired,
+    price: PropTypes.string.isRequired,
+    oldPrice: PropTypes.string,
+    badge: PropTypes.string,
+    hot: PropTypes.bool,
+    stock: PropTypes.number,
+  }).isRequired,
+  onAddToCart: PropTypes.func.isRequired,
+  saleActive: PropTypes.bool.isRequired,
+  viewerCount: PropTypes.number.isRequired,
+  reviewCount: PropTypes.number.isRequired,
+};

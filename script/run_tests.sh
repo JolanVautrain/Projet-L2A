@@ -1,9 +1,6 @@
 #!/bin/bash
-
-###############################################################################
-# Script de test complet pour Sail Weather
+# Script de test complet pour G34
 # Ce script exécute tous les tests (backend et frontend) avec génération de rapports
-###############################################################################
 
 set -e  # Arrêt en cas d'erreur
 
@@ -12,7 +9,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m' # Pas de couleur
 
 # Variables
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -75,7 +72,7 @@ trap cleanup EXIT INT TERM
 
 echo -e "${BLUE}"
 echo "╔════════════════════════════════════════════════════════════╗"
-echo "║          SAIL WEATHER - SUITE DE TESTS COMPLÈTE           ║"
+echo "║              G34 - SUITE DE TESTS COMPLÈTE                 ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
@@ -92,6 +89,19 @@ if [ -d "$BACKEND_DIR/tests" ]; then
     print_success "Tests copiés depuis backend/tests/"
 else
     print_warning "Dossier backend/tests/ non trouvé"
+fi
+
+# Installer les dépendances frontend si nécessaire (pour ESLint)
+if command -v npm >/dev/null 2>&1 && [ -f "$FRONTEND_DIR/package.json" ]; then
+    if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+        print_step "Installation des dépendances frontend (npm install)..."
+        (cd "$FRONTEND_DIR" && npm install)
+        print_success "Dépendances frontend installées"
+    else
+        print_success "Dépendances frontend déjà présentes"
+    fi
+else
+    print_warning "npm non disponible ou frontend/package.json absent"
 fi
 
 ###############################################################################
@@ -196,19 +206,73 @@ if "$PYTEST" test/backend/ \
     --verbose \
     --cov=backend \
     --cov-report=term-missing \
+    --cov-report=xml:"$REPORTS_DIR/coverage-backend.xml" \
+    --cov-report=html:"$REPORTS_DIR/htmlcov-backend" \
+    --junit-xml="$REPORTS_DIR/junit-backend.xml" \
+    --log-file="$REPORTS_DIR/pytest-backend.log" \
+    --log-file-level=INFO 2>&1 | tee "$REPORTS_DIR/pytest-backend-output.log"; then
+    print_success "Tests pytest backend: TOUS PASSÉS"
+else
+    print_error "Tests pytest backend: CERTAINS TESTS ONT ÉCHOUÉ"
+    echo "Voir les détails dans $REPORTS_DIR/pytest-backend.log"
+fi
+
+###############################################################################
+# 4. TESTS SCÉNARIOS FRONTEND (via pytest)
+###############################################################################
+
+echo ""
+print_step "═══════════════════════════════════════════════════════════"
+print_step "TESTS SCÉNARIOS FRONTEND (inscription, jeu, boutique, etc.)"
+print_step "═══════════════════════════════════════════════════════════"
+
+cd "$PROJECT_ROOT"
+
+print_step "Exécution des scénarios frontend avec couverture..."
+if "$PYTEST" test/frontend/ \
+    --verbose \
+    --cov=backend \
+    --cov-report=term-missing \
+    --cov-report=xml:"$REPORTS_DIR/coverage-frontend.xml" \
+    --cov-report=html:"$REPORTS_DIR/htmlcov-frontend" \
+    --junit-xml="$REPORTS_DIR/junit-frontend.xml" \
+    --log-file="$REPORTS_DIR/pytest-frontend.log" \
+    --log-file-level=INFO 2>&1 | tee "$REPORTS_DIR/pytest-frontend-output.log"; then
+    print_success "Tests scénarios frontend: TOUS PASSÉS"
+else
+    print_error "Tests scénarios frontend: CERTAINS TESTS ONT ÉCHOUÉ"
+    echo "Voir les détails dans $REPORTS_DIR/pytest-frontend.log"
+fi
+
+###############################################################################
+# 5. COUVERTURE COMBINÉE (backend + frontend)
+###############################################################################
+
+echo ""
+print_step "═══════════════════════════════════════════════════════════"
+print_step "COUVERTURE COMBINÉE (tous les tests)"
+print_step "═══════════════════════════════════════════════════════════"
+
+cd "$PROJECT_ROOT"
+
+print_step "Exécution de tous les tests avec couverture combinée..."
+if "$PYTEST" test/backend/ test/frontend/ \
+    --verbose \
+    --cov=backend \
+    --cov-report=term-missing \
     --cov-report=xml:"$REPORTS_DIR/coverage.xml" \
     --cov-report=html:"$REPORTS_DIR/htmlcov" \
     --junit-xml="$REPORTS_DIR/junit.xml" \
     --log-file="$REPORTS_DIR/pytest.log" \
     --log-file-level=INFO 2>&1 | tee "$REPORTS_DIR/pytest-output.log"; then
-    print_success "Tests pytest: TOUS PASSÉS"
+    print_success "Tests combinés: TOUS PASSÉS"
 else
-    print_error "Tests pytest: CERTAINS TESTS ONT ÉCHOUÉ"
+    print_error "Tests combinés: CERTAINS TESTS ONT ÉCHOUÉ"
     echo "Voir les détails dans $REPORTS_DIR/pytest.log"
 fi
 
 ###############################################################################
-# 4. TESTS FRONTEND (ESLint)
+# 6. TESTS FRONTEND QUALITÉ (ESLint)
 ###############################################################################
 
 echo ""
@@ -236,7 +300,7 @@ else
 fi
 
 ###############################################################################
-# 5. GÉNÉRATION DU RAPPORT FINAL
+# 7. GÉNÉRATION DU RAPPORT FINAL
 ###############################################################################
 
 echo ""
@@ -254,15 +318,23 @@ Date: $(date '+%Y-%m-%d %H:%M:%S')
 ═══════════════════════════════════════════════════════════
 
 FICHIERS GÉNÉRÉS:
-- pytest.log       : Logs détaillés des tests pytest
-- junit.xml        : Résultats des tests au format JUnit
-- coverage.xml     : Couverture de code au format XML
-- htmlcov/         : Rapport de couverture HTML
-- pylint.log       : Rapport d'analyse pylint
-- flake8.log       : Rapport de style flake8
-- isort.log        : Rapport d'ordre des imports
-- mypy.log         : Rapport de vérification des types
-- eslint.log       : Rapport ESLint frontend
+- pytest-backend.log       : Logs des tests backend
+- pytest-frontend.log      : Logs des scénarios frontend
+- pytest.log               : Logs combinés (tous les tests)
+- junit-backend.xml        : Résultats backend JUnit
+- junit-frontend.xml       : Résultats frontend JUnit
+- junit.xml                : Résultats combinés JUnit
+- coverage-backend.xml     : Couverture backend XML
+- coverage-frontend.xml    : Couverture frontend XML
+- coverage.xml             : Couverture combinée XML
+- htmlcov-backend/         : Rapport couverture backend HTML
+- htmlcov-frontend/        : Rapport couverture frontend HTML
+- htmlcov/                 : Rapport couverture combinée HTML
+- pylint.log               : Rapport d'analyse pylint
+- flake8.log               : Rapport de style flake8
+- isort.log                : Rapport d'ordre des imports
+- mypy.log                 : Rapport de vérification des types
+- eslint.log               : Rapport ESLint frontend
 
 LOCALISATION DES RAPPORTS:
 $REPORTS_DIR
@@ -285,17 +357,22 @@ echo "║                  TESTS TERMINÉS                            ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-echo "📊 Rapports disponibles dans: $REPORTS_DIR"
+echo "Rapports disponibles dans: $REPORTS_DIR"
 echo ""
 echo "Fichiers principaux:"
-echo "  - pytest.log       (logs des tests)"
-echo "  - junit.xml        (résultats JUnit)"
-echo "  - coverage.xml     (couverture XML)"
-echo "  - htmlcov/         (couverture HTML)"
+echo "  - pytest-backend.log       (logs tests backend)"
+echo "  - pytest-frontend.log      (logs scénarios frontend)"
+echo "  - pytest.log               (logs combinés)"
+echo "  - junit.xml                (résultats JUnit combinés)"
+echo "  - coverage.xml             (couverture combinée XML)"
+echo "  - htmlcov/                 (couverture combinée HTML)"
+echo "  - htmlcov-backend/         (couverture backend HTML)"
+echo "  - htmlcov-frontend/        (couverture frontend HTML)"
 echo ""
 echo "Pour voir la couverture de code:"
-echo "  👉 Ouvrez: $REPORTS_DIR/htmlcov/index.html"
+echo "    Ouvrez: $REPORTS_DIR/htmlcov/index.html"
 echo ""
 
 # Le cleanup sera automatiquement appelé grâce au trap
+rm -rf G34_backend.egg-info
 exit 0

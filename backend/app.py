@@ -1,8 +1,8 @@
 """Bootstrap Flask app and register API blueprints."""
 
 import logging
-import sys
 import re
+import sys
 from pathlib import Path
 
 from flask import Flask, request
@@ -17,6 +17,9 @@ from core import admin, db, utils  # type: ignore
 from pages.accueil import auth, game  # type: ignore
 from pages.classement import scores  # type: ignore
 from pages.compte import users  # type: ignore
+from pages.classement import topUsers  # type: ignore
+from pages.report import report  # type: ignore
+from pages.shop import shop  # type: ignore
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -26,8 +29,8 @@ logging.basicConfig(level=logging.INFO)
 @app.after_request
 def after_request(response):
     """Add CORS headers to response."""
-    origin = request.headers.get('Origin')
-    
+    origin = request.headers.get("Origin")
+
     # Check if origin is allowed
     if origin:
         allowed_origins = [
@@ -37,18 +40,30 @@ def after_request(response):
             "http://127.0.0.1:5000",
             "http://localhost:15256",
             "http://127.0.0.1:15256",
+            "http://192.168.60.202:15256",
+            "http://192.168.60.200:15256",
+            "http://192.168.60.302:15256",
             "http://192.168.60.220:15256",
+            "http://192.168.60.021:15256",
+            "http://192.168.60.201:15256",
         ]
-        
+
         # Check if origin is explicitly allowed or matches pattern
-        if origin in allowed_origins or re.match(r"^http://[^:]+:15256$", origin):
-            response.headers['Access-Control-Allow-Origin'] = origin
-            response.headers['Access-Control-Allow-Credentials'] = 'true'
-            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
-            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-User'
-            response.headers['Access-Control-Max-Age'] = '1728000'
-    
+        if origin in allowed_origins or re.match(
+            r"^http://[^:]+:15256$", origin
+        ):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = (
+                "GET, POST, DELETE, OPTIONS"
+            )
+            response.headers["Access-Control-Allow-Headers"] = (
+                "Content-Type, Authorization, X-Admin-User, X-Session-User, X-Session-Token"
+            )
+            response.headers["Access-Control-Max-Age"] = "1728000"
+
     return response
+
 
 # Register blueprints - organized by page
 app.register_blueprint(auth.bp)
@@ -56,6 +71,9 @@ app.register_blueprint(game.bp)
 app.register_blueprint(scores.bp)
 app.register_blueprint(users.bp)
 app.register_blueprint(admin.bp)
+app.register_blueprint(topUsers.bp)
+app.register_blueprint(report.bp)
+app.register_blueprint(shop.bp)
 
 # Ensure database schema exists
 db.check_and_recreate_schema()

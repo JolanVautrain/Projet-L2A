@@ -29,12 +29,16 @@
 
 /* Panels that previously used inline highlight/background */
 .leaderboard__panel{
+  display: block;
   margin-bottom:24px;
   padding:16px;
   background-color: rgba(79,158,246,0.1);
   border-radius:8px;
   border:1px solid rgba(79,158,246,0.3);
+  max-height: 672px;
+  overflow-y: auto;
 }
+
 .leaderboard__panel h2{ margin-top:0 }
 
 .leaderboard h1{margin:0 0 12px 0;font-size:1.5rem;text-align:center}

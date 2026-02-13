@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoginModal from "./modals/LoginModal.jsx";
 import RegisterModal from "./modals/RegisterModal.jsx";
@@ -16,7 +16,32 @@ import { useLanguage } from "../autres/Language.jsx";
 function Accueil({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [showAdPopup, setShowAdPopup] = useState(false);
   const { t } = useLanguage();
+
+  // Statistiques aléatoires affichées dans la page d'accueil
+  const [gamesInProgress, setGamesInProgress] = useState(0);
+  const [averageTime, setAverageTime] = useState("00:00");
+  const [activePlayers, setActivePlayers] = useState(0);
+
+  const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  // Génère et rafraîchit des valeurs aléatoires toutes les 15s
+  useEffect(() => {
+    const updateStats = () => {
+      setGamesInProgress(getRandomInt(20, 100));
+      setAverageTime(formatTime(getRandomInt(120, 10 * 60)));
+      setActivePlayers(getRandomInt(100, 1000));
+    };
+    updateStats();
+    const id = setInterval(updateStats, 15000); // rafraîchit toutes les 15 secondes
+    return () => clearInterval(id);
+  }, []);
 
   // Données pour les sections mises en avant
   const highlights = [
@@ -64,6 +89,66 @@ function Accueil({ user, setUser }) {
       globalThis.history.replaceState({}, document.title, globalThis.location.pathname);
     }
   }, [location]);
+
+  // Gère l'affichage d'une popup publicitaire pour la boutique, avec mémorisation en sessionStorage
+  const adTimerRef = useRef(null);
+  
+  useEffect(() => {
+    const key = "ad_popup_shown_v1";
+    const already = sessionStorage.getItem(key);
+    if (!already) {
+      const showTimer = setTimeout(() => {
+        setShowAdPopup(true);
+        try {
+          sessionStorage.setItem(key, "1");
+        } catch {
+          // Si sessionStorage n'est pas disponible, on ignore l'erreur et on ne mémorise pas
+        }
+          // Ferme la popup après 60 secondes
+        adTimerRef.current = setTimeout(() => {
+          setShowAdPopup(false);
+          adTimerRef.current = null;
+        }, 60000);
+      }, 3000);
+      
+      // Nettoie les timers si le composant est démonté avant l'affichage ou la fermeture de la popup
+      return () => {
+        clearTimeout(showTimer);
+        if (adTimerRef.current) {
+          clearTimeout(adTimerRef.current);
+          adTimerRef.current = null;
+        }
+      };
+    }
+    return undefined;
+  }, []);
+
+  // Ferme la popup publicitaire et nettoie le timer de fermeture si nécessaire
+  const closeAdPopup = () => {
+    setShowAdPopup(false);
+    if (adTimerRef.current) {
+      clearTimeout(adTimerRef.current);
+      adTimerRef.current = null;
+    }
+  };
+  // Ferme la popup par la touche Échap pour accessibilité clavier
+  // Utilise un écouteur global uniquement lorsque la popup est affichée
+  useEffect(() => {
+    if (!showAdPopup) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeAdPopup();
+      }
+    };
+    globalThis.addEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
+  }, [showAdPopup]);
+  // Redirige vers la boutique et ferme la popup
+  const goToShop = () => {
+    setShowAdPopup(false);
+    navigate('/shop');
+  };
   // Rendu du composant Accueil
   return (
     <div className="home">
@@ -79,8 +164,11 @@ function Accueil({ user, setUser }) {
           <div className="hero__actions">
             <Link className="btn primary rainbow" to="/lobby">
                 {t("accueil.startGame")}
+            </Link>
+            <Link className="btn primary rainbow" to="/gameSolo">
+                {t("accueil.startGameSolo")}
               </Link>
-            <Link className="btn ghost" to="/leaderboard">
+            <Link className="btn accent" to="/regle">
               {t("accueil.seeRules")}
             </Link>
             <button
@@ -95,17 +183,17 @@ function Accueil({ user, setUser }) {
           <div className="hero__stats">
             <div className="stat-card">
               <span className="stat-label">{t("accueil.gamesInProgress")}</span>
-              <strong className="stat-value">12</strong>
+              <strong className="stat-value">{gamesInProgress}</strong>
               <p className="stat-note">{t("accueil.stableServers")}</p>
             </div>
             <div className="stat-card">
               <span className="stat-label">{t("accueil.averageTime")}</span>
-              <strong className="stat-value">04:32</strong>
+              <strong className="stat-value">{averageTime}</strong>
               <p className="stat-note">{t("accueil.fastGames")}</p>
             </div>
             <div className="stat-card">
               <span className="stat-label">{t("accueil.activePlayers")}</span>
-              <strong className="stat-value">+120</strong>
+              <strong className="stat-value">{activePlayers >= 0 ? `+${activePlayers}` : activePlayers}</strong>
               <p className="stat-note">{t("accueil.communityReady")}</p>
             </div>
           </div>
@@ -164,13 +252,31 @@ function Accueil({ user, setUser }) {
       </section>
       <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} openRegister={openRegister} />
       <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }} />
+      {showAdPopup && (
+        <div className="ad-popup-overlay" aria-hidden="true" onClick={closeAdPopup}>
+          <div className="ad-popup-card" aria-hidden="true" onClick={(e) => e.stopPropagation()}>
+            <button className="ad-close" onClick={closeAdPopup}>✕</button>
+            <div className="ad-content">
+              <div className="ad-badge">{t("accueil.adPopupBadge")}</div>
+              <h2 className="ad-title">{t("accueil.adPopupTitle")}</h2>
+              <img src="/assets/shop/lootbox/lootboxPub.png" alt="Lootboxes" className="ad-image" />
+              <p className="ad-desc">{t("accueil.adPopupDesc")}</p>
+              <div className="ad-timer">{t("accueil.adPopupTimer")}</div>
+              <button className="btn primary ad-cta" onClick={goToShop}> {t("accueil.adPopupShopBtn")}
+              </button>
+              <button className="btn ghost ad-later" onClick={closeAdPopup}>{t("accueil.adPopupLaterBtn")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default Accueil;
 
-// PropTypes validation pour le composant Accueil
+// PropTypes pour le composant Accueil
 Accueil.propTypes = {
   user: PropTypes.string,
   setUser: PropTypes.func.isRequired,

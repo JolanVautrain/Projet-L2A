@@ -6,9 +6,15 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "./autres/Language.jsx";
-import { getActiveUser, setActiveUser } from "./utils/userSession.js";
+import {
+  getActiveSessionToken,
+  getActiveUser,
+  setActiveSessionToken,
+  setActiveUser,
+} from "./utils/userSession.js";
+import { apiFetch } from "./utils/apiClient.js";
 
 /**
  * Rend une route protégée qui nécessite une authentification.
@@ -35,11 +41,15 @@ RequireAuth.propTypes = {
 import Accueil from "./accueil/Accueil";
 import Leaderboard from "./classement/Leaderboard";
 import Account from "./compte/Account";
+import Statistics from "./statistics/Statistics";
 import Contacts from "./contacts/Contacts";
 import PageNotFound from "./autres/PageNotFound";
 import Game from "./game/Game.jsx";
 import GameWaitingRoom from "./game/GameWaitingRoom.jsx";
-import Regle from "./autres/regle";
+import Regle from "./regle/regle";
+import Shop from "./shop/Shop";
+import GameSolo from "./game/GameSolo.jsx";
+import Moderation from "./admin/moderation.jsx";
 
 /**
  * Composant principal de l'application.
@@ -50,15 +60,21 @@ function App() {
 
   // État utilisateur (persisté dans le localStorage)
   const [userState, setUserState] = useState(() => getActiveUser());
+  const [navbarAvatarKey, setNavbarAvatarKey] = useState(0); // Force le rendu de l'avatar
   const navigate = useNavigate();
 
   /**
    * Met à jour l'utilisateur et le stocke dans le localStorage.
    * @param {string|null} value
    */
-  const setUser = (value) => {
+  const setUser = (value, sessionToken) => {
     setUserState(value);
     setActiveUser(value);
+    if (sessionToken) {
+      setActiveSessionToken(sessionToken);
+    } else if (!value) {
+      setActiveSessionToken(null);
+    }
   };
 
   // Après connexion, si un utilisateur est défini, charger sa langue depuis le backend
@@ -79,7 +95,75 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    if (!userState) return undefined;
+
+    const keepAlive = () => {
+      apiFetch("/session/ping").catch(() => {});
+    };
+
+    keepAlive();
+    const intervalId = setInterval(keepAlive, 5 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [userState]);
+
+  // Écouter l'événement de changement d'avatar
+  useEffect(() => {
+    const handleAvatarChange = (event) => {
+      if (event.detail.username === userState) {
+        setNavbarAvatarKey(prev => prev + 1); // Force le re-rendu de l'avatar
+      }
+    };
+
+    globalThis.addEventListener("avatarChanged", handleAvatarChange);
+    return () => {
+      globalThis.removeEventListener("avatarChanged", handleAvatarChange);
+    };
+  }, [userState]);
+
+
+
+
+
+  useEffect(() => {
+    if (!userState) return undefined;
+
+    const sessionToken = getActiveSessionToken();
+    if (!sessionToken) return undefined;
+
+    // Pas de popup beforeunload - seulement beacon de déconnexion silencieux
+    const handleBeforeUnload = () => {
+      const payload = JSON.stringify({
+        username: userState,
+        session_token: sessionToken,
+      });
+      try {
+        navigator.sendBeacon(
+          "/api/logout",
+          new Blob([payload], { type: "application/json" })
+        );
+      } catch (e) { //eslint-disable-line
+        // Ignore unload failures
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [userState]);
+
   const handleLogout = () => {
+    const sessionToken = getActiveSessionToken();
+    if (userState && sessionToken) {
+      apiFetch("/logout", {
+        method: "POST",
+        headers: {
+          "X-Session-User": userState,
+          "X-Session-Token": sessionToken,
+        },
+      }).catch(() => {});
+    }
     setUser(null);
     navigate("/");
   };
@@ -88,32 +172,68 @@ function App() {
     <>
       <header>
         <nav className="navbar">
-          <NavLink to="/">{t("common.home")}</NavLink>
-          <NavLink to="/leaderboard">{t("common.leaderboard")}</NavLink>
+          <NavLink to="/" onClick={(e) => requestLeaveIfInMatch("/", e)}>
+            {t("common.home")}
+          </NavLink>
+          <NavLink
+            to="/leaderboard"
+            onClick={(e) => requestLeaveIfInMatch("/leaderboard", e)}
+          >
+            {t("common.leaderboard")}
+          </NavLink>
+          <NavLink
+            to="/statistics"
+            onClick={(e) => requestLeaveIfInMatch("/statistics", e)}
+          >
+            {t("common.statistics")}
+          </NavLink>
           {userState ? (
             <div className="nav-greeting">
-              <div className="nav-account-display">
-                <span>
-                  {t("account.hello")} {userState}
-                </span>
-                <button
-                  className="btn ghost no-border account__logout"
-                  onClick={handleLogout}
-                >
-                  {t("common.logout")}
-                </button>
-              </div>
-              <NavLink className="btn ghost no-border" to="/account">
-                {t("account.title")}
+              <NavLink
+                className="nav-user-profile"
+                to="/account"
+                onClick={(e) => requestLeaveIfInMatch("/account", e)}
+              >
+                <img
+                  key={navbarAvatarKey}
+                  src={"/assets/avatar/" + (() => {
+                    if (userState === "admin") return "admin.jpg";
+                    const saved = localStorage.getItem("avatar_" + userState);
+                    return (saved && saved !== "admin.jpg") ? saved : "businessman1.png";
+                  })()}
+                  alt="Avatar"
+                  className="nav-avatar"
+                />
+                <span className="nav-username">{userState}</span>
               </NavLink>
+              <button
+                className="btn ghost no-border nav-logout-btn"
+                onClick={handleLogout}
+                title={t("common.logout")}
+              >
+                ↪
+              </button>
             </div>
           ) : (
-            <NavLink to="/account">{t("account.title")}</NavLink>
+            <NavLink
+              to="/account"
+              onClick={(e) => requestLeaveIfInMatch("/account", e)}
+            >
+              {t("account.title")}
+            </NavLink>
           )}
-          <NavLink to="/contacts">{t("common.contacts")}</NavLink>
-          <NavLink to="/regle">{t("rules.title")}</NavLink>
+          <NavLink to="/shop" onClick={(e) => requestLeaveIfInMatch("/shop", e)}>
+            {t("common.shop")}
+          </NavLink>
+          <NavLink
+            to="/contacts"
+            onClick={(e) => requestLeaveIfInMatch("/contacts", e)}
+          >
+            {t("common.contacts")}
+          </NavLink>
         </nav>
       </header>
+
       <Routes>
         <Route
           path="/"
@@ -123,6 +243,12 @@ function App() {
           path="/leaderboard"
           element={
             <Leaderboard user={userState} setUser={setUserAndLoadLang} />
+          }
+        />
+        <Route
+          path="/statistics"
+          element={
+            <Statistics user={userState} setUser={setUserAndLoadLang} />
           }
         />
         <Route
@@ -138,9 +264,19 @@ function App() {
             </RequireAuth>
           }
         />
+        <Route
+          path="/gameSolo"
+          element={
+            <RequireAuth user={userState}>
+              <GameSolo />
+            </RequireAuth>
+          }
+        />
         <Route path="/lobby" element={<RequireAuth user={userState}><GameWaitingRoom /></RequireAuth>}/>
         <Route path="/*" element={<PageNotFound />} />
         <Route path="/regle" element={<Regle />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/moderation" element={<Moderation user={userState} />} />
       </Routes>
     </>
   );

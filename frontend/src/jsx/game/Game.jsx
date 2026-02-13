@@ -11,8 +11,6 @@ import {
   initWeatherSystem,
   updateWeatherSystem,
   addNightStars,
-  removeNightStars,
-  addSunGlow,
   isNight,
   getTimeOfDay,
   getSunProgress,
@@ -21,14 +19,15 @@ import {
 import {
   createBackgroundSystem,
   updateBackgroundParallax,
-  getBackgroundLayers,
   updateStarsVisibility,
   updateSkyGradient,
 } from "./utils/GameBackground.js";
 import {
   initObstacles,
+  applySpawnWave,
   spawnObstacle,
   recycleObstacles,
+  setMultiplayerMode,
   updateStage,
   getStage,
   resetObstacles,
@@ -40,7 +39,6 @@ import {
   toggleInvincible,
   getInvincibility,
   getPlayer,
-  getPlatforms,
   resetPhysicsState,
   setupCollisions,
   getOpponent,
@@ -66,17 +64,13 @@ import {
   createScorePopup,
   createElectricSpark,
   createDustCloud,
-  createTrail,
   createShockWave,
 } from "./utils/GameParticles.js";
 import {
   initEnhancements,
   createImpactEffect,
-  addPlayerTrail,
   addVignette,
-  clearEnhancements,
   createEnergyAura,
-  updatePlayerHologram,
 } from "./utils/GameEnhancements.js";
 import ModalGameWon from "./modals/ModalGameWon.jsx";
 import GameClientPrediction from "./utils/GameClientPrediction.js";
@@ -88,10 +82,12 @@ let currentSessionId = null;
 let processingDeath = false;
 let sessionPosted = false;
 let showGameOverModalCallback = null;
-let showGameWonModalCallback = null;
 let gameScene = null;
 let inputSocket = null;
 let clientPrediction = null; // Système de prédiction client-side
+let activeMatchId = null;
+let serverTimeOffsetMs = 0;
+let multiplayerEnabled = false;
 
 /**
  * Envoyer un input avec prédiction client-side
@@ -126,15 +122,17 @@ export function sendGameInput(type) {
     },
     applyActionLocally,
     inputSocket,
-    username
+    username,
+    activeMatchId
   );
 }
 
 export function sendGameOver() {
   const username = getActiveUser();
   if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
-
-  inputSocket.send(JSON.stringify({ type: "gameOver", username }));
+  inputSocket.send(
+    JSON.stringify({ type: "gameOver", username, matchId: activeMatchId })
+  );
 }
 
 /**
@@ -174,7 +172,7 @@ function create() {
   initDayNightSystem(this);
   initWeatherSystem(this);
   createBackgroundSystem(this);
-  initPhysics(this);
+  initPhysics(this,false);
   initObstacles(this);
   initControls(this, handleAdminInvincible);
   initParticles(this);
@@ -204,9 +202,7 @@ function create() {
 function update() {
   if (!gameScene || gameOver) return;
 
-  const username = getActiveUser();
   const player = getPlayer();
-  const cursors = getCursors();
 
   if (!player) return;
 
@@ -240,6 +236,16 @@ function update() {
     updateStage(newStage);
     createScorePopup(gameScene, 400, 100, `Stage ${newStage}`);
     globalThis.dispatchEvent(new CustomEvent("stage-up", { detail: newStage }));
+
+    if (multiplayerEnabled && inputSocket?.readyState === WebSocket.OPEN) {
+      inputSocket.send(
+        JSON.stringify({
+          type: "stage_update",
+          matchId: activeMatchId,
+          stage: newStage,
+        })
+      );
+    }
   }
 
   // Recycler les obstacles et compter les points
@@ -250,7 +256,9 @@ function update() {
   });
 
   // Mettre à jour et spawner les obstacles
-  spawnObstacle(gameScene);
+  if (!multiplayerEnabled) {
+    spawnObstacle(gameScene);
+  }
 }
 
 /**
@@ -302,6 +310,7 @@ function handleObstacleCollision(_player, _obstacle) {
           score: finalScore,
           stage: getStage(),
           timer: timerSeconds,
+          state: "Defeat"
         }),
       })
         .then((r) => r.json())
@@ -399,27 +408,82 @@ function resetGameState() {
  */
 function Game() {
   const gameContainer = useRef(null);
+  const leavePromptedRef = useRef(false);
   const [stage, setStage] = useState(1);
   const [scoreDisplay, setScoreDisplay] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showGameWonModal, setShowGameWonModal] = useState(false);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+  const [confirmedLeavingGame, setConfirmedLeavingGame] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
+
+  // Vérifier si l'utilisateur essaie d'accéder directement sans passer par le lobby
+  useEffect(() => {
+    const storedMatchId = sessionStorage.getItem("activeMatchId");
+    const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
+    
+    // Si pas de matchId et pas de replay confirmé, rediriger vers le lobby
+    if (!storedMatchId && !confirmedLeaving) {
+      navigate("/lobby", { replace: true });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
+    if (confirmedLeaving) {
+      sessionStorage.removeItem("confirmedLeavingGame");
+    }
+    const storedMatchId = sessionStorage.getItem("activeMatchId");
+    const storedOffset = sessionStorage.getItem("serverTimeOffsetMs");
+    activeMatchId = storedMatchId;
+    serverTimeOffsetMs = storedOffset ? Number(storedOffset) : 0;
+    multiplayerEnabled = Boolean(storedMatchId);
+    setMultiplayerMode(multiplayerEnabled);
+  }, []);
 
   useEffect(() => {
     const wsUrl = getWebSocketUrl();
     const ws = new WebSocket(wsUrl);
     const username = getActiveUser();
     inputSocket = ws;
+    let isUnmounting = false;
+    let closeAfterOpen = false;
 
-    ws.onopen = () => console.log("WS connected");
-    ws.onerror = (e) => console.error("WS error", e);
-    ws.onclose = () => console.log("WS closed");
+    ws.onopen = () => {
+      if (closeAfterOpen) {
+        ws.close();
+        return;
+      }
+      console.log("WS connected");
+      if (activeMatchId) {
+        ws.send(
+          JSON.stringify({
+            type: "join_game",
+            username,
+            matchId: activeMatchId,
+          })
+        );
+      }
+    };
+    ws.onerror = (e) => {
+      if (isUnmounting) return;
+      console.error("WS error", e);
+    };
+    ws.onclose = () => {
+      if (isUnmounting) return;
+      console.log("WS closed");
+    };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
+        if (data.type === "join_ok") {
+          setOpponentDisconnected(false);
+          return;
+        }
 
         // ========== CONFIRMATION D'INPUT ==========
         // Le serveur confirme que l'input a été reçu et validé
@@ -440,7 +504,7 @@ function Game() {
         if (data.type === "state_correction") {
           if (clientPrediction) {
             const player = getPlayer();
-            console.warn(`⚠️ Correction du serveur reçue`);
+            console.warn(`[!] Correction du serveur reçue`);
             clientPrediction.processServerCorrection(
               {
                 sequence: data.sequence || 0,
@@ -460,8 +524,11 @@ function Game() {
         // ========== INPUT REÇU (adversaire) ==========
         // Mise à jour de l'adversaire avec interpolation
         if (data.type === "input") {
+          if (data.matchId && data.matchId !== activeMatchId) return;
           const usernameOpponent = data.username;
           if (username === usernameOpponent) return; // C'est notre action, on ignore
+
+          setOpponentDisconnected(false);
 
           // Mettre à jour l'état de l'adversaire dans la prédiction
           if (clientPrediction && data.serverState) {
@@ -475,11 +542,31 @@ function Game() {
               opponent.setVelocityY(-500);
             }
           }
-          console.log(`📨 Action adversaire: ${usernameOpponent} ${data.input}`);
+          console.log(`[X] Action adversaire: ${usernameOpponent} ${data.input}`);
+        }
+
+        if (data.type === "spawn_wave") {
+          if (data.matchId !== activeMatchId) return;
+          const spawnAt = Number(data.spawnAt || 0);
+          const targetTime = spawnAt - serverTimeOffsetMs;
+          const delay = Math.max(0, targetTime - Date.now());
+          setTimeout(() => {
+            applySpawnWave(gameScene, data.wave);
+          }, delay);
+        }
+
+        // ========== ADVERSAIRE DÉCONNECTÉ ==========
+        if (data.type === "opponent_disconnected") {
+          if (data.matchId && data.matchId !== activeMatchId) return;
+          if (!confirmedLeavingGame) {
+            setOpponentDisconnected(true);
+          }
+          return;
         }
 
         // ========== FIN DE PARTIE ==========
         if (data.type === "gameOver") {
+          if (data.matchId && data.matchId !== activeMatchId) return;
           const usernameOpponent = data.username;
           if (username === usernameOpponent) return;
 
@@ -500,6 +587,7 @@ function Game() {
                   score: finalScore,
                   stage: getStage(),
                   timer: timerSeconds,
+                  state: "Victory"
                 }),
               })
                 .then((r) => r.json())
@@ -553,9 +641,12 @@ function Game() {
                 .catch((err) => console.warn("Failed to submit score", err));
             }
           }
-          if (showGameWonModalCallback) {
-            showGameWonModalCallback();
+          try {
+            gameScene?.scene?.pause();
+          } catch (e) {
+            console.warn("Failed to pause scene", e);
           }
+          setShowGameWonModal(true);
         }
       } catch (err) {
         console.error("Invalid WS message", event.data);
@@ -563,7 +654,12 @@ function Game() {
     };
 
     return () => {
-      ws.close();
+      isUnmounting = true;
+      if (ws.readyState === WebSocket.CONNECTING) {
+        closeAfterOpen = true;
+      } else {
+        ws.close();
+      }
       inputSocket = null;
     };
   }, []);
@@ -571,24 +667,24 @@ function Game() {
   const handleReplay = () => {
     setShowGameOverModal(false);
     setShowGameWonModal(false);
-    try {
-      gameScene.scene.resume();
-    } catch (e) {
-      console.warn("Failed to resume scene", e);
-    }
-    setScoreDisplay(0);
-    setStage(1);
-    setTimerSeconds(0);
-    resetGameState();
+    setConfirmedLeavingGame(true);
+    sessionStorage.setItem("confirmedLeavingGame", "1");
+    sessionStorage.removeItem("activeMatchId");
+    sessionStorage.removeItem("serverTimeOffsetMs");
+    navigate("/lobby");
   };
 
   const handleReturnHome = async () => {
     setShowGameOverModal(false);
+    setConfirmedLeavingGame(true);
+    sessionStorage.setItem("confirmedLeavingGame", "1");
     try {
       gameScene.scene.resume();
     } catch (e) {
       console.warn("Failed to resume scene", e);
     }
+    sessionStorage.removeItem("activeMatchId");
+    sessionStorage.removeItem("serverTimeOffsetMs");
     navigate("/");
   };
 
@@ -603,16 +699,35 @@ function Game() {
     };
   }, []);
 
+  // Demander confirmation avant de quitter via un changement d'onglet
   useEffect(() => {
-    showGameWonModalCallback = () => {
-      try {
-        gameScene.scene.pause();
-      } catch (e) {
-        console.warn("Failed to pause scene", e);
-      }
-      setShowGameWonModal(true);
+    if (confirmedLeavingGame || showGameOverModal || showGameWonModal) {
+      return;
+    }
+
+    const handleBlur = () => {
+      if (!activeMatchId) return;
+      if (leavePromptedRef.current) return;
+      leavePromptedRef.current = true;
+      globalThis.dispatchEvent(
+        new CustomEvent("request-leave-match", {
+          detail: { target: "/lobby", reason: "tab" },
+        })
+      );
     };
-  }, []);
+
+    const handleCancel = () => {
+      leavePromptedRef.current = false;
+    };
+
+    globalThis.addEventListener("blur", handleBlur);
+    globalThis.addEventListener("leave-match-cancelled", handleCancel);
+    return () => {
+      globalThis.removeEventListener("blur", handleBlur);
+      globalThis.removeEventListener("leave-match-cancelled", handleCancel);
+      leavePromptedRef.current = false;
+    };
+  }, [confirmedLeavingGame, showGameOverModal, showGameWonModal]);
 
   useEffect(() => {
     globalThis.dispatchEvent(new CustomEvent("score-up", { detail: score }));
@@ -707,6 +822,18 @@ function Game() {
             onReturnHome={handleReturnHome}
           />
         )}
+
+        {opponentDisconnected && (
+          <div className="opponent-disconnected-notification">
+            <div className="notification-content">
+              <span className="notification-icon">⚠️</span>
+              <span className="notification-text">
+                {t("game.opponentDisconnected") || "L'adversaire s'est déconnecté"}
+              </span>
+            </div>
+          </div>
+        )}
+
         {showGameWonModal && (
           <ModalGameWon
             isOpen={true}

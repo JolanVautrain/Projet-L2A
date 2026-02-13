@@ -9,17 +9,13 @@ import { useLanguage } from "./Language.jsx";
  * Affiche une page 404 personnalisée avec animation interactive.
  */
 function PageNotFound() {
-  // Refs et états pour l'animation des yeux et la synthèse vocale
+  // Refs et états pour l'animation des yeux
   const leftPupil = useRef(null);
   const rightPupil = useRef(null);
   const eyesDataRef = useRef([]);
-  const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState(null);
-  const [pitch] = useState(1);
-  const [rate] = useState(1);
   const [speakingId, setSpeakingId] = useState(null);
   const [clickedId, setClickedId] = useState(null);
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // Textes parlés par les différentes figures
   const speeches = {
@@ -27,6 +23,14 @@ function PageNotFound() {
     one: t("pageNotFound.speechOne"),
     two: t("pageNotFound.speechTwo"),
     three: t("pageNotFound.speechThree"),
+  };
+
+  // Fichiers audio associés à chaque figure
+  const audioFiles = {
+    main: "/assets/voice/voix_DD.mp3",
+    one: "/assets/voice/voix_DV.mp3",
+    two: "/assets/voice/voix_MS.mp3",
+    three: "/assets/voice/voix_NS.mp3",
   };
 
   // Animation des yeux qui suivent le curseur
@@ -111,45 +115,18 @@ function PageNotFound() {
       globalThis.cancelAnimationFrame(rafId);
     };
   }, []);
-  // Chargement des voix disponibles pour la synthèse vocale
-  useEffect(() => {
-    if (typeof globalThis === "undefined" || !("speechSynthesis" in globalThis)) return;
-    // fonction de chargement des voix
-    function loadVoices() {
-      const vs = globalThis.speechSynthesis.getVoices() || [];
-      setVoices(vs);
-      if (vs.length && !selectedVoice) {
-        const pref = vs.find((v) => /fr/i.test(v.lang) && !/Microsoft/i.test(v.name));
-        setSelectedVoice(pref ? pref.name : vs[0].name);
-      }
-    }
-    // initial les voix
-    loadVoices();
-    globalThis.speechSynthesis.onvoiceschanged = loadVoices;
-    return () => { globalThis.speechSynthesis.onvoiceschanged = null; };
-  }, [selectedVoice]);
 
   /**
    * Composant PageNotFound
    * 
-   * Fait parler la synthèse vocale avec le texte associé à l'ID donné.
+   * Joue le fichier audio associé à l'ID donné.
    */
   function handleSpeak(id = "main") {
-    const text = speeches[id] || speeches.main;
-    if (typeof globalThis !== "undefined" && "speechSynthesis" in globalThis) {
-      globalThis.speechSynthesis.cancel();
-      const ut = new globalThis.SpeechSynthesisUtterance(text);
-      ut.lang = language === 'en' ? "en-US" : "fr-FR";
-      // configuration de la voix
-      const v = voices.find((x) => x.name === selectedVoice);
-      if (v) ut.voice = v;
-      ut.pitch = Math.max(0.1, Math.min(2, pitch));
-      ut.rate = Math.max(0.1, Math.min(10, rate));
-      globalThis.speechSynthesis.speak(ut);
-    } else {
-      // solution de repli : simple alerte
-      alert(text);
-    }
+    const audioPath = audioFiles[id] || audioFiles.main;
+    const audio = new Audio(audioPath);
+    audio.play().catch((error) => {
+      console.error("Erreur lors de la lecture de l'audio:", error);
+    });
   }
   
   /**

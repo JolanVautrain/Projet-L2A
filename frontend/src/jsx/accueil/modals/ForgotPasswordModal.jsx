@@ -20,25 +20,26 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
 
   const handleImportFile = (event) => {
     setError("");
-    const file = event.target.files && event.target.files[0];
+    const file = event.target?.files?.[0];
     if (!file) return;
     if (!file.name.endsWith('.json')) {
       setError(t("forgotPassword.error_invalid_code") || "Invalid file format");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const obj = JSON.parse(reader.result);
-        if (obj.username) setUsername(String(obj.username));
-        if (obj.recovery_code) setRecoveryCode(String(obj.recovery_code));
-      } catch (e) {
-        setError(t("forgotPassword.error_invalid_code") || "Invalid JSON file");
-      }
-    };
-    reader.onerror = () => setError(t("forgotPassword.error_invalid_code") || "Failed to read file");
-    reader.readAsText(file);
-    // reset the input so same file can be selected again
+    file
+      .text()
+      .then((text) => {
+        try {
+          const obj = JSON.parse(text);
+          if (obj.username) setUsername(String(obj.username));
+          if (obj.recovery_code) setRecoveryCode(String(obj.recovery_code));
+        } catch {
+          setError(t("forgotPassword.error_invalid_code") || "Invalid JSON file");
+        }
+      })
+      .catch(() => setError(t("forgotPassword.error_invalid_code") || "Failed to read file"));
+
+    // Reset de l'input pour permettre de réimporter le même fichier si besoin
     event.target.value = null;
   };
 

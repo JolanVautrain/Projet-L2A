@@ -125,7 +125,10 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             users_count = 0
         if users_count == 0:
             default_users = load_default_users()
-            logger.info("Preparing to insert %d default users from db_init.json", len(default_users))
+            logger.info(
+                "Preparing to insert %d default users from db_init.json",
+                len(default_users),
+            )
             for init_username, init_password, init_language in default_users:
                 init_cur.execute(
                     "INSERT INTO users (username, password, language) "
@@ -133,13 +136,16 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
                     (init_username, init_password, init_language),
                 )
                 logger.info("Inserted user: %s", init_username)
-            logger.info("Successfully inserted %d default users", len(default_users))
+            logger.info(
+                "Successfully inserted %d default users", len(default_users)
+            )
         init_cur.execute(
             """CREATE TABLE IF NOT EXISTS highscores (
             username varchar(100) PRIMARY KEY,
             high_score integer NOT NULL,
             stage integer DEFAULT 0,
             timer integer DEFAULT 0,
+            state varchar(100),
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
         )
@@ -168,6 +174,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             score integer NOT NULL,
             stage integer DEFAULT 0,
             timer integer DEFAULT 0,
+            state varchar(100),
             playedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
@@ -181,6 +188,15 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
         );"""
         )
         init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS user_sessions (
+            username varchar(100) PRIMARY KEY,
+            session_token varchar(128) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        );"""
+        )
+        init_cur.execute(
             """CREATE TABLE IF NOT EXISTS recovery_codes (
             id SERIAL PRIMARY KEY,
             username varchar(100) NOT NULL,
@@ -190,6 +206,27 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
         );"""
         )
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS issue_reports (
+                id SERIAL PRIMARY KEY,
+                username varchar(100) NOT NULL,
+                issue TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            );"""
+        )
+        init_cur.execute(
+            """CREATE TABLE IF NOT EXISTS purchases (
+                id SERIAL PRIMARY KEY,
+                username varchar(100) NOT NULL,
+                product_id varchar(100) NOT NULL,
+                product_name TEXT NOT NULL,
+                price varchar(50) NOT NULL,
+                purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            );"""
+        )
+
         init_conn.commit()
     except psycopg2.Error as err:
         logger.exception("Failed to initialize database: %s", err)
@@ -214,7 +251,10 @@ def check_and_recreate_schema() -> None:
         "user_xp_history",
         "game_sessions",
         "user_inputs",
+        "user_sessions",
         "recovery_codes",
+        "issue_reports",
+        "purchases",
     ]
     try:
         with get_db_connection() as conn, get_db_cursor(conn) as cur:
@@ -267,6 +307,32 @@ def check_and_recreate_schema() -> None:
                         logger.info("Adding ban_reason column to users table")
                         cur.execute(
                             "ALTER TABLE users ADD COLUMN ban_reason TEXT NULL"
+                        )
+                        conn.commit()
+
+                    # Check and add state column in highscores
+                    cur.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name='highscores' AND column_name='state'"
+                    )
+                    if not cur.fetchone():
+                        logger.info("Adding state column to highscores table")
+                        cur.execute(
+                            "ALTER TABLE highscores ADD COLUMN state varchar(100)"
+                        )
+                        conn.commit()
+
+                    # Check and add state column in game_sessions
+                    cur.execute(
+                        "SELECT column_name FROM information_schema.columns "
+                        "WHERE table_name='game_sessions' AND column_name='state'"
+                    )
+                    if not cur.fetchone():
+                        logger.info(
+                            "Adding state column to game_sessions table"
+                        )
+                        cur.execute(
+                            "ALTER TABLE game_sessions ADD COLUMN state varchar(100)"
                         )
                         conn.commit()
             except psycopg2.Error as err:

@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sail-weather-backend"
+name = "G34-backend"
 version = "0.1.0"
 description = "Backend Flask pour Groupe 34"
 requires-python = ">=3.9"
@@ -15,3 +15,7 @@ exclude = ["test*", "WIKI*", "docker*", "script*", "frontend*"]
 
 [tool.black]
 line-length = 79
+
+[tool.mypy]
+mypy_path = "backend"
+ignore_missing_imports = true

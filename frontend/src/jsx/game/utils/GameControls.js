@@ -3,9 +3,8 @@
  */
 
 let cursors = null;
-let key3Pressed = false;
-let key4Pressed = false;
 let onInvincibleToggle = null;
+let keyInvincible = null;
 
 /**
  * Initialise les contrôles clavier
@@ -13,9 +12,10 @@ let onInvincibleToggle = null;
 export function initControls(scene, onInvincibleToggleCallback = null) {
   cursors = scene.input.keyboard.createCursorKeys();
   onInvincibleToggle = onInvincibleToggleCallback;
-  
+
   // Ajouter la touche K pour le mode invincible (admin seulement)
-  scene.input.keyboard.on('keydown-K', () => {
+  keyInvincible = scene.input.keyboard.addKey("K");
+  keyInvincible.on("down", () => {
     if (onInvincibleToggle) {
       onInvincibleToggle();
     }

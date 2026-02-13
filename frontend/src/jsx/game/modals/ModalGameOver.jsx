@@ -2,6 +2,19 @@
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
 
+/**
+ * Composant ModalGameOver
+ * 
+ * Affiche une fenêtre modale lorsque le jeu est terminé, montrant le score et le stage atteint, avec des options pour rejouer ou retourner à l'accueil.
+ *  
+ * Props :
+ * - isOpen (bool) : indique si la modale doit être affichée
+ * - score (number) : le score atteint par le joueur
+ * - stage (number) : le stage atteint par le joueur
+ * - onReplay (function) : fonction à appeler pour rejouer
+ * - onReturnHome (function) : fonction à appeler pour retourner à l'accueil
+ * 
+*/
 function ModalGameOver({ isOpen, score, stage, onReplay, onReturnHome }) {
   const { t } = useLanguage();
   if (!isOpen) return null;
@@ -31,6 +44,7 @@ function ModalGameOver({ isOpen, score, stage, onReplay, onReturnHome }) {
 
 export default ModalGameOver;
 
+// PropTypes pour le composant ModalGameOver
 ModalGameOver.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   score: PropTypes.number,

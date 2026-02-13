@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Statistics from "./Statistics.jsx";
 import { LanguageSelector, useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
+import { getActiveSessionToken } from "../utils/userSession.js";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 
@@ -35,9 +36,113 @@ function Account({ user, setUser }) {
   const [newRecoveryCode, setNewRecoveryCode] = useState(null);
   const [showNewCode, setShowNewCode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState("");
+  const [ownsAvatarPack, setOwnsAvatarPack] = useState(false);
+  const [userPurchases, setUserPurchases] = useState([]);
   const navigate = useNavigate();
   const { t } = useLanguage();
   const apiBase = getApiBaseUrl();
+
+  // Liste des avatars disponibles (sans admin.jpg pour utilisateurs normaux)
+  const availableAvatars = [
+    "samourai.png",
+    "businessman1.png",
+    "fireman.png",
+    "fireman_temu.png",
+    "fireman_woman.png",
+    "gangster.png",
+    "gangster_temu.png",
+    "policeman.png",
+    "policewomen.png",
+    "politician_men.png",
+    "politician_woman.png",
+    "rescue.png",
+    "worker.png",
+  ];
+
+  // Vérifier si l'utilisateur possède le pack d'avatars depuis la BDD
+  useEffect(() => {
+    if (user && user !== "admin") {
+      fetch(`${apiBase}/shop/has-product/${user}/avatar-logo`)
+        .then(res => res.json())
+        .then(data => {
+          setOwnsAvatarPack(data.has_product || false);
+        })
+        .catch(err => {
+          console.error("Failed to check avatar pack ownership:", err);
+          setOwnsAvatarPack(false);
+        });
+    }
+  }, [user, apiBase]);
+
+  // Charger l'historique d'achats de l'utilisateur
+  useEffect(() => {
+    if (user) {
+      fetch(`${apiBase}/shop/purchases/${user}`)
+        .then(res => res.json())
+        .then(data => {
+          setUserPurchases(data.purchases || []);
+        })
+        .catch(err => {
+          console.error("Failed to load purchase history:", err);
+          setUserPurchases([]);
+        });
+    }
+  }, [user, apiBase]);
+
+  // Charger l'avatar depuis localStorage
+  useEffect(() => {
+    if (user) {
+      // Admin a toujours admin.jpg et ne peut pas le changer
+      if (user === "admin") {
+        setSelectedAvatar("admin.jpg");
+        localStorage.setItem(`avatar_${user}`, "admin.jpg");
+        return;
+      }
+      
+      const savedAvatar = localStorage.getItem(`avatar_${user}`);
+      // Empêcher les utilisateurs normaux d'utiliser admin.jpg
+      if (savedAvatar && savedAvatar !== "admin.jpg" && availableAvatars.includes(savedAvatar)) {
+        // si l'avatar sauvegardé est autorisé (samourai toujours autorisé) ou l'utilisateur possède le pack
+        if (savedAvatar === "samourai.png" || ownsAvatarPack) {
+          setSelectedAvatar(savedAvatar);
+        } else {
+          // le pack n'est pas possédé : forcer samourai
+          setSelectedAvatar("samourai.png");
+          localStorage.setItem(`avatar_${user}`, "samourai.png");
+        }
+      } else {
+        // Avatar par défaut : samourai
+        setSelectedAvatar("samourai.png");
+        localStorage.setItem(`avatar_${user}`, "samourai.png");
+      }
+    }
+  }, [user, ownsAvatarPack]);
+
+  // Fonction pour sélectionner un avatar
+  const handleAvatarSelect = (avatar) => {
+    // Admin ne peut pas changer son avatar
+    if (user === "admin") {
+      return;
+    }
+    
+    // Empêcher de sélectionner admin.jpg
+    if (avatar === "admin.jpg") {
+      return;
+    }
+    if (avatar !== "samourai.png" && !ownsAvatarPack) {
+      // Ne pas permettre la sélection ; rediriger vers la boutique pour achat
+      navigate('/shop');
+      return;
+    }
+
+    setSelectedAvatar(avatar);
+    if (user) {
+      localStorage.setItem(`avatar_${user}`, avatar);
+      // Déclencher un événement personnalisé pour actualiser l'avatar dans la navbar
+      globalThis.dispatchEvent(new CustomEvent("avatarChanged", { detail: { avatar, username: user } }));
+    }
+  };
 
   // Fonction pour charger et enrichir les utilisateurs
   const loadAdminUsers = async (currentUser) => {
@@ -174,6 +279,17 @@ function Account({ user, setUser }) {
   };
   // Gère la déconnexion de l'utilisateur
   const handleLogout = () => {
+    const sessionToken = getActiveSessionToken();
+    if (user && sessionToken) {
+      fetch(`${apiBase}/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Session-User": user,
+          "X-Session-Token": sessionToken,
+        },
+      }).catch(() => {});
+    }
     setUser(null);
     navigate("/");
   };
@@ -229,31 +345,6 @@ function Account({ user, setUser }) {
       }
     };
 
-    const xp_form = (
-      <form id="xp-form" onSubmit={handleSubmit}>
-        <label htmlFor="input-xp">
-          Ajoute l'XP à l'utilisateur
-          <input
-            type="text"
-            name="number"
-            placeholder="50"
-            inputMode="numeric"
-            pattern="[0-9]{0,}"
-            required
-          />
-        </label>
-
-        <label htmlFor="sub-xp">
-          soustrait l'xp si cocher
-          <input type="checkbox" name="sub_xp" />
-        </label>
-
-        <button type="submit" className="btn primary" disabled={awardXpLoading}>
-          {awardXpLoading ? t("common.saving") : t("account.awardXp")}
-        </button>
-      </form>
-    );
-
     return (
       <>
         <h1>{t("account.title")}</h1>
@@ -261,8 +352,104 @@ function Account({ user, setUser }) {
           <p>
             {t("account.hello")} {user}, {t("account.yourAccountPage")}.
           </p>
-          <Statistics user={user} />
+          
+          {/* Sélecteur d'avatar */}
+          {user !== "admin" ? (
+            <div className="avatar-selector">
+              <h3>{t("account.chooseAvatar") || "Choisir votre avatar"}</h3>
+              <div className="avatar-grid">
+                {availableAvatars.map((avatar) => {
+                  const locked = avatar !== "samourai.png" && !ownsAvatarPack;
+                  return (
+                    <div
+                      key={avatar}
+                      className={`avatar-option ${selectedAvatar === avatar ? "selected" : ""} ${locked ? "locked" : ""}`}
+                      onClick={() => handleAvatarSelect(avatar)}
+                      role="button"
+                      tabIndex={0}
+                      title={locked ? (t("account.avatarPackRequired") || "Pack avatar cyber requis — acheter dans la boutique") : avatar.replace(".png", "")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          handleAvatarSelect(avatar);
+                        }
+                      }}
+                    >
+                      <img
+                        src={`/assets/avatar/${avatar}`}
+                        alt={avatar.replace(".png", "")}
+                        className="avatar-img"
+                      />
+                      {locked && (
+                        <div className="avatar-lock" aria-hidden>
+                          <span className="lock-icon">🔒</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="avatar-selector">
+              <h3>Avatar Administrateur</h3>
+              <div className="admin-avatar-display">
+                <img
+                  src="/assets/avatar/admin.jpg"
+                  alt="Admin Avatar"
+                  className="admin-avatar-img"
+                />
+                <p style={{color: "#66e3b8", marginTop: "12px"}}>Avatar unique et non modifiable</p>
+              </div>
+            </div>
+          )}
+          
           <LanguageSelector />
+          
+          {/* Historique d'achats */}
+          <div className="purchase-history-section">
+            <h3>{t("account.purchaseHistory") || "Historique d'achats"}</h3>
+            {userPurchases.length > 0 ? (
+              <div style={{ overflowX: "auto", marginTop: "12px" }}>
+                <table className="purchase-history-table" style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  background: "rgba(255,255,255,0.02)",
+                  borderRadius: "10px",
+                  overflow: "hidden"
+                }}>
+                  <thead>
+                    <tr style={{
+                      background: "rgba(255,255,255,0.05)",
+                      borderBottom: "1px solid rgba(255,255,255,0.1)"
+                    }}>
+                      <th style={{ padding: "12px", textAlign: "left" }}>ID</th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>{t("shop.product") || "Produit"}</th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>{t("shop.price") || "Prix"}</th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>{t("common.date") || "Date"}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userPurchases.map((purchase) => (
+                      <tr key={purchase.id} style={{
+                        borderBottom: "1px solid rgba(255,255,255,0.05)"
+                      }}>
+                        <td style={{ padding: "12px" }}>{purchase.id}</td>
+                        <td style={{ padding: "12px" }}>{purchase.product_name}</td>
+                        <td style={{ padding: "12px" }}>{purchase.price}</td>
+                        <td style={{ padding: "12px" }}>
+                          {new Date(purchase.purchased_at).toLocaleString('fr-FR')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p style={{ color: "rgba(255,255,255,0.6)", marginTop: "8px" }}>
+                {t("account.noPurchases") || "Aucun achat effectué"}
+              </p>
+            )}
+          </div>
           
           {/* Codes de récupération */}
           <div className="recovery-codes-section">
@@ -317,518 +504,6 @@ function Account({ user, setUser }) {
             )}
           </div>
 
-          {isAdmin && (
-            <div className="admin-tools">
-              <h2
-                className="admin-tools__title"
-                style={{ textAlign: "center" }}
-              >
-                {t("account.adminTools")}
-              </h2>
-              <div style={{ width: "100%" }}>
-                <div className="admin-tools__center">
-                  <h4 style={{ textAlign: "center" }}>
-                    {t("account.manageUsers")}
-                  </h4>
-                  <div className="admin-users-search-row">
-                    <input
-                      type="search"
-                      placeholder={
-                        t("account.searchPlaceholder") ||
-                        "Rechercher un joueur..."
-                      }
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="admin-users-search"
-                    />
-                  </div>
-
-                  <div
-                    className="admin-users-list"
-                    role="region"
-                    aria-label="liste-utilisateurs"
-                  >
-                    <table className="admin-users-table">
-                      <thead>
-                        <tr>
-                          <th>Utilisateur</th>
-                          <th>XP</th>
-                          <th>Niveau</th>
-                          <th>Parties</th>
-                          <th>Meilleur</th>
-                          <th>Total</th>
-                          <th>Admin</th>
-                          <th>Banni</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {allUsers
-                          .filter((u) =>
-                            u.username
-                              .toLowerCase()
-                              .includes(searchTerm.toLowerCase())
-                          )
-                          .map((u) => (
-                            <tr
-                              key={u.username}
-                              className={
-                                u.username === selectedUser ? "selected" : ""
-                              }
-                              onClick={() => setSelectedUser(u.username)}
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter")
-                                  setSelectedUser(u.username);
-                              }}
-                            >
-                              <td>{u.username}</td>
-                              <td>{u.xp ?? 0}</td>
-                              <td>{u.level ?? 1}</td>
-                              <td>{u.totalGames ?? 0}</td>
-                              <td>{u.bestScore ?? 0}</td>
-                              <td>{u.totalScore ?? 0}</td>
-                              <td>{u.is_admin ? "✓" : "-"}</td>
-                              <td>{u.banned_until ? "✓" : "-"}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="admin-actions">
-                  <div className="admin-action">
-                    {xp_form}
-                    <p className="admin-action__desc">
-                      {t("account.awardXpDesc") ||
-                        "Modifie l'XP de l'utilisateur sélectionné."}
-                    </p>
-                    <hr />
-                  </div>
-
-                  <div className="admin-action">
-                    <button
-                      className="btn danger"
-                      disabled={resetSessionsLoading}
-                      onClick={() => {
-                        if (
-                          selectedUser &&
-                          confirm(
-                            t("account.confirmResetUserSessionsFull").replace(
-                              "{username}",
-                              selectedUser
-                            )
-                          )
-                        ) {
-                          setResetSessionsLoading(true);
-                          fetch(
-                            `${apiBase}/admin/reset-sessions/${selectedUser}`,
-                            {
-                              method: "POST",
-                              headers: { "X-Admin-User": "admin" },
-                            }
-                          )
-                            .then((res) => {
-                              if (!res.ok) throw new Error("Erreur serveur");
-                              alert(
-                                t("account.resetUserSessionsSuccess").replace(
-                                  "{username}",
-                                  selectedUser
-                                )
-                              );
-                            })
-                            .catch((e) =>
-                              alert(t("common.failedPrefix") + e.message)
-                            )
-                            .finally(() => setResetSessionsLoading(false));
-                        }
-                      }}
-                    >
-                      {resetSessionsLoading
-                        ? t("account.resetting")
-                        : t("account.resetUserSessions")}
-                    </button>
-                    <p className="admin-action__desc">
-                      {t("account.resetSessionsDesc") ||
-                        "Supprime les parties et scores de l'utilisateur."}
-                    </p>
-                    <hr />
-                  </div>
-
-                  <div className="admin-action">
-                    <button
-                      className="btn ghost warning"
-                      disabled={deleteHistoryLoading}
-                      onClick={() => {
-                        if (
-                          selectedUser &&
-                          confirm(
-                            (
-                              t("account.confirmDeleteXpHistory") ||
-                              `Supprimer l'historique XP de ${selectedUser}?`
-                            ).replace("{username}", selectedUser)
-                          )
-                        ) {
-                          setDeleteHistoryLoading(true);
-                          fetch(
-                            `${apiBase}/admin/delete-xp-history/${selectedUser}`,
-                            {
-                              method: "POST",
-                              headers: { "X-Admin-User": "admin" },
-                            }
-                          )
-                            .then((res) => {
-                              if (!res.ok) throw new Error("Erreur serveur");
-                              return res.json();
-                            })
-                            .then(() => {
-                              alert(
-                                t("account.deleteXpHistorySuccess")?.replace(
-                                  "{username}",
-                                  selectedUser
-                                ) ||
-                                  `Historique XP supprimé pour ${selectedUser}`
-                              );
-                            })
-                            .catch((e) =>
-                              alert(t("common.failedPrefix") + e.message)
-                            )
-                            .finally(() => setDeleteHistoryLoading(false));
-                        }
-                      }}
-                    >
-                      {deleteHistoryLoading
-                        ? t("common.saving")
-                        : t("account.deleteXpHistory") ||
-                          "Supprimer historique XP"}
-                    </button>
-                    <p className="admin-action__desc">
-                      {t("account.deleteXpHistoryDesc") ||
-                        "Supprime toutes les entrées d'historique XP."}
-                    </p>
-                    <hr />
-                  </div>
-
-                  <div className="admin-action">
-                    <button
-                      className="btn ghost danger admin-tools__delete"
-                      onClick={() => {
-                        if (
-                          selectedUser &&
-                          confirm(
-                            t("account.confirmDeleteUserFull").replace(
-                              "{username}",
-                              selectedUser
-                            )
-                          )
-                        ) {
-                          fetch(
-                            `${apiBase}/admin/delete-user/${selectedUser}`,
-                            {
-                              method: "DELETE",
-                              headers: { "X-Admin-User": "admin" },
-                            }
-                          )
-                            .then((res) => {
-                              if (!res.ok) throw new Error("Erreur serveur");
-                              const remaining = allUsers.filter(
-                                (u) => u.username !== selectedUser
-                              );
-                              setAllUsers(remaining);
-                              if (remaining.length > 0)
-                                setSelectedUser(remaining[0].username);
-                              else setSelectedUser("");
-                              alert(
-                                t("account.deleteUserSuccess").replace(
-                                  "{username}",
-                                  selectedUser
-                                )
-                              );
-                            })
-                            .catch((e) =>
-                              alert(t("common.failedPrefix") + e.message)
-                            );
-                        }
-                      }}
-                    >
-                      {t("account.deleteUser")}
-                    </button>
-                    <p className="admin-action__desc">
-                      {t("account.deleteUserDesc") ||
-                        "Supprime l'utilisateur et les données associées."}
-                    </p>
-                    <hr />
-                  </div>
-
-                  <div className="admin-action">
-                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                      {selectedUser && selectedUser !== "admin" && !allUsers.find(u => u.username === selectedUser)?.is_admin && (
-                        <button
-                          className="btn primary"
-                          disabled={setAdminLoading}
-                          onClick={() => {
-                            if (
-                              selectedUser &&
-                              confirm(
-                                t("account.confirmSetAdmin").replace(
-                                  "{username}",
-                                  selectedUser
-                                ) || `Donner les droits administrateur à ${selectedUser}?`
-                              )
-                            ) {
-                              setSetAdminLoading(true);
-                              fetch(
-                                `${apiBase}/admin/set-admin/${selectedUser}`,
-                                {
-                                  method: "POST",
-                                  headers: { "X-Admin-User": "admin" },
-                                }
-                              )
-                                .then((res) => {
-                                  if (!res.ok) throw new Error("Erreur serveur");
-                                  const updated = allUsers.map(u =>
-                                    u.username === selectedUser
-                                      ? { ...u, is_admin: true }
-                                      : u
-                                  );
-                                  setAllUsers(updated);
-                                  alert(
-                                    t("account.setAdminSuccess").replace(
-                                      "{username}",
-                                      selectedUser
-                                    ) || `${selectedUser} est maintenant administrateur.`
-                                  );
-                                })
-                                .catch((e) =>
-                                  alert(t("common.failedPrefix") + e.message)
-                                )
-                                .finally(() => setSetAdminLoading(false));
-                            }
-                          }}
-                        >
-                          {setAdminLoading
-                            ? t("common.saving")
-                            : t("account.setAdmin") || "Donner droits admin"}
-                        </button>
-                      )}
-                      {selectedUser && selectedUser !== "admin" && allUsers.find(u => u.username === selectedUser)?.is_admin && (
-                        <button
-                          className="btn warning"
-                          disabled={removeAdminLoading}
-                          onClick={() => {
-                            if (
-                              selectedUser &&
-                              confirm(
-                                t("account.confirmRemoveAdmin").replace(
-                                  "{username}",
-                                  selectedUser
-                                ) || `Retirer les droits administrateur à ${selectedUser}?`
-                              )
-                            ) {
-                              setRemoveAdminLoading(true);
-                              fetch(
-                                `${apiBase}/admin/remove-admin/${selectedUser}`,
-                                {
-                                  method: "POST",
-                                  headers: { "X-Admin-User": "admin" },
-                                }
-                              )
-                                .then((res) => {
-                                  if (!res.ok) throw new Error("Erreur serveur");
-                                  const updated = allUsers.map(u =>
-                                    u.username === selectedUser
-                                      ? { ...u, is_admin: false }
-                                      : u
-                                  );
-                                  setAllUsers(updated);
-                                  alert(
-                                    t("account.removeAdminSuccess").replace(
-                                      "{username}",
-                                      selectedUser
-                                    ) || `${selectedUser} n'est plus administrateur.`
-                                  );
-                                })
-                                .catch((e) =>
-                                  alert(t("common.failedPrefix") + e.message)
-                                )
-                                .finally(() => setRemoveAdminLoading(false));
-                            }
-                          }}
-                        >
-                          {removeAdminLoading
-                            ? t("common.saving")
-                            : t("account.removeAdmin") || "Retirer droits admin"}
-                        </button>
-                      )}
-                    </div>
-                    <p className="admin-action__desc">
-                      {t("account.adminManagementDesc") ||
-                        "Gérer les droits administrateur de cet utilisateur."}
-                    </p>
-                    <hr />
-                  </div>
-
-                  <div className="admin-action">
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                        <input
-                          type="number"
-                          placeholder={t("account.banDurationPlaceholder") || "Durée en heures (vide = permanent)"}
-                          value={banDuration}
-                          onChange={(e) => setBanDuration(e.target.value)}
-                          min="1"
-                          style={{
-                            padding: "10px 14px",
-                            borderRadius: "10px",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                            background: "rgba(255,255,255,0.02)",
-                            color: "inherit",
-                            flex: 1,
-                            minWidth: "150px",
-                          }}
-                        />
-                        <input
-                          type="text"
-                          placeholder={t("account.banReasonPlaceholder") || "Raison du bannissement..."}
-                          value={banReason}
-                          onChange={(e) => setBanReason(e.target.value)}
-                          style={{
-                            padding: "10px 14px",
-                            borderRadius: "10px",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                            background: "rgba(255,255,255,0.02)",
-                            color: "inherit",
-                            flex: 1,
-                            minWidth: "200px",
-                          }}
-                        />
-                      </div>
-                      {selectedUser && selectedUser !== "admin" && !allUsers.find(u => u.username === selectedUser)?.banned_until && (
-                        <button
-                          className="btn danger"
-                          disabled={banUserLoading}
-                          onClick={() => {
-                            if (selectedUser && banReason.trim()) {
-                              const durationHours = banDuration ? parseInt(banDuration) : null;
-                              if (durationHours !== null && durationHours <= 0) {
-                                alert(t("account.invalidDuration") || "La durée doit être positive");
-                                return;
-                              }
-                              const banType = durationHours ? `${durationHours}h` : "permanent";
-                              if (
-                                confirm(
-                                  t("account.confirmBanUser").replace("{username}", selectedUser).replace("{duration}", banType) ||
-                                  `Bannir ${selectedUser} pour ${banType}?`
-                                )
-                              ) {
-                                setBanUserLoading(true);
-                                fetch(
-                                  `${apiBase}/admin/ban-user/${selectedUser}`,
-                                  {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                      "X-Admin-User": user,
-                                    },
-                                    body: JSON.stringify({
-                                      duration_hours: durationHours,
-                                      reason: banReason.trim(),
-                                    }),
-                                  }
-                                )
-                                  .then((res) => {
-                                    if (!res.ok) throw new Error("Erreur serveur");
-                                    const updated = allUsers.map(u =>
-                                      u.username === selectedUser
-                                        ? {
-                                            ...u,
-                                            banned_until: durationHours
-                                              ? new Date(Date.now() + durationHours * 3600000).toISOString()
-                                              : new Date(8640000000000000).toISOString(), // Very far in future for permanent
-                                          }
-                                        : u
-                                    );
-                                    setAllUsers(updated);
-                                    setBanDuration("");
-                                    setBanReason("");
-                                    alert(
-                                      t("account.banUserSuccess").replace("{username}", selectedUser) ||
-                                      `${selectedUser} a été banni.`
-                                    );
-                                  })
-                                  .catch((e) =>
-                                    alert(t("common.failedPrefix") + e.message)
-                                  )
-                                  .finally(() => setBanUserLoading(false));
-                              }
-                            } else {
-                              alert(t("account.banReasonRequired") || "La raison du bannissement est requise");
-                            }
-                          }}
-                        >
-                          {banUserLoading
-                            ? t("common.saving")
-                            : t("account.banUser") || "Bannir"}
-                        </button>
-                      )}
-                      {selectedUser && allUsers.find(u => u.username === selectedUser)?.banned_until && (
-                        <button
-                          className="btn warning"
-                          disabled={unbanUserLoading}
-                          onClick={() => {
-                            if (
-                              selectedUser &&
-                              confirm(
-                                t("account.confirmUnbanUser").replace("{username}", selectedUser) ||
-                                `Débannir ${selectedUser}?`
-                              )
-                            ) {
-                              setUnbanUserLoading(true);
-                              fetch(
-                                `${apiBase}/admin/unban-user/${selectedUser}`,
-                                {
-                                  method: "POST",
-                                  headers: { "X-Admin-User": user },
-                                }
-                              )
-                                .then((res) => {
-                                  if (!res.ok) throw new Error("Erreur serveur");
-                                  const updated = allUsers.map(u =>
-                                    u.username === selectedUser
-                                      ? { ...u, banned_until: null, ban_reason: null }
-                                      : u
-                                  );
-                                  setAllUsers(updated);
-                                  setBanDuration("");
-                                  setBanReason("");
-                                  alert(
-                                    t("account.unbanUserSuccess").replace("{username}", selectedUser) ||
-                                    `${selectedUser} a été débanni.`
-                                  );
-                                })
-                                .catch((e) =>
-                                  alert(t("common.failedPrefix") + e.message)
-                                )
-                                .finally(() => setUnbanUserLoading(false));
-                            }
-                          }}
-                        >
-                          {unbanUserLoading
-                            ? t("common.saving")
-                            : t("account.unbanUser") || "Débannir"}
-                        </button>
-                      )}
-                    </div>
-                    <p className="admin-action__desc">
-                      {t("account.banManagementDesc") ||
-                        "Bannir temporairement ou définitivement cet utilisateur."}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="user-action">
             <button
               className="btn ghost no-border account__logout"
@@ -873,7 +548,7 @@ function Account({ user, setUser }) {
             >
               {t("account.deleteSelf")}
             </button>
-
+            
             <button
               className="btn danger"
               disabled={resetSessionsLoading}
@@ -905,7 +580,16 @@ function Account({ user, setUser }) {
               {resetSessionsLoading
                 ? t("account.resetting")
                 : t("account.resetSelfSessions")}
-            </button>
+                {/*bouton pour acceder au panneau de moderation */}
+              </button>
+              {isAdmin && (
+                <button
+                  className="btn primary"
+                  onClick={() => navigate("/moderation")}
+                >
+                  boutton de la toute puissance
+                </button>
+              )}
           </div>
         </div>
       </>

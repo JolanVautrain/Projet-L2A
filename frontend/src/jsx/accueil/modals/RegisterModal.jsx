@@ -41,7 +41,6 @@ function RegisterModal({ isOpen, onClose, afterRegister }) {
         return r.json();
       })
       .then((data) => {
-        // attendu: { success: true }
         if (data?.success) {
           if (typeof afterRegister === "function") afterRegister(u);
           if (typeof onClose === "function") onClose();

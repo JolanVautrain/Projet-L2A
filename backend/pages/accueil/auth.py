@@ -2,12 +2,12 @@
 
 import hashlib
 import secrets
-import psycopg2  # type: ignore
 from datetime import datetime
+
+import psycopg2  # type: ignore
+from core import db, utils
 from flask import Blueprint, request
 from werkzeug.security import check_password_hash, generate_password_hash
-
-from core import db, utils
 
 bp = Blueprint("auth", __name__)
 
@@ -27,6 +27,7 @@ def check_login():
 
     username = data["username"].strip()
     password = data["password"].strip()
+
     with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
         cur.execute(
             "SELECT username, password, banned_until, ban_reason FROM users WHERE username = %s",
@@ -76,11 +77,39 @@ def check_login():
             return utils.make_response(
                 {"userExist": True, "passwordIsCorrect": False}
             )
+
+        cur.execute(
+            "SELECT session_token, last_seen FROM user_sessions WHERE username = %s",
+            (username,),
+        )
+        session_row = cur.fetchone()
+        if session_row and utils.is_session_active(session_row[1]):
+            # Automatically disconnect old session and allow new login
+            cur.execute(
+                "DELETE FROM user_sessions WHERE username = %s",
+                (username,),
+            )
+            conn.commit()
+            session_row = None
+
+        session_token = secrets.token_urlsafe(32)
+        if session_row:
+            cur.execute(
+                "UPDATE user_sessions SET session_token = %s, last_seen = CURRENT_TIMESTAMP WHERE username = %s",
+                (session_token, username),
+            )
+        else:
+            cur.execute(
+                "INSERT INTO user_sessions (username, session_token) VALUES (%s, %s)",
+                (username, session_token),
+            )
+        conn.commit()
         return utils.make_response(
             {
                 "userExist": True,
                 "passwordIsCorrect": True,
                 "username": stored_username,
+                "session_token": session_token,
             }
         )
 
@@ -99,10 +128,15 @@ def register_user():
         )
     username = str(data["username"]).strip()
     password = generate_password_hash(str(data["password"]))
+    language = str(data.get("language", "fr")).strip() or "fr"
 
     if len(username) > 100:
         return utils.make_response(
             {"success": False, "message": "username too long"}, 400
+        )
+    if len(language) > 10:
+        return utils.make_response(
+            {"success": False, "message": "language too long"}, 400
         )
     if not username or not password:
         return utils.make_response(
@@ -122,8 +156,8 @@ def register_user():
             )
         try:
             cur.execute(
-                "INSERT INTO users (username, password) VALUES (%s, %s)",
-                (username, password),
+                "INSERT INTO users (username, password, language) VALUES (%s, %s, %s)",
+                (username, password, language),
             )
             conn.commit()
             return utils.make_response({"success": True})
@@ -133,6 +167,38 @@ def register_user():
             return utils.make_response(
                 {"success": False, "message": "user already exists"}, 409
             )
+
+
+@bp.route("/api/logout", methods=["POST"])
+@utils.handle_db_errors
+def logout_user():
+    data = request.get_json(silent=True) or {}
+    username = data.get("username") or request.headers.get("X-Session-User")
+    token = data.get("session_token") or request.headers.get("X-Session-Token")
+
+    if not username or not token:
+        return utils.make_response(
+            {
+                "error": utils.BAD_REQUEST,
+                "message": "username and session_token required",
+            },
+            400,
+        )
+
+    with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
+        cur.execute(
+            "DELETE FROM user_sessions WHERE username = %s AND session_token = %s",
+            (username, token),
+        )
+        conn.commit()
+
+    return utils.make_response({"ok": True})
+
+
+@bp.route("/api/session/ping", methods=["POST", "GET"])
+@utils.handle_db_errors
+def ping_session():
+    return utils.make_response({"ok": True})
 
 
 @bp.route("/api/user/generate-recovery-code", methods=["POST"])

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-# Script Bash : crée un virtualenv Python et installe les dépendances
+# Script Bash : crée un virtualenv Python et installe les dépendances (développement)
 # Usage:
-#   ./script/install_requirements.sh
-#   or
-#   ./script/install_requirements.sh -r script/requirements-dev.txt -v .venv
+#   ./script/install_requirements.sh              # installe dev
+#   ./script/install_requirements.sh -v .venv -f  # avec options
+#
+# Options:
+#   -r <path>             Chemin du fichier requirements (défaut: backend/requirements-dev.txt)
+#   -v <path>             Chemin du virtualenv (défaut: .venv)
+#   -f                    Force la recréation du venv
 
-REQ_PATH="script/requirements-dev.txt"
+REQ_PATH="backend/requirements-dev.txt"
 VENV_PATH=".venv"
 FORCE=0
 
@@ -20,14 +24,16 @@ done
 
 set -e
 
-echo "== Install requirements into venv =="
+echo "== Installation des dépendances (développement) =="
+echo "Requirements: $REQ_PATH"
+echo "Virtualenv: $VENV_PATH"
 
-# Find python3
+# Trouve le chemin de Python3
 PYTHON_CMD=""
 if command -v python3 >/dev/null 2>&1; then
   PYTHON_CMD=python3
 elif command -v python >/dev/null 2>&1; then
-  # Check version >=3
+  # Vérifie si la version est >=3
   if python -c 'import sys
 print(sys.version_info[0])' 2>/dev/null | grep -q "3"; then
     PYTHON_CMD=python
@@ -50,6 +56,7 @@ if [ -d "$VENV_PATH" ] && [ $FORCE -eq 0 ]; then
   echo "Le venv existe déjà en '$VENV_PATH'. Utilisez -f pour recréer." >&2
 else
   if [ -d "$VENV_PATH" ]; then
+    echo "Suppression du venv existant..."
     rm -rf "$VENV_PATH"
   fi
   echo "Création du virtualenv dans $VENV_PATH..."
@@ -62,11 +69,20 @@ if [ ! -x "$PIP_PATH" ]; then
   exit 1
 fi
 
+echo ""
 echo "Mise à jour de pip, setuptools et wheel..."
 "$PIP_PATH" install --upgrade pip setuptools wheel
 
+echo ""
 echo "Installation des dépendances depuis $REQ_PATH ..."
 "$PIP_PATH" install -r "$REQ_PATH"
 
+echo ""
 echo "Installation terminée."
-echo "Pour activer le venv : source $VENV_PATH/bin/activate"
+echo ""
+echo "Pour activer le venv :"
+echo "  source $VENV_PATH/bin/activate"
+echo ""
+echo "Pour désactiver le venv :"
+echo "  deactivate"
+

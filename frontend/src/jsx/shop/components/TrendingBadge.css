@@ -1,0 +1,58 @@
+.trending-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 0.6rem 1rem;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  animation: trendingPulse 2s ease-in-out infinite;
+}
+
+.trending-hot {
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.9) 0%, rgba(255, 142, 142, 0.8) 100%);
+  color: white;
+  box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+}
+
+.trending-new {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(96, 165, 250, 0.8) 100%);
+  color: white;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.trending-limited {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.9) 0%, rgba(192, 132, 250, 0.8) 100%);
+  color: white;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+}
+
+.trending-animated {
+  display: inline-block;
+  animation: textShimmer 3s linear infinite;
+}
+
+@keyframes trendingPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes textShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}

@@ -8,6 +8,7 @@
     "rules": "Rules",
     "home": "Home",
     "contacts": "Contacts",
+    "shop": "Shop",
     "play": "Play",
     "score": "Score",
     "stage": "Stage",
@@ -21,6 +22,8 @@
     "failedPrefix": "Failed: ",
     "noData": "No data available",
     "close": "Close"
+    ,"confirm": "Confirm"
+    ,"cancel": "Cancel"
   },
   "nav": {
     "hello": "Hello",
@@ -30,7 +33,9 @@
     "reloadGame": "Reload Game",
     "youReachedScore": "You reached a score of",
     "atStage": "at stage",
-    "time": "Time"
+    "time": "Time",
+    "confirmLeaveMatch": "Are you sure you want to leave the match?",
+    "opponentDisconnected": "Opponent disconnected"
   },
   "leaderboard": {
     "title": "Player Leaderboard",
@@ -206,6 +211,7 @@
     "usernamePasswordRequired": "Username and password required.",
     "incorrectUsername": "Incorrect username.",
     "incorrectPassword": "Incorrect password.",
+    "alreadyLoggedIn": "This account is already signed in on another device.",
     "connectionError": "Connection error. Please try again.",
     "noAccount": "No account? Register",
     "accountBanned": "Your account has been banned for {duration}.",
@@ -257,11 +263,110 @@
   },
   "rules": {
     "title": "Game Rules",
-    "objective": "Objective",
-    "objectiveDesc": "Collect stars and avoid bombs to accumulate the maximum points.",
-    "controls": "Controls",
-    "controlsDesc": "Use arrow keys or WASD to move. Collect stars to increase your score.",
-    "stages": "Stages",
-    "stagesDesc": "At each stage, more bombs appear. Reaching a certain score automatically increases the stage."
+    "rule1": {
+      "name": "Rule 1",
+      "content": "be respectful to other players and avoid toxic behavior."
+    },
+    "rule2": {
+      "name": "Rule 2",
+      "content": "Cheaters will be severely punished, without exception."
+    },
+    "rule3": {
+      "name": "Rule 3",
+      "content": "Inappropriate behavior will result in penalties."
+    },
+    "rule4": {
+      "name": "Rule 4",
+      "content": "Harrassment of other players is strictly prohibited."
+    },
+    "rule5": {
+      "name": "Rule 5",
+      "content": "Moderator decisions are final and must be respected."
+    },
+    "rule6": {
+      "name": "Rule 6",
+      "content": "Users must report any suspicious or inappropriate behavior."
+    },
+    "rule7": {
+      "name": "Rule 7",
+      "content": "Users must respect the privacy of others."
+    },
+    "rule8": {
+      "name": "Rule 8",
+      "content": "Users must not share personal information."
+    },
+    "rule9": {
+      "name": "Rule 9",
+      "content": "Users must use appropriate language at all times."
+    }
+  },
+  "shop": {
+    "title": "Shop",
+    "subtitle": "Cosmetic items and useful packs",
+    "intro": "Treat yourself to some visual or utility enhancements to personalize your gaming experience.",
+    "buy": "Buy",
+    "open": "Open",
+    "salePrefix": "Flash sale ends in",
+    "saleEnded": "Sale ended",
+    "soldOut": "Out of stock",
+    "modal": {
+      "title": "Confirm Purchase",
+      "notice": "WARNING: This offer expires in a few seconds! Stocks are limited.",
+      "extrasTitle": "Recommended options (pre-selected for your convenience)",
+      "delivery": "Standard delivery (REQUIRED)",
+      "express": "24h express delivery (HIGHLY RECOMMENDED)",
+      "giftWrap": "Premium gift wrap",
+      "support": "24/7 priority customer support",
+      "warranty": "2-year extended warranty (maximum protection)",
+      "insurance": "Breakage/theft insurance",
+      "subtotal": "Total",
+      "savingsText": "You save up to 50% with these bundled options!",
+      "addon": "Add premium insurance (+2.99€) — RECOMMENDED to protect your purchase",
+      "confirm": "YES, I WANT TO BUY NOW",
+      "cancel": "No thanks, I'd rather miss this exceptional offer",
+      "exitWarning": "WARNING! Are you CERTAIN you want to abandon this EXCLUSIVE offer? This promotion will NEVER be available at this price again! You will LOSE this UNIQUE opportunity!"
+    },
+    "loot": {
+      "revealing": "Opening...",
+      "loading": "Revealing your reward...",
+      "close": "Claim my reward",
+      "coinPack": "100 Coins Pack",
+      "nothing": "Nothing (try again!)"
+    },
+    "products": {
+      "neoSkin": {
+        "title": "Neon Skin",
+        "desc": "A luminous skin for your in-game avatar."
+      },
+      "bombPack": {
+        "title": "Bomb Pack (aesthetic)",
+        "desc": "Exclusive bomb icons and effects (visual only)."
+      },
+      "avatarPack": {
+        "title": "Avatar Pack",
+        "desc": "Premium avatars for your profile."
+      },
+      "lootboxBasic": {
+        "title": "Mystery Box",
+        "desc": "A box containing random rewards."
+      },
+      "lootboxRare": {
+        "title": "Rare Box",
+        "desc": "Box with better chances of rare items."
+      },
+      "xpPack": {
+        "title": "XP Pack +100",
+        "desc": "Instantly add 100 experience points to your account."
+      },
+      "levelUpPack": {
+        "title": "Level Up Pack",
+        "desc": "Instantly gain an extra level!"
+      }
+    }
+  },
+  "report": {
+    "title": "Report",
+    "desc": "Reporting form.",
+    "text": "Describe the issue you encountered..."
   }
 }

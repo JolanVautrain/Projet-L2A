@@ -1,0 +1,123 @@
+{
+  "products": [
+    {
+      "id": "skin-neo",
+      "titleKey": "shop.products.neoSkin.title",
+      "descKey": "shop.products.neoSkin.desc",
+      "price": "3.99€",
+      "oldPrice": "9.99€",
+      "img": "/assets/star.png",
+      "stock": 3,
+      "hot": true,
+      "trending": true,
+      "category": "skins",
+      "isLootbox": false
+    },
+    {
+      "id": "bomb-icon",
+      "titleKey": "shop.products.bombPack.title",
+      "descKey": "shop.products.bombPack.desc",
+      "price": "1.99€",
+      "oldPrice": "4.99€",
+      "img": "/assets/bomb.png",
+      "stock": 12,
+      "hot": true,
+      "trending": true,
+      "category": "items",
+      "isLootbox": false
+    },
+    {
+      "id": "avatar-logo",
+      "titleKey": "shop.products.avatarPack.title",
+      "descKey": "shop.products.avatarPack.desc",
+      "price": "2.49€",
+      "oldPrice": "5.99€",
+      "img": "/assets/shop/article/packAvatarCyber.png",
+      "stock": 1,
+      "hot": true,
+      "trending": true,
+      "category": "items",
+      "isLootbox": false
+    },
+    {
+      "id": "lootbox-basic",
+      "titleKey": "shop.products.lootboxBasic.title",
+      "descKey": "shop.products.lootboxBasic.desc",
+      "price": "0.99€",
+      "oldPrice": "2.99€",
+      "img": "/assets/shop/lootbox/lootboxCommun.png",
+      "stock": 50,
+      "category": "lootboxes",
+      "isLootbox": true
+    },
+    {
+      "id": "lootbox-rare",
+      "titleKey": "shop.products.lootboxRare.title",
+      "descKey": "shop.products.lootboxRare.desc",
+      "price": "4.99€",
+      "oldPrice": "9.99€",
+      "img": "/assets/shop/lootbox/lootboxRare.png",
+      "stock": 12,
+      "category": "lootboxes",
+      "isLootbox": true
+    },
+    {
+      "id": "lootbox-precieux",
+      "titleKey": "shop.products.lootboxPrecieux.title",
+      "descKey": "shop.products.lootboxPrecieux.desc",
+      "price": "9.99€",
+      "oldPrice": "19.99€",
+      "img": "/assets/shop/lootbox/lootboxPrecieux.png",
+      "stock": 15,
+      "category": "lootboxes",
+      "isLootbox": true
+    },
+    {
+      "id": "pack-xp",
+      "titleKey": "shop.products.xpPack.title",
+      "descKey": "shop.products.xpPack.desc",
+      "price": "1.49€",
+      "oldPrice": "3.99€",
+      "img": "/assets/star.png",
+      "stock": 100,
+      "hot": false,
+      "category": "boosters",
+      "isLootbox": false
+    },
+    {
+      "id": "pack-levelup",
+      "titleKey": "shop.products.levelUpPack.title",
+      "descKey": "shop.products.levelUpPack.desc",
+      "price": "9.99€",
+      "oldPrice": "19.99€",
+      "img": "/assets/logo.png",
+      "stock": 20,
+      "hot": true,
+      "trending": true,
+      "category": "boosters",
+      "isLootbox": false
+    }
+  ],
+  "lootboxWaitTimes": {
+    "lootbox-basic": 1,
+    "lootbox-rare": 4,
+    "lootbox-epique": 7
+  },
+  "lootboxRewards": {
+    "lootbox-basic": [
+      {"productId": "bomb-icon", "weight": 40, "rarity": "common"},
+      {"productId": "pack-xp", "weight": 35, "rarity": "common"},
+      {"productId": "skin-neo", "weight": 15, "rarity": "rare"},
+      {"productId": "avatar-logo", "weight": 8, "rarity": "epic"},
+      {"productId": null, "weight": 2, "rarity": "none"}
+    ],
+    "lootbox-rare": [
+      {"productId": "skin-neo", "weight": 30, "rarity": "rare"},
+      {"productId": "avatar-logo", "weight": 25, "rarity": "epic"},
+      {"productId": "pack-levelup", "weight": 20, "rarity": "epic"},
+      {"productId": "pack-xp", "weight": 20, "rarity": "common"},
+      {"productId": "bomb-icon", "weight": 4, "rarity": "common"},
+      {"productId": null, "weight": 1, "rarity": "none"}
+    ]
+  }
+}
