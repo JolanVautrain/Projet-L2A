@@ -331,8 +331,8 @@ function Moderation({ user }) {
                   }}
                 >
                   <td>{u.username}</td>
-                  <td>{u.is_admin ? "✓" : "-"}</td>
-                  <td>{u.report_reason ?? "-"}</td>
+                  <td>{u.username === "admin" ? "admin ne peut pas être banni" : "-"}</td>
+                  <td>{u.issue ?? "-"}</td>
                 </tr>
               ))}
           </tbody>
