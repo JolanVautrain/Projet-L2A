@@ -341,6 +341,34 @@ function Moderation({ user }) {
     </div>
   )
 
+  const bannedList = (
+    <div style={{ width: "100%" }}>
+      <div className="admin-tools__center">
+        <h4 style={{ textAlign: "center" }}>Utilisateurs Bannis</h4>
+        <table className="admin-users-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Raison</th>
+              <th>Fin du bannissement</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allUsers
+              .filter((u) => u.banned_until)
+              .map((u) => (
+                <tr key={u.username}>
+                  <td>{u.username}</td>
+                  <td>{u.banReason || "-"}</td>
+                  <td>{new Date(u.banned_until).toLocaleString('fr-FR')}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+
   const userPurchaseHistory = (
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
@@ -602,6 +630,7 @@ function Moderation({ user }) {
       <div className="admin-actions">{userPurchaseHistory}</div>
       <div className="admin-actions">{reportList}</div>
       <div className="admin-actions">{ban_user}</div>
+      <div className="admin-actions">{bannedList}</div>
     </div>
   ) : (
     <h2>Vous n'avez pas les droits admin</h2>
