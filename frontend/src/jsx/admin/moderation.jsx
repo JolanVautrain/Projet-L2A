@@ -356,13 +356,34 @@ function Moderation({ user }) {
           <tbody>
             {allUsers
               .filter((u) => u.banned_until)
-              .map((u) => (
-                <tr key={u.username}>
-                  <td>{u.username}</td>
-                  <td>{u.banReason || "-"}</td>
-                  <td>{new Date(u.banned_until).toLocaleString('fr-FR')}</td>
-                </tr>
-              ))}
+              .map((u) => {
+                const bannedUntil = u.banned_until ? new Date(u.banned_until) : null;
+                let banDisplay = "-";
+
+                if (bannedUntil) {
+                  const now = new Date();
+                  const diffMs = bannedUntil - now; // différence en millisecondes
+                  const diffHours = diffMs / (1000 * 60 * 60);
+
+                  if (diffHours <= 24) {
+                    // Affichage en compte à rebours
+                    const hours = Math.floor(diffHours);
+                    const minutes = Math.floor((diffHours - hours) * 60);
+                    banDisplay = `${hours}h ${minutes}min`;
+                  } else {
+                    // Affichage en date normale
+                    banDisplay = bannedUntil.toLocaleString("fr-FR");
+                  }
+                }
+
+                return (
+                  <tr key={u.username}>
+                    <td>{u.username}</td>
+                    <td>{u.banReason || "-"}</td>
+                    <td>{banDisplay}</td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
