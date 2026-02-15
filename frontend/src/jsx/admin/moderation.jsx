@@ -297,7 +297,7 @@ function Moderation({ user }) {
   const reportList = (
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
-        <h4 style={{ textAlign: "center" }}>{t("account.manageUsers")}</h4>
+        <h4 style={{ textAlign: "center" }}>{t("account.manageReports")}</h4>
         <input
           type="search"
           placeholder={
