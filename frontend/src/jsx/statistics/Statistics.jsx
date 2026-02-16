@@ -392,17 +392,20 @@ function ScoreChart({ sessions, t }) {
     const values = sorted.map((s) => Number(s.highScore ?? s.score ?? 0));
     const sMin = Math.min(...values);
     const sMax = Math.max(...values);
-    const xFor = makeXFor(xMin, xMax, width, margin);
+    const innerW = width - margin.left - margin.right;
+    const step = sorted.length > 1 ? innerW / (sorted.length - 1) : 0;
+    const xFor = (index) => margin.left + index * step;
     const yFor = (v) => {
       const innerH = height - margin.top - margin.bottom;
       const denom = sMax - sMin || 1;
       return margin.top + (1 - (v - sMin) / denom) * innerH;
     };
-    const points = sorted.map((s) => ({
-      x: xFor(new Date(s.playedAt).getTime()),
+    const points = sorted.map((s, i) => ({
+      x: xFor(i),
       y: yFor(Number(s.highScore ?? s.score ?? 0)),
       raw: s,
     }));
+
     const firstLabel = new Date(xMin).toLocaleString();
     const lastLabel = new Date(xMax).toLocaleString();
     const xLabel = t("leaderboard.date") || "";
@@ -574,20 +577,22 @@ function ProgressHistoryChart({ history, t }) {
     const sorted = [...history].sort(
       (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
     );
+    const values = sorted.map((h) => Number(h.xp || 0));
     const times = sorted.map((h) => new Date(h.createdAt).getTime());
     const xMin = Math.min(...times);
     const xMax = Math.max(...times);
-    const values = sorted.map((h) => Number(h.xp || 0));
     const vMin = Math.min(...values);
     const vMax = Math.max(...values);
-    const xFor = makeXFor(xMin, xMax, width, margin);
+    const innerW = width - margin.left - margin.right;
+    const step = sorted.length > 1 ? innerW / (sorted.length - 1) : 0;
+    const xFor = (index) => margin.left + index * step;
     const yFor = (v) => {
       const innerH = height - margin.top - margin.bottom;
       const denom = vMax - vMin || 1;
       return margin.top + (1 - (v - vMin) / denom) * innerH;
     };
-    const points = sorted.map((s) => ({
-      x: xFor(new Date(s.createdAt).getTime()),
+    const points = sorted.map((s, i) => ({
+      x: xFor(i),
       y: yFor(Number(s.xp || 0)),
       raw: s,
     }));
