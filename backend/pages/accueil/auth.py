@@ -3,7 +3,6 @@
 import hashlib
 import secrets
 from datetime import datetime
-
 import psycopg2  # type: ignore
 from core import db, utils
 from flask import Blueprint, request

@@ -4,14 +4,8 @@ import logging
 import re
 import sys
 from pathlib import Path
-
 from flask import Flask, request
 from werkzeug.exceptions import HTTPException
-
-# Ensure local imports work whether run as a module or a script
-BASE_DIR = Path(__file__).resolve().parent
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
 
 from core import admin, db, utils  # type: ignore
 from pages.accueil import auth, game  # type: ignore
@@ -21,17 +15,22 @@ from pages.classement import topUsers  # type: ignore
 from pages.report import report  # type: ignore
 from pages.shop import shop  # type: ignore
 
+BASE_DIR = Path(__file__).resolve().parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-# Manual CORS handling to avoid duplicate headers
+# CORS est géré manuellement dans after_request pour éviter les en-têtes
+# dupliqués
 @app.after_request
 def after_request(response):
     """Add CORS headers to response."""
     origin = request.headers.get("Origin")
 
-    # Check if origin is allowed
+    # Vérification de l'origine de la requête
     if origin:
         allowed_origins = [
             "http://localhost:5173",
@@ -48,7 +47,7 @@ def after_request(response):
             "http://192.168.60.201:15256",
         ]
 
-        # Check if origin is explicitly allowed or matches pattern
+        # Ajout des en-têtes CORS
         if origin in allowed_origins or re.match(
             r"^http://[^:]+:15256$", origin
         ):
@@ -65,7 +64,7 @@ def after_request(response):
     return response
 
 
-# Register blueprints - organized by page
+# Registre des blueprints - organisés par page
 app.register_blueprint(auth.bp)
 app.register_blueprint(game.bp)
 app.register_blueprint(scores.bp)
@@ -75,7 +74,7 @@ app.register_blueprint(topUsers.bp)
 app.register_blueprint(report.bp)
 app.register_blueprint(shop.bp)
 
-# Ensure database schema exists
+# Vérification de la connexion à la base de données et création du schéma si nécessaire
 db.check_and_recreate_schema()
 
 
