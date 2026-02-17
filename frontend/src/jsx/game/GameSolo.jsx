@@ -78,9 +78,9 @@ let gameScene = null;
  * Précharge les assets Phaser
  */
 function preload() {
-  this.load.image("ground", "public/assets/platform.png");
-  this.load.image("obstacle", "public/assets/bomb.png");
-  this.load.spritesheet("dude", "public/assets/dude.png", {
+  this.load.image("ground", "/assets/platform.png");
+  this.load.image("obstacle", "/assets/bomb.png");
+  this.load.spritesheet("dude", "/assets/dude.png", {
     frameWidth: 32,
     frameHeight: 48,
   });
