@@ -93,10 +93,10 @@ function Contacts() {
   // Rendu du composant Contacts
   return (
     <main className="contacts">
-      <header className="contacts-header">
+      <div className="contacts-header">
         <h1>{t("contacts.title")}</h1>
         <p className="intro">{t("contacts.intro")}</p>
-      </header>
+      </div>
       <section className="contacts-grid">
         {devs.map((d) => (
           <ContactCard key={d.email} person={d} t={t} />
