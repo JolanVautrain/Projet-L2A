@@ -297,7 +297,7 @@ function Moderation({ user }) {
   const reportList = (
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
-        <h4 style={{ textAlign: "center" }}>{t("account.manageUsers")}</h4>
+        <h4 style={{ textAlign: "center" }}>{t("account.manageReports")}</h4>
         <input
           type="search"
           placeholder={
@@ -331,10 +331,74 @@ function Moderation({ user }) {
                   }}
                 >
                   <td>{u.username}</td>
-                  <td>{u.is_admin ? "✓" : "-"}</td>
-                  <td>{u.report_reason ?? "-"}</td>
+                  <td>{u.username === "admin" ? "admin ne peut pas être banni" : "-"}</td>
+                  <td>{u.issue ?? "-"}</td>
                 </tr>
               ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+
+  const bannedList = (
+    <div style={{ width: "100%" }}>
+      <div className="admin-tools__center">
+         <input
+          type="search"
+          placeholder={
+            t("account.searchPlaceholder") || "Rechercher un joueur..."
+          }
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="admin-users-search"
+        />
+        <h4 style={{ textAlign: "center" }}>Utilisateurs Bannis</h4>
+        <table className="admin-users-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Raison</th>
+              <th>Fin du bannissement</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allUsers
+              .filter((u) => u.banned_until)
+              .map((u) => {
+                const bannedUntil = u.banned_until ? new Date(u.banned_until) : null;
+                let banDisplay = "-";
+
+                if (bannedUntil) {
+                  const now = new Date();
+                  const diffMs = bannedUntil - now; // différence en millisecondes
+                  const diffHours = (diffMs / (1000 * 60 * 60))+1;
+
+                  if (diffHours <= 24) {
+                    // Affichage en compte à rebours
+                    const hours = Math.floor(diffHours);
+                    const minutes = Math.floor((diffHours - hours) * 60);
+                    banDisplay = `${hours}h ${minutes}min`;
+                  } else {
+                    // Affichage en date normale
+                    banDisplay = bannedUntil.toLocaleString("fr-FR");
+                  }
+                }
+
+                return (
+                  <tr key={u.username} 
+                  className={u.username === selectedUser ? "selected" : ""}
+                  onClick={() => setSelectedUser(u.username)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setSelectedUser(u.username);
+                  }}>
+                    <td>{u.username}</td>
+                    <td>{u.banReason || "-"}</td>
+                    <td>{banDisplay}</td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
@@ -602,6 +666,7 @@ function Moderation({ user }) {
       <div className="admin-actions">{userPurchaseHistory}</div>
       <div className="admin-actions">{reportList}</div>
       <div className="admin-actions">{ban_user}</div>
+      <div className="admin-actions">{bannedList}</div>
     </div>
   ) : (
     <h2>Vous n'avez pas les droits admin</h2>

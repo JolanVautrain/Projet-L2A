@@ -5,7 +5,6 @@ import os
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Callable
-
 import psycopg2  # type: ignore
 from flask import Response, jsonify, request
 from psycopg2 import OperationalError  # type: ignore
@@ -48,11 +47,11 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
         if not user:
             return make_response({"error": "unauthorized"}, 401)
 
-        # Check if user is the original admin user
+        # Vérifier si l'utilisateur est "admin".
         if user == "admin":
             return f(*args, **kwargs)
 
-        # Check if user has admin privileges in database
+        # Vérifier dans la base de données si l'utilisateur a is_admin = true
         try:
             from . import db
 
