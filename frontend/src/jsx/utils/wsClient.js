@@ -15,7 +15,6 @@ export function getWebSocketUrl() {
     const host = window.location.hostname;
     const port = window.location.port ? `:${window.location.port}` : '';
     // Utiliser le chemin /ws qui est proxifié par Nginx
-    // (au lieu de se connecter directement au port 3001)
     return `${protocol}//${host}${port}/ws`;
   }
 

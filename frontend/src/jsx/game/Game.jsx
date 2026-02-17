@@ -441,32 +441,65 @@ function Game() {
     serverTimeOffsetMs = storedOffset ? Number(storedOffset) : 0;
     multiplayerEnabled = Boolean(storedMatchId);
     setMultiplayerMode(multiplayerEnabled);
+    console.log("[Game.jsx useEffect] Initialized:", {
+      activeMatchId,
+      serverTimeOffsetMs,
+      multiplayerEnabled,
+    });
   }, []);
 
   useEffect(() => {
-    const wsUrl = getWebSocketUrl();
-    const ws = new WebSocket(wsUrl);
     const username = getActiveUser();
+    const matchId = sessionStorage.getItem("activeMatchId");
+    
+    // Réutiliser le WebSocket existant du lobby si disponible
+    let ws = globalThis.gameWebSocket;
+    let isReusedSocket = !!ws && ws.readyState === WebSocket.OPEN;
+    
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      console.log("[Game.jsx] Creating new WebSocket (no existing one)");
+      const wsUrl = getWebSocketUrl();
+      ws = new WebSocket(wsUrl);
+      isReusedSocket = false;
+    } else {
+      console.log("[Game.jsx] Reusing existing WebSocket from lobby");
+      isReusedSocket = true;
+    }
+    
     inputSocket = ws;
     let isUnmounting = false;
     let closeAfterOpen = false;
 
-    ws.onopen = () => {
+    const handleOpen = () => {
       if (closeAfterOpen) {
         ws.close();
         return;
       }
       console.log("WS connected");
-      if (activeMatchId) {
-        ws.send(
-          JSON.stringify({
-            type: "join_game",
-            username,
-            matchId: activeMatchId,
-          })
-        );
+      // Lire activeMatchId directement de sessionStorage (pas la variable globale)
+      const mId = sessionStorage.getItem("activeMatchId");
+      console.log("[ws.onopen] matchId from sessionStorage:", mId);
+      console.log("[ws.onopen] username:", username);
+      if (mId && username) {
+        const payload = {
+          type: "join_game",
+          username,
+          matchId: mId,
+        };
+        ws.send(JSON.stringify(payload));
+        console.log("[ws.onopen] Sent join_game payload:", JSON.stringify(payload));
+      } else {
+        console.warn("[ws.onopen] Missing username or matchId:", { username, mId });
       }
     };
+
+    // Attacher les handlers seulement si ce n'est pas un WebSocket réutilisé
+    if (ws.readyState === WebSocket.OPEN && isReusedSocket) {
+      handleOpen();
+    } else {
+      ws.onopen = handleOpen;
+    }
+    
     ws.onerror = (e) => {
       if (isUnmounting) return;
       console.error("WS error", e);
@@ -479,9 +512,16 @@ function Game() {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log("[ws.onmessage] Received:", data.type, data);
 
         if (data.type === "join_ok") {
           setOpponentDisconnected(false);
+          return;
+        }
+
+        // ========== ERREUR SERVEUR ==========
+        if (data.type === "error") {
+          console.error("[ERROR] Serveur error:", data.message);
           return;
         }
 
@@ -546,10 +586,23 @@ function Game() {
         }
 
         if (data.type === "spawn_wave") {
-          if (data.matchId !== activeMatchId) return;
+          console.log("[spawn_wave] Received spawn_wave event", {
+            activeMatchId,
+            dataMatchId: data.matchId,
+            wave: data.wave,
+            spawnAt: data.spawnAt,
+          });
+          if (data.matchId !== activeMatchId) {
+            console.warn("[spawn_wave] Mismatch matchId, ignoring", {
+              activeMatchId,
+              dataMatchId: data.matchId,
+            });
+            return;
+          }
           const spawnAt = Number(data.spawnAt || 0);
           const targetTime = spawnAt - serverTimeOffsetMs;
           const delay = Math.max(0, targetTime - Date.now());
+          console.log("[spawn_wave] Scheduling spawn with delay", delay);
           setTimeout(() => {
             applySpawnWave(gameScene, data.wave);
           }, delay);
@@ -655,10 +708,13 @@ function Game() {
 
     return () => {
       isUnmounting = true;
-      if (ws.readyState === WebSocket.CONNECTING) {
-        closeAfterOpen = true;
-      } else {
-        ws.close();
+      // Ne fermer le socket que s'il a été créé par ce composant (pas réutilisé du lobby)
+      if (!isReusedSocket) {
+        if (ws.readyState === WebSocket.CONNECTING) {
+          closeAfterOpen = true;
+        } else if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
       }
       inputSocket = null;
     };
@@ -671,6 +727,8 @@ function Game() {
     sessionStorage.setItem("confirmedLeavingGame", "1");
     sessionStorage.removeItem("activeMatchId");
     sessionStorage.removeItem("serverTimeOffsetMs");
+    // Nettoyer la référence globale du WebSocket
+    globalThis.gameWebSocket = null;
     navigate("/lobby");
   };
 
@@ -685,6 +743,8 @@ function Game() {
     }
     sessionStorage.removeItem("activeMatchId");
     sessionStorage.removeItem("serverTimeOffsetMs");
+    // Nettoyer la référence globale du WebSocket
+    globalThis.gameWebSocket = null;
     navigate("/");
   };
 

@@ -37,8 +37,10 @@ const GameWaitingRoom = () => {
     // Nettoyer les données stales d'une session précédente
     if (!confirmedLeaving) {
       sessionStorage.removeItem("activeMatchId");
-      sessionStorage.removeItem("serverTimeOffsetMs");
-    }
+      sessionStorage.removeItem("serverTimeOffsetMs");      // Nettoyer aussi le WebSocket global s'il existe
+      if (globalThis.gameWebSocket) {
+        globalThis.gameWebSocket = null;
+      }    }
     
     if (confirmedLeaving) {
       sessionStorage.removeItem("confirmedLeavingGame");
@@ -49,6 +51,7 @@ const GameWaitingRoom = () => {
     wsRef.current = ws;
     let isUnmounting = false;
     let closeAfterOpen = false;
+    let shouldCloseSocket = true; // Flag pour savoir si on doit fermer le socket
 
     ws.onopen = () => {
       if (closeAfterOpen) {
@@ -91,6 +94,10 @@ const GameWaitingRoom = () => {
             }
           }
           console.log("[!] Game starting!", msg.matchId);
+          // Sauvegarder le WebSocket existant pour que Game.jsx le réutilise
+          globalThis.gameWebSocket = ws;
+          // IMPORTANT: ne pas fermer le socket au démontage du composant
+          shouldCloseSocket = false;
           navigate("/game");
           break;
 
@@ -111,10 +118,13 @@ const GameWaitingRoom = () => {
 
     return () => {
       isUnmounting = true;
-      if (ws.readyState === WebSocket.CONNECTING) {
-        closeAfterOpen = true;
-      } else {
-        ws.close();
+      // Ne fermer le socket que si on n'en a pas besoin dans Game.jsx
+      if (shouldCloseSocket) {
+        if (ws.readyState === WebSocket.CONNECTING) {
+          closeAfterOpen = true;
+        } else if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
       }
     };
   }, [navigate, username]);

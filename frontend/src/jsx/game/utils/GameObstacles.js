@@ -195,7 +195,24 @@ export function resetObstacles() {
 }
 
 export function applySpawnWave(scene, wave) {
-  if (!scene || !obstacles || !wave || !Array.isArray(wave.bombs)) return;
+  if (!scene) {
+    console.warn("[applySpawnWave] Scene is null");
+    return;
+  }
+  if (!obstacles) {
+    console.warn("[applySpawnWave] obstacles group not initialized");
+    return;
+  }
+  if (!wave) {
+    console.warn("[applySpawnWave] wave is null");
+    return;
+  }
+  if (!Array.isArray(wave.bombs)) {
+    console.warn("[applySpawnWave] wave.bombs is not an array", wave);
+    return;
+  }
+
+  console.log("[applySpawnWave] Spawning", wave.bombs.length, "bombs", wave);
 
   wave.bombs.forEach((bomb) => {
     const x = Number(bomb.x);
