@@ -88,6 +88,23 @@ services:
     networks:
       - internal
 
+  # ================= CLOUDFLARED TUNNEL =================
+  # Tunnel Cloudflare - accès direct sans proxy (nginx est local)
+  cloudflared-tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --url http://nginx:80
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    networks:
+      - internal
+    stdin_open: true
+    tty: true
+
   # ================= NGINX REVERSE PROXY =================
   # Nginx pour servir le frontend et proxy vers le backend
   nginx:
