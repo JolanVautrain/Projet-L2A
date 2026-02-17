@@ -146,7 +146,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             stage integer DEFAULT 0,
             timer integer DEFAULT 0,
             state varchar(100),
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
         );"""
         )
         init_cur.execute(
@@ -154,7 +154,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             username varchar(100) PRIMARY KEY,
             xp integer DEFAULT 0,
             level integer DEFAULT 1,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
         );"""
         )
         init_cur.execute(
@@ -164,7 +164,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             xp integer DEFAULT 0,
             level integer DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
         );"""
         )
         init_cur.execute(
@@ -176,7 +176,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             timer integer DEFAULT 0,
             state varchar(100),
             playedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
         );"""
         )
         init_cur.execute(
@@ -184,7 +184,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             username varchar(100) NOT NULL,
             input varchar(100) NOT NULL,
             time TIMESTAMP DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
         );"""
         )
         init_cur.execute(
@@ -193,7 +193,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             session_token varchar(128) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
         );"""
         )
         init_cur.execute(
@@ -203,7 +203,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
             code_hash varchar(256) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             used boolean DEFAULT false,
-            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
         );"""
         )
         init_cur.execute(
@@ -212,7 +212,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
                 username varchar(100) NOT NULL,
                 issue TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
             );"""
         )
         init_cur.execute(
@@ -223,7 +223,7 @@ def initialize_database(init_conn=None, init_cur=None) -> None:
                 product_name TEXT NOT NULL,
                 price varchar(50) NOT NULL,
                 purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+                FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
             );"""
         )
 

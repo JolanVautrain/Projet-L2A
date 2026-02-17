@@ -5,6 +5,8 @@ from typing import List
 from core import db, utils
 from flask import Blueprint, request
 
+from werkzeug.security import check_password_hash, generate_password_hash
+
 bp = Blueprint("users", __name__)
 
 
@@ -20,7 +22,7 @@ def get_user_sessions(username: str):
 
     result: List[dict[str, int | float | str]] = [
         {
-            "username":username,
+            "username": username,
             "id": int(r[0]),
             "score": int(r[1]),
             "stage": int(r[2] or 0),
@@ -258,3 +260,121 @@ def is_admin_user():
         return utils.make_response({"is_admin": False})
 
     return utils.make_response({"is_admin": bool(row[0])})
+
+
+@bp.route("/api/user/resetPassword", methods=["POST"])
+@utils.handle_db_errors
+def reset_password():
+    """Reset password using username (public endpoint, auth required)"""
+    data = request.get_json()
+    if not data:
+        return utils.make_response({"error": "invalid_request"}, 400)
+
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+    new_password = data.get("new_password", "").strip()
+
+    if not username or not new_password:
+        return utils.make_response(
+            {
+                "error": "missing_fields",
+                "message": "username and new_password required",
+            },
+            400,
+        )
+
+    if len(new_password) < 4:
+        return utils.make_response(
+            {
+                "error": "weak_password",
+                "message": "password must be at least 4 characters",
+            },
+            400,
+        )
+
+    # Check if user exists and password is valid
+    row = db.query_fetchone(
+        """SELECT username, password FROM users WHERE username = %s""",
+        (username,)
+    )
+
+    if not check_password_hash(row[1],password):
+        return utils.make_response(
+            {
+                "error": "invalid_password",
+                "message": "Invalid password",
+            },
+            400,
+        )
+
+    # Update password
+    hashed_pw = generate_password_hash(new_password)
+    db.exec_commit(
+        "UPDATE users SET password = %s WHERE username = %s",
+        (hashed_pw, username),
+    )
+
+    return utils.make_response(
+        {"ok": True, "message": "Password reset successfully"}
+    )
+
+@bp.route("/api/user/resetUsername", methods=["POST"])
+@utils.handle_db_errors
+def reset_username():
+    """Reset username using password (public endpoint, auth required)"""
+    data = request.get_json()
+    if not data:
+        return utils.make_response({"error": "invalid_request"}, 400)
+
+    username = data.get("username", "").strip()
+    new_username = data.get("new_username", "").strip()
+    password = data.get("password", "").strip()
+
+    if not username or not new_username or not password:
+        return utils.make_response(
+            {
+                "error": "missing_fields",
+                "message": "username, new_username and new_password required",
+            },
+            400,
+        )
+
+    # Check if user exists and password is valid
+    row = db.query_fetchone(
+        """SELECT username, password FROM users WHERE username = %s""",
+        (username,)
+    )
+
+    if not check_password_hash(row[1],password):
+        return utils.make_response(
+            {
+                "error": "invalid_password",
+                "message": "Invalid password",
+            },
+            400,
+        )
+
+    # Check if user exists and password is valid
+    row = db.query_fetchone(
+        """SELECT username FROM users WHERE username = %s""",
+        (new_username,)
+    )
+
+    if row:
+        return utils.make_response(
+            {
+                "error": "user_already_exists",
+                "message": "Username already exists",
+            },
+            400,
+        )
+
+    # Update username
+    db.exec_commit(
+        "UPDATE users SET username = %s WHERE username = %s",
+        (new_username, username),
+    )
+
+    return utils.make_response(
+        {"ok": True, "message": "Username reset successfully"}
+    )
