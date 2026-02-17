@@ -13,16 +13,10 @@ export function getWebSocketUrl() {
   if (typeof window !== 'undefined' && window.location) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname;
-    const devPorts = new Set(['5173', '4173']);
-    const envPort = import.meta.env.VITE_WS_PORT;
-    const portValue = envPort
-      ? String(envPort)
-      : window.location.port && !devPorts.has(window.location.port)
-        ? window.location.port
-        : '3001';
-    const port = portValue ? `:${portValue}` : '';
-    const path = import.meta.env.VITE_WS_PATH || '';
-    return `${protocol}//${host}${port}${path}`;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    // Utiliser le chemin /ws qui est proxifié par Nginx
+    // (au lieu de se connecter directement au port 3001)
+    return `${protocol}//${host}${port}/ws`;
   }
 
   // Fallback
