@@ -1,9 +1,7 @@
-"""Admin-only endpoints."""
+"""Admin routes pour la gestion des utilisateurs et des sessions de jeu."""
 
 import os
-
 from flask import Blueprint, request
-
 from . import db, utils
 
 bp = Blueprint("admin", __name__)
@@ -12,7 +10,7 @@ bp = Blueprint("admin", __name__)
 @bp.route("/api/admin/check/<username>", methods=["GET"])
 @utils.handle_db_errors
 def check_admin(username: str):
-    """Vérifie si un utilisateur est admin (endpoint public pour le frontend)."""
+    """Vérifie si un utilisateur est admin."""
     username = username.strip()
     row = db.query_fetchone(
         "SELECT is_admin FROM users WHERE username = %s", (username,)
@@ -173,11 +171,11 @@ def ban_user(username: str):
         )
 
     data = request.get_json() or {}
-    duration_hours = data.get("duration_hours")  # None for permanent
+    duration_hours = data.get("duration_hours")  # None pour ban permanent
     reason = data.get("reason", "No reason provided").strip()
 
     if duration_hours is not None:
-        # Temporary ban
+        # ban temporaire, calcul de la date de fin du ban en fonction de la durée spécifiée
         try:
             duration_hours = int(duration_hours)
             if duration_hours <= 0:
@@ -205,7 +203,7 @@ def ban_user(username: str):
             (duration_hours, reason, username),
         )
     else:
-        # Permanent ban
+        # ban permanent, on peut utiliser une date très lointaine ou NULL selon la logique de l'application (ici on choisit NULL pour indiquer un ban permanent)
         db.exec_commit(
             """UPDATE users 
                SET banned_until = NULL,

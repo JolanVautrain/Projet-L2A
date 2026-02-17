@@ -6,7 +6,6 @@ import os
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator, List
-
 import psycopg2  # type: ignore
 from psycopg2 import OperationalError  # type: ignore
 from werkzeug.security import generate_password_hash
@@ -270,7 +269,7 @@ def check_and_recreate_schema() -> None:
             logger.info(
                 "All required tables present: %s", ", ".join(required_tables)
             )
-            # Check if is_admin column exists and add it if missing
+            # Vérifie si les colonnes nécessaires sont présentes et les ajoute si elles manquent
             try:
                 with get_db_connection() as conn, get_db_cursor(conn) as cur:
                     cur.execute(
@@ -284,7 +283,7 @@ def check_and_recreate_schema() -> None:
                         )
                         conn.commit()
 
-                    # Check and add banned_until column
+                    # Vérifie et ajoute les colonnes banned_until
                     cur.execute(
                         "SELECT column_name FROM information_schema.columns "
                         "WHERE table_name='users' AND column_name='banned_until'"
@@ -297,8 +296,8 @@ def check_and_recreate_schema() -> None:
                             "ALTER TABLE users ADD COLUMN banned_until TIMESTAMP NULL"
                         )
                         conn.commit()
-
-                    # Check and add ban_reason column
+                        
+                    # Vérifie et ajoute les colonnes ban_reason
                     cur.execute(
                         "SELECT column_name FROM information_schema.columns "
                         "WHERE table_name='users' AND column_name='ban_reason'"
@@ -310,7 +309,7 @@ def check_and_recreate_schema() -> None:
                         )
                         conn.commit()
 
-                    # Check and add state column in highscores
+                    # Vérifie et ajoute les colonnes state dans highscores
                     cur.execute(
                         "SELECT column_name FROM information_schema.columns "
                         "WHERE table_name='highscores' AND column_name='state'"
@@ -322,7 +321,7 @@ def check_and_recreate_schema() -> None:
                         )
                         conn.commit()
 
-                    # Check and add state column in game_sessions
+                    # Vérifie et ajoute les colonnes state dans game_sessions
                     cur.execute(
                         "SELECT column_name FROM information_schema.columns "
                         "WHERE table_name='game_sessions' AND column_name='state'"

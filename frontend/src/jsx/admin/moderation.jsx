@@ -344,6 +344,15 @@ function Moderation({ user }) {
   const bannedList = (
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
+         <input
+          type="search"
+          placeholder={
+            t("account.searchPlaceholder") || "Rechercher un joueur..."
+          }
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="admin-users-search"
+        />
         <h4 style={{ textAlign: "center" }}>Utilisateurs Bannis</h4>
         <table className="admin-users-table">
           <thead>
@@ -363,7 +372,7 @@ function Moderation({ user }) {
                 if (bannedUntil) {
                   const now = new Date();
                   const diffMs = bannedUntil - now; // différence en millisecondes
-                  const diffHours = diffMs / (1000 * 60 * 60);
+                  const diffHours = (diffMs / (1000 * 60 * 60))+1;
 
                   if (diffHours <= 24) {
                     // Affichage en compte à rebours
@@ -377,7 +386,13 @@ function Moderation({ user }) {
                 }
 
                 return (
-                  <tr key={u.username}>
+                  <tr key={u.username} 
+                  className={u.username === selectedUser ? "selected" : ""}
+                  onClick={() => setSelectedUser(u.username)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setSelectedUser(u.username);
+                  }}>
                     <td>{u.username}</td>
                     <td>{u.banReason || "-"}</td>
                     <td>{banDisplay}</td>
