@@ -515,6 +515,26 @@ function Game() {
 
         if (data.type === "join_ok") {
           setOpponentDisconnected(false);
+          // Récupérer le nom de l'adversaire du message join_ok
+          if (data.opponent) {
+            console.log("[join_ok] Opponent found:", data.opponent);
+            setOpponentUsername(data.opponent);
+            sessionStorage.setItem("opponentUsername", data.opponent);
+          } else {
+            console.log("[join_ok] No opponent yet, waiting...");
+          }
+          return;
+        }
+
+        // ========== NOUVEAU JOUEUR REJOINT ==========
+        if (data.type === "player_joined") {
+          // Un autre joueur a rejoint le match
+          if (data.username && data.username !== username) {
+            console.log("[player_joined] Opponent joined:", data.username);
+            setOpponentUsername(data.username);
+            sessionStorage.setItem("opponentUsername", data.username);
+            setOpponentDisconnected(false);
+          }
           return;
         }
 
@@ -571,6 +591,10 @@ function Game() {
 
           setOpponentDisconnected(false);
           setOpponentUsername(usernameOpponent); // Stocker le nom de l'adversaire
+          // Persister dans sessionStorage pour une récupération fiable
+          if (usernameOpponent) {
+            sessionStorage.setItem("opponentUsername", usernameOpponent);
+          }
 
           // Mettre à jour l'état de l'adversaire dans la prédiction
           if (clientPrediction && data.serverState) {

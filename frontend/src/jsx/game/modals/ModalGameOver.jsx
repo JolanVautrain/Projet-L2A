@@ -62,6 +62,8 @@ function ModalGameOver({
                 wordWrap: "break-word",
                 wordBreak: "break-word",
                 lineHeight: "1.3",
+                margin: "0.5rem auto 0 auto",
+                textAlign: "center",
               }}
             >
               {currentUser}

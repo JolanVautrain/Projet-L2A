@@ -74,7 +74,10 @@ const GameWaitingRoom = () => {
         case "match_found":
           // Nouveau cas: quand un match est trouvé, afficher les deux joueurs
           if (msg.opponent) {
+            console.log("[GameWaitingRoom] Opponent found:", msg.opponent);
             setOpponentUsername(msg.opponent);
+            // Stocker immédiatement dans sessionStorage
+            sessionStorage.setItem("opponentUsername", msg.opponent);
             setMatchReady(true);
           }
           break;

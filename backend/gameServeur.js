@@ -98,6 +98,11 @@ function scheduleNextSpawn(matchId) {
   const match = matches.get(matchId);
   if (!match) return;
 
+  // Ne pas spawner de nouvelles bombes si la partie est terminée
+  if (match.overPlayers.size > 0) {
+    return;
+  }
+
   const interval = getSpawnInterval(match.stage);
   const now = Date.now();
   const last = match.lastSpawnAt || now;
@@ -105,6 +110,11 @@ function scheduleNextSpawn(matchId) {
   const delay = Math.max(0, nextAt - now);
 
   match.spawnTimer = setTimeout(() => {
+    // Vérifier à nouveau si la partie n'a pas été terminée entretemps
+    if (match.overPlayers.size > 0 || !matches.has(matchId)) {
+      return;
+    }
+
     const wave = buildSpawnWave(match.stage);
     match.lastSpawnAt = Date.now();
     const spawnAt = match.lastSpawnAt + 200;
@@ -162,22 +172,19 @@ function validateInput(match, username, inputData) {
     lastSequence: -1,
     lastJumpTime: 0,
   };
-
   // Vérifier le numéro de séquence
   if (inputData.sequence <= state.lastSequence) {
     console.warn(`[!] Séquence invalide: ${username} (seq: ${inputData.sequence}, last: ${state.lastSequence})`);
     return { valid: false, reason: "sequence_out_of_order" };
   }
-
   // Vérifier les sauts trop rapides
-  /*if (inputData.input === "JUMP") {
+  if (inputData.input === "JUMP") {
     const timeSinceLastJump = Date.now() - state.lastJumpTime;
     if (timeSinceLastJump < ANTI_CHEAT_CONFIG.MIN_TIME_BETWEEN_JUMPS) {
       console.warn(`[!] Trop de sauts trop rapides: ${username}`);
       return { valid: false, reason: "jump_spam" };
     }
-  }*/ //TODO: à revoir
-
+  }
   // Validation réussie
   return { valid: true };
 }
@@ -319,7 +326,35 @@ wss.on("connection", (ws) => {
         });
         connectionInfo.set(ws, { username, matchId, inLobby: false });
 
-        ws.send(JSON.stringify({ type: "join_ok", matchId }));
+        // Récupérer la liste de tous les joueurs du match
+        const playerNames = Array.from(match.players.keys());
+        // Trouver l'adversaire (tous les joueurs sauf l'utilisateur actuel)
+        const opponents = playerNames.filter(name => name !== username);
+
+        console.log(`[join_game] ${username} joined match ${matchId}. Players: ${playerNames.join(', ')}`);
+
+        // Envoyer join_ok au joueur qui vient de rejoindre
+        ws.send(JSON.stringify({
+          type: "join_ok",
+          matchId,
+          players: playerNames,
+          opponent: opponents.length > 0 ? opponents[0] : null
+        }));
+
+        // Notifier tous les AUTRES joueurs du match qu'un nouveau joueur a rejoint
+        if (opponents.length > 0) {
+          match.players.forEach((playerWs, playerName) => {
+            if (playerName !== username && playerWs.readyState === WebSocket.OPEN) {
+              playerWs.send(JSON.stringify({
+                type: "player_joined",
+                matchId,
+                username: username,
+                allPlayers: playerNames
+              }));
+            }
+          });
+        }
+
         return;
       }
 
