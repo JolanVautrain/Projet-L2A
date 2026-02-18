@@ -53,6 +53,7 @@ import { getWebSocketUrl } from "../utils/wsClient.js";
 import {
   calculateXPReward,
   checkAchievements,
+  getLevelFromXP,
 } from "./utils/GameGamification.js";
 import { getActiveUser, getUserAchievementsKey } from "../utils/userSession.js";
 import {
@@ -413,9 +414,21 @@ function Game() {
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showGameWonModal, setShowGameWonModal] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+  const [opponentUsername, setOpponentUsername] = useState(null);
+  const [isMultiplayer, setIsMultiplayer] = useState(false);
   const [confirmedLeavingGame, setConfirmedLeavingGame] = useState(false);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [opponentLevel, setOpponentLevel] = useState(1);
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const resolveLevel = (data) => {
+    if (!data) return 1;
+    if (typeof data.level === "number" && data.level > 1) return data.level;
+    if (typeof data.xp === "number") return getLevelFromXP(data.xp);
+    return typeof data.level === "number" ? data.level : 1;
+  };
 
   // Vérifier si l'utilisateur essaie d'accéder directement sans passer par le lobby
   useEffect(() => {
@@ -435,9 +448,14 @@ function Game() {
     }
     const storedMatchId = sessionStorage.getItem("activeMatchId");
     const storedOffset = sessionStorage.getItem("serverTimeOffsetMs");
+    const storedOpponent = sessionStorage.getItem("opponentUsername");
     activeMatchId = storedMatchId;
     serverTimeOffsetMs = storedOffset ? Number(storedOffset) : 0;
     multiplayerEnabled = Boolean(storedMatchId);
+    setIsMultiplayer(multiplayerEnabled);
+    if (storedOpponent) {
+      setOpponentUsername(storedOpponent);
+    }
     setMultiplayerMode(multiplayerEnabled);
     console.log("[Game.jsx useEffect] Initialized:", {
       activeMatchId,
@@ -449,11 +467,11 @@ function Game() {
   useEffect(() => {
     const username = getActiveUser();
     const matchId = sessionStorage.getItem("activeMatchId");
-    
+
     // Réutiliser le WebSocket existant du lobby si disponible
     let ws = globalThis.gameWebSocket;
     let isReusedSocket = !!ws && ws.readyState === WebSocket.OPEN;
-    
+
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       console.log("[Game.jsx] Creating new WebSocket (no existing one)");
       const wsUrl = getWebSocketUrl();
@@ -463,7 +481,7 @@ function Game() {
       console.log("[Game.jsx] Reusing existing WebSocket from lobby");
       isReusedSocket = true;
     }
-    
+
     inputSocket = ws;
     let isUnmounting = false;
     let closeAfterOpen = false;
@@ -491,7 +509,7 @@ function Game() {
     } else {
       ws.onopen = handleOpen;
     }
-    
+
     ws.onerror = (e) => {
       if (isUnmounting) return;
       console.error("WS error", e);
@@ -508,12 +526,60 @@ function Game() {
 
         if (data.type === "join_ok") {
           setOpponentDisconnected(false);
+          // Récupérer le nom de l'adversaire du message join_ok
+          if (data.opponent) {
+            console.log("[join_ok] Opponent found:", data.opponent);
+            setOpponentUsername(data.opponent);
+            sessionStorage.setItem("opponentUsername", data.opponent);
+          } else {
+            console.log("[join_ok] No opponent yet, waiting...");
+          }
+          return;
+        }
+
+        // ========== NOUVEAU JOUEUR REJOINT ==========
+        if (data.type === "player_joined") {
+          // Un autre joueur a rejoint le match
+          if (data.username && data.username !== username) {
+            console.log("[player_joined] Opponent joined:", data.username);
+            setOpponentUsername(data.username);
+            sessionStorage.setItem("opponentUsername", data.username);
+            setOpponentDisconnected(false);
+          }
           return;
         }
 
         // ========== ERREUR SERVEUR ==========
         if (data.type === "error") {
           console.error("[ERROR] Serveur error:", data.message);
+
+          // Rediriger vers le lobby en cas d'erreur invalid_match
+          if (
+            data.message === "invalid_match" ||
+            data.errorType === "invalid_match"
+          ) {
+            console.warn("[ERROR] Invalid match, redirecting to lobby");
+            isUnmounting = true;
+
+            // Nettoyer sessionStorage
+            sessionStorage.removeItem("activeMatchId");
+            sessionStorage.removeItem("opponentUsername");
+            sessionStorage.removeItem("serverTimeOffsetMs");
+
+            // Fermer la WebSocket si ouverte
+            try {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+              }
+            } catch (e) {
+              console.warn("Failed to close WebSocket", e);
+            }
+
+            // Rediriger vers le lobby
+            setTimeout(() => {
+              navigate("/lobby", { replace: true });
+            }, 300);
+          }
           return;
         }
 
@@ -563,6 +629,11 @@ function Game() {
           if (username === usernameOpponent) return; // C'est notre action, on ignore
 
           setOpponentDisconnected(false);
+          setOpponentUsername(usernameOpponent); // Stocker le nom de l'adversaire
+          // Persister dans sessionStorage pour une récupération fiable
+          if (usernameOpponent) {
+            sessionStorage.setItem("opponentUsername", usernameOpponent);
+          }
 
           // Mettre à jour l'état de l'adversaire dans la prédiction
           if (clientPrediction && data.serverState) {
@@ -706,8 +777,77 @@ function Game() {
       }
     };
 
+    // Fermer le WebSocket quand l'utilisateur quitte la page
+    const handleBeforeUnload = () => {
+      console.log("[Game.jsx] beforeunload - notifying server");
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(
+            JSON.stringify({
+              type: "player_leaving",
+              username: getActiveUser(),
+              matchId: activeMatchId,
+            }),
+          );
+          console.log("[Game.jsx] player_leaving message sent");
+        } catch (e) {
+          console.warn("Failed to send player_leaving message:", e);
+        }
+      }
+    };
+
+    const handlePageHide = () => {
+      console.log("[Game.jsx] pagehide - notifying server");
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(
+            JSON.stringify({
+              type: "player_leaving",
+              username: getActiveUser(),
+              matchId: activeMatchId,
+            }),
+          );
+          console.log("[Game.jsx] player_leaving message sent");
+        } catch (e) {
+          console.warn("Failed to send player_leaving message:", e);
+        }
+        // Ne pas fermer le WebSocket ici - le serveur le fermera
+        // Cela donne le maximum de temps pour que le message arrive
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
+
     return () => {
       isUnmounting = true;
+
+      // Envoyer le message player_leaving avant de fermer
+      if (
+        activeMatchId &&
+        !isReusedSocket &&
+        ws &&
+        ws.readyState === WebSocket.OPEN
+      ) {
+        try {
+          console.log(
+            "[Game.jsx cleanup] Sending player_leaving message on component unmount",
+          );
+          ws.send(
+            JSON.stringify({
+              type: "player_leaving",
+              username: getActiveUser(),
+              matchId: activeMatchId,
+            }),
+          );
+        } catch (e) {
+          console.warn("Failed to send player_leaving on cleanup:", e);
+        }
+      }
+
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+
       // Ne fermer le socket que s'il a été créé par ce composant (pas réutilisé du lobby)
       if (!isReusedSocket) {
         if (ws.readyState === WebSocket.CONNECTING) {
@@ -727,6 +867,7 @@ function Game() {
     sessionStorage.setItem("confirmedLeavingGame", "1");
     sessionStorage.removeItem("activeMatchId");
     sessionStorage.removeItem("serverTimeOffsetMs");
+    sessionStorage.removeItem("opponentUsername");
     // Nettoyer la référence globale du WebSocket
     globalThis.gameWebSocket = null;
     navigate("/lobby");
@@ -736,6 +877,7 @@ function Game() {
     setShowGameOverModal(false);
     setConfirmedLeavingGame(true);
     sessionStorage.setItem("confirmedLeavingGame", "1");
+    sessionStorage.removeItem("opponentUsername");
     try {
       gameScene.scene.resume();
     } catch (e) {
@@ -821,6 +963,27 @@ function Game() {
   }, []);
 
   useEffect(() => {
+    const activeUser = getActiveUser();
+    if (!activeUser) return;
+    fetch(`${apiBase}/api/user/xp/${activeUser}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setPlayerLevel(resolveLevel(data));
+      })
+      .catch(() => {});
+  }, [apiBase]);
+
+  useEffect(() => {
+    if (!opponentUsername) return;
+    fetch(`${apiBase}/api/user/xp/${opponentUsername}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setOpponentLevel(resolveLevel(data));
+      })
+      .catch(() => {});
+  }, [opponentUsername, apiBase]);
+
+  useEffect(() => {
     const config = {
       type: Phaser.AUTO,
       scale: {
@@ -853,6 +1016,42 @@ function Game() {
   return (
     <>
       <div className="game-wrap">
+        {/* Affichage des avatars en mode multijoueur */}
+        {isMultiplayer && (
+          <div className="multiplayer-avatars">
+            <div className="player-avatar-container">
+              <img
+                src={
+                  getActiveUser() === "admin"
+                    ? "/assets/avatar/admin.jpg"
+                    : "/assets/avatar/" +
+                      (localStorage.getItem("avatar_" + getActiveUser()) ||
+                        "businessman1.png")
+                }
+                alt="Your Avatar"
+                className="player-avatar"
+              />
+              <div className="player-label">{getActiveUser()}</div>
+              <div className="player-level">Lv. {playerLevel}</div>
+            </div>
+            <div className="vs-divider">VS</div>
+            <div className="player-avatar-container opponent">
+              <img
+                src={
+                  opponentUsername === "admin"
+                    ? "/assets/avatar/admin.jpg"
+                    : "/assets/avatar/" +
+                      (localStorage.getItem("avatar_" + opponentUsername) ||
+                        "businessman1.png")
+                }
+                alt="Opponent Avatar"
+                className="player-avatar"
+              />
+              <div className="player-label">{opponentUsername || "..."}</div>
+              <div className="player-level">Lv. {opponentLevel}</div>
+            </div>
+          </div>
+        )}
         <div className="phaser-container" ref={gameContainer} />
 
         <div className="game-overlay">
@@ -877,6 +1076,7 @@ function Game() {
             isOpen={true}
             score={scoreDisplay}
             stage={stage}
+            username={getActiveUser()}
             timerSeconds={timerSeconds}
             onReplay={handleReplay}
             onReturnHome={handleReturnHome}
@@ -900,6 +1100,7 @@ function Game() {
             isOpen={true}
             score={scoreDisplay}
             stage={stage}
+            username={getActiveUser()}
             timerSeconds={timerSeconds}
             onReplay={handleReplay}
             onReturnHome={handleReturnHome}

@@ -102,7 +102,7 @@ function Leaderboard({ user, setUser }) {
       </div>
     );
   }
-  
+
   const columnsGames = [
     { key: "rank", label: t("leaderboard.rank") },
     { key: "username", label: t("leaderboard.username") },
@@ -128,13 +128,13 @@ function Leaderboard({ user, setUser }) {
       {user && userSessions.length > 0 && (
         <>
           <div className="leaderboard__panel">
-            <h2>{t("leaderboard.top10games")}</h2>
-            <SortableTable data={userSessions} columns={columnsGames}/>
+            <h2>{t("leaderboard.top10Games")}</h2>
+            <SortableTable data={userSessions} columns={columnsGames} />
           </div>
 
           <div className="leaderboard__panel">
-            <h2>{t("leaderboard.top10users")}</h2>
-            <SortableTable data={topUsers} columns={columnsUsers}/>
+            <h2>{t("leaderboard.top10Users")}</h2>
+            <SortableTable data={topUsers} columns={columnsUsers} />
           </div>
         </>
       )}

@@ -50,6 +50,8 @@ import Regle from "./regle/regle";
 import Shop from "./shop/Shop";
 import GameSolo from "./game/GameSolo.jsx";
 import Moderation from "./admin/moderation.jsx";
+import { BombPackManager } from "./shop/components/BombPackManager.jsx";
+import { useBombPack } from "./shop/hooks/useBombPack.js";
 
 /**
  * Composant principal de l'application.
@@ -62,6 +64,7 @@ function App() {
   const [userState, setUserState] = useState(() => getActiveUser());
   const [navbarAvatarKey, setNavbarAvatarKey] = useState(0); // Force le rendu de l'avatar
   const navigate = useNavigate();
+  const { hasActiveBombPack } = useBombPack(userState);
 
   /**
    * Met à jour l'utilisateur et le stocke dans le localStorage.
@@ -258,6 +261,8 @@ function App() {
         </nav>
       </header>
 
+      <BombPackManager hasActiveBombPack={hasActiveBombPack} />
+
       <Routes>
         <Route
           path="/"
@@ -304,7 +309,10 @@ function App() {
         />
         <Route path="/*" element={<PageNotFound />} />
         <Route path="/regle" element={<Regle />} />
-        <Route path="/shop" element={<Shop />} />
+        <Route
+          path="/shop"
+          element={<Shop user={userState} setUser={setUserAndLoadLang} />}
+        />
         <Route path="/moderation" element={<Moderation user={userState} />} />
       </Routes>
     </>

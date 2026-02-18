@@ -451,6 +451,7 @@ function GameSolo() {
           isOpen={true}
           score={scoreDisplay}
           stage={stage}
+          username={getActiveUser()}
           timerSeconds={timerSeconds}
           onReplay={handleReplay}
           onReturnHome={handleReturnHome}

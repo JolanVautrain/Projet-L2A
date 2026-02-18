@@ -24,9 +24,12 @@ function Accueil({ user, setUser }) {
   const [averageTime, setAverageTime] = useState("00:00");
   const [activePlayers, setActivePlayers] = useState(0);
 
-  const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const getRandomInt = (min, max) =>
+    Math.floor(Math.random() * (max - min + 1)) + min;
   const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
@@ -86,13 +89,17 @@ function Accueil({ user, setUser }) {
     if (location?.state?.openLogin) {
       setTimeout(() => setIsOpen(true), 0);
       // Nettoie l'état pour éviter de rouvrir la modal inutilement
-      globalThis.history.replaceState({}, document.title, globalThis.location.pathname);
+      globalThis.history.replaceState(
+        {},
+        document.title,
+        globalThis.location.pathname,
+      );
     }
   }, [location]);
 
   // Gère l'affichage d'une popup publicitaire pour la boutique, avec mémorisation en sessionStorage
   const adTimerRef = useRef(null);
-  
+
   useEffect(() => {
     const key = "ad_popup_shown_v1";
     const already = sessionStorage.getItem(key);
@@ -104,13 +111,13 @@ function Accueil({ user, setUser }) {
         } catch {
           // Si sessionStorage n'est pas disponible, on ignore l'erreur et on ne mémorise pas
         }
-          // Ferme la popup après 60 secondes
+        // Ferme la popup après 60 secondes
         adTimerRef.current = setTimeout(() => {
           setShowAdPopup(false);
           adTimerRef.current = null;
         }, 60000);
       }, 3000);
-      
+
       // Nettoie les timers si le composant est démonté avant l'affichage ou la fermeture de la popup
       return () => {
         clearTimeout(showTimer);
@@ -147,7 +154,7 @@ function Accueil({ user, setUser }) {
   // Redirige vers la boutique et ferme la popup
   const goToShop = () => {
     setShowAdPopup(false);
-    navigate('/shop');
+    navigate("/shop");
   };
   // Rendu du composant Accueil
   return (
@@ -156,18 +163,17 @@ function Accueil({ user, setUser }) {
         <div className="hero__copy">
           <p className="hero__eyebrow">{t("accueil.readyToPlay")}</p>
           <h1>
-            {t("accueil.tagline")} <span className="text-glow">{t("accueil.taglineHighlight")}</span>.
+            {t("accueil.tagline")}{" "}
+            <span className="text-glow">{t("accueil.taglineHighlight")}</span>.
           </h1>
-          <p className="hero__lede">
-            {t("accueil.welcomeText")}
-          </p>
+          <p className="hero__lede">{t("accueil.welcomeText")}</p>
           <div className="hero__actions">
             <Link className="btn primary rainbow" to="/lobby">
-                {t("accueil.startGame")}
+              {t("accueil.startGame")}
             </Link>
             <Link className="btn primary rainbow" to="/gameSolo">
-                {t("accueil.startGameSolo")}
-              </Link>
+              {t("accueil.startGameSolo")}
+            </Link>
             <Link className="btn accent" to="/regle">
               {t("accueil.seeRules")}
             </Link>
@@ -177,7 +183,9 @@ function Accueil({ user, setUser }) {
               disabled={!!user}
               aria-disabled={!!user}
             >
-              {user ? `${t("account.hello")} ${user}` : t("accueil.connectButton")}
+              {user
+                ? `${t("account.hello")} ${user}`
+                : t("accueil.connectButton")}
             </button>
           </div>
           <div className="hero__stats">
@@ -193,7 +201,9 @@ function Accueil({ user, setUser }) {
             </div>
             <div className="stat-card">
               <span className="stat-label">{t("accueil.activePlayers")}</span>
-              <strong className="stat-value">{activePlayers >= 0 ? `+${activePlayers}` : activePlayers}</strong>
+              <strong className="stat-value">
+                {activePlayers >= 0 ? `+${activePlayers}` : activePlayers}
+              </strong>
               <p className="stat-note">{t("accueil.communityReady")}</p>
             </div>
           </div>
@@ -202,9 +212,7 @@ function Accueil({ user, setUser }) {
           <div className="panel-glow">
             <p className="panel-label">{t("accueil.atmosphere")}</p>
             <h3>{t("accueil.animatedInterface")}</h3>
-            <p className="panel-copy">
-              {t("accueil.atmosphereDesc")}
-            </p>
+            <p className="panel-copy">{t("accueil.atmosphereDesc")}</p>
           </div>
           <div className="highlight-grid">
             {highlights.map((item) => (
@@ -220,9 +228,7 @@ function Accueil({ user, setUser }) {
         <header>
           <p className="hero__eyebrow">{t("accueil.howItWorks")}</p>
           <h2>{t("accueil.clearPath")}</h2>
-          <p className="hero__lede">
-            {t("accueil.clearPathDesc")}
-          </p>
+          <p className="hero__lede">{t("accueil.clearPathDesc")}</p>
         </header>
         <div className="steps__grid">
           {steps.map((step, index) => (
@@ -235,36 +241,77 @@ function Accueil({ user, setUser }) {
             </div>
           ))}
         </div>
-        {!user && (
-          <div className="cta-banner">
-            <div>
-              <p className="hero__eyebrow">{t("accueil.joinTheGame")}</p>
-              <h3>{t("accueil.connectToSave")}</h3>
-              <p className="hero__lede">
-                {t("accueil.oneClickConnect")}
-              </p>
-            </div>
-            <button className="btn primary" onClick={openLogin}>
-              {t("accueil.openLogin")}
-            </button>
+        <div className="cta-banner">
+          <div>
+            <p className="hero__eyebrow">{t("accueil.joinTheGame")}</p>
+            <h3>
+              {user
+                ? t("account.hello") + " " + user
+                : t("accueil.connectToSave")}
+            </h3>
+            <p className="hero__lede">
+              {user
+                ? t("accueil.alreadyConnected")
+                : t("accueil.oneClickConnect")}
+            </p>
           </div>
-        )}
+          <button
+            className="btn primary"
+            onClick={user ? undefined : openLogin}
+            disabled={!!user}
+            style={user ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+          >
+            {user
+              ? t("accueil.alreadyConnectedButton")
+              : t("accueil.openLogin")}
+          </button>
+        </div>
       </section>
-      <LoginModal isOpen={isOpen} action={setUser} onClose={closeLogin} afterLogin={() => navigate('/leaderboard', { replace: true })} openRegister={openRegister} />
-      <RegisterModal isOpen={isRegisterOpen} onClose={closeRegister} afterRegister={(u) => { setUser(u); navigate('/account', { replace: true }); }} />
+      <LoginModal
+        isOpen={isOpen}
+        action={setUser}
+        onClose={closeLogin}
+        afterLogin={() => navigate("/leaderboard", { replace: true })}
+        openRegister={openRegister}
+      />
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={closeRegister}
+        afterRegister={(u) => {
+          setUser(u);
+          navigate("/account", { replace: true });
+        }}
+      />
       {showAdPopup && (
-        <div className="ad-popup-overlay" aria-hidden="true" onClick={closeAdPopup}>
-          <div className="ad-popup-card" aria-hidden="true" onClick={(e) => e.stopPropagation()}>
-            <button className="ad-close" onClick={closeAdPopup}>✕</button>
+        <div
+          className="ad-popup-overlay"
+          aria-hidden="true"
+          onClick={closeAdPopup}
+        >
+          <div
+            className="ad-popup-card"
+            aria-hidden="true"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="ad-close" onClick={closeAdPopup}>
+              ✕
+            </button>
             <div className="ad-content">
               <div className="ad-badge">{t("accueil.adPopupBadge")}</div>
               <h2 className="ad-title">{t("accueil.adPopupTitle")}</h2>
-              <img src="/assets/shop/lootbox/lootboxPub.png" alt="Lootboxes" className="ad-image" />
+              <img
+                src="/assets/shop/lootbox/lootboxPub.png"
+                alt="Lootboxes"
+                className="ad-image"
+              />
               <p className="ad-desc">{t("accueil.adPopupDesc")}</p>
               <div className="ad-timer">{t("accueil.adPopupTimer")}</div>
-              <button className="btn primary ad-cta" onClick={goToShop}> {t("accueil.adPopupShopBtn")}
+              <button className="btn primary ad-cta" onClick={goToShop}>
+                {" "}
+                {t("accueil.adPopupShopBtn")}
               </button>
-              <button className="btn ghost ad-later" onClick={closeAdPopup}>{t("accueil.adPopupLaterBtn")}
+              <button className="btn ghost ad-later" onClick={closeAdPopup}>
+                {t("accueil.adPopupLaterBtn")}
               </button>
             </div>
           </div>

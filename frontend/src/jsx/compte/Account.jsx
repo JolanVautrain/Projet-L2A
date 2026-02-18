@@ -8,6 +8,7 @@ import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 import ChangePasswordModal from "./modals/ChangePasswordModal.jsx";
 import ChangeUsernameModal from "./modals/ChangeUsernameModal.jsx";
+import { UserInventory } from "./UserInventory.jsx";
 
 /**
  * Composant Account
@@ -24,13 +25,12 @@ function Account({ user, setUser }) {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [changePassword, setChangePassword] = useState(false);
-   const [changeUsername, setChangeUsername] = useState(false);
+  const [changeUsername, setChangeUsername] = useState(false);
   const [recoveryCodesLoading, setRecoveryCodesLoading] = useState(false);
   const [newRecoveryCode, setNewRecoveryCode] = useState(null);
   const [showNewCode, setShowNewCode] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState("");
-  const [ownsAvatarPack, setOwnsAvatarPack] = useState(false);
   const [userPurchases, setUserPurchases] = useState([]);
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -53,20 +53,27 @@ function Account({ user, setUser }) {
     "worker.png",
   ];
 
-  // Vérifier si l'utilisateur possède le pack d'avatars depuis la BDD
-  useEffect(() => {
-    if (user && user !== "admin") {
-      fetch(`${apiBase}/shop/has-product/${user}/avatar-logo`)
-        .then((res) => res.json())
-        .then((data) => {
-          setOwnsAvatarPack(data.has_product || false);
-        })
-        .catch((err) => {
-          console.error("Failed to check avatar pack ownership:", err);
-          setOwnsAvatarPack(false);
-        });
-    }
-  }, [user, apiBase]);
+  const avatarIdToFile = {
+    "avatar-samourai": "samourai.png",
+    "avatar-businessman1": "businessman1.png",
+    "avatar-fireman": "fireman.png",
+    "avatar-fireman-temu": "fireman_temu.png",
+    "avatar-fireman-woman": "fireman_woman.png",
+    "avatar-gangster": "gangster.png",
+    "avatar-gangster-temu": "gangster_temu.png",
+    "avatar-policeman": "policeman.png",
+    "avatar-policewomen": "policewomen.png",
+    "avatar-politician-men": "politician_men.png",
+    "avatar-politician-woman": "politician_woman.png",
+    "avatar-rescue": "rescue.png",
+    "avatar-worker": "worker.png",
+  };
+
+  const ownedAvatarFiles = new Set(
+    userPurchases
+      .map((purchase) => avatarIdToFile[purchase.product_id])
+      .filter(Boolean),
+  );
 
   // Charger l'historique d'achats de l'utilisateur
   useEffect(() => {
@@ -100,11 +107,14 @@ function Account({ user, setUser }) {
         savedAvatar !== "admin.jpg" &&
         availableAvatars.includes(savedAvatar)
       ) {
-        // si l'avatar sauvegardé est autorisé (samourai toujours autorisé) ou l'utilisateur possède le pack
-        if (savedAvatar === "samourai.png" || ownsAvatarPack) {
+        // si l'avatar sauvegardé est autorisé (samourai toujours autorisé) ou acheté individuellement
+        if (
+          savedAvatar === "samourai.png" ||
+          ownedAvatarFiles.has(savedAvatar)
+        ) {
           setSelectedAvatar(savedAvatar);
         } else {
-          // le pack n'est pas possédé : forcer samourai
+          // avatar non acheté : forcer samourai
           setSelectedAvatar("samourai.png");
           localStorage.setItem(`avatar_${user}`, "samourai.png");
         }
@@ -114,7 +124,7 @@ function Account({ user, setUser }) {
         localStorage.setItem(`avatar_${user}`, "samourai.png");
       }
     }
-  }, [user, ownsAvatarPack]);
+  }, [user, userPurchases]);
 
   // Fonction pour sélectionner un avatar
   const handleAvatarSelect = (avatar) => {
@@ -127,7 +137,7 @@ function Account({ user, setUser }) {
     if (avatar === "admin.jpg") {
       return;
     }
-    if (avatar !== "samourai.png" && !ownsAvatarPack) {
+    if (avatar !== "samourai.png" && !ownedAvatarFiles.has(avatar)) {
       // Ne pas permettre la sélection ; rediriger vers la boutique pour achat
       navigate("/shop");
       return;
@@ -138,7 +148,9 @@ function Account({ user, setUser }) {
       localStorage.setItem(`avatar_${user}`, avatar);
       // Déclencher un événement personnalisé pour actualiser l'avatar dans la navbar
       globalThis.dispatchEvent(
-        new CustomEvent("avatarChanged", { detail: { avatar, username: user } })
+        new CustomEvent("avatarChanged", {
+          detail: { avatar, username: user },
+        }),
       );
     }
   };
@@ -160,7 +172,7 @@ function Account({ user, setUser }) {
           data.map(async (u) => {
             try {
               const [xpRes, statsRes] = await Promise.all([
-                fetch(`${apiBase}/user/xp/${u.username}`),
+                fetch(`${apiBase}/api/user/xp/${u.username}`),
                 fetch(`${apiBase}/user/stats/${u.username}`),
               ]);
               const xpJson =
@@ -194,7 +206,7 @@ function Account({ user, setUser }) {
                 averageScore: 0,
               };
             }
-          })
+          }),
         );
         setAllUsers(enriched);
         if (enriched.length > 0 && !selectedUser)
@@ -308,12 +320,12 @@ function Account({ user, setUser }) {
         confirm(
           t("account.confirmAwardXp")
             .replace("{username}", selectedUser)
-            .replace("{xp}", xp)
+            .replace("{xp}", xp),
         )
       ) {
         setAwardXpLoading(true);
 
-        fetch(`${apiBase}/user/xp`, {
+        fetch(`${apiBase}/api/user/xp`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -332,7 +344,7 @@ function Account({ user, setUser }) {
             alert(
               t("account.awardXpSuccess")
                 .replace("{username}", selectedUser)
-                .replace("{xp}", xp)
+                .replace("{xp}", xp),
             );
             // Rafraîchir la liste des utilisateurs après succès
             loadAdminUsers(user);
@@ -356,7 +368,8 @@ function Account({ user, setUser }) {
               <h3>{t("account.chooseAvatar") || "Choisir votre avatar"}</h3>
               <div className="avatar-grid">
                 {availableAvatars.map((avatar) => {
-                  const locked = avatar !== "samourai.png" && !ownsAvatarPack;
+                  const locked =
+                    avatar !== "samourai.png" && !ownedAvatarFiles.has(avatar);
                   return (
                     <div
                       key={avatar}
@@ -368,8 +381,8 @@ function Account({ user, setUser }) {
                       tabIndex={0}
                       title={
                         locked
-                          ? t("account.avatarPackRequired") ||
-                            "Pack avatar cyber requis — acheter dans la boutique"
+                          ? t("account.avatarRequired") ||
+                            "Avatar requis — acheter dans la boutique"
                           : avatar.replace(".png", "")
                       }
                       onKeyDown={(e) => {
@@ -426,70 +439,6 @@ function Account({ user, setUser }) {
             {t("account.changePassword")}
           </button>
           <LanguageSelector />
-
-          {/* Historique d'achats */}
-          <div className="purchase-history-section">
-            <h3>{t("account.purchaseHistory") || "Historique d'achats"}</h3>
-            {userPurchases.length > 0 ? (
-              <div style={{ overflowX: "auto", marginTop: "12px" }}>
-                <table
-                  className="purchase-history-table"
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    background: "rgba(255,255,255,0.02)",
-                    borderRadius: "10px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <thead>
-                    <tr
-                      style={{
-                        background: "rgba(255,255,255,0.05)",
-                        borderBottom: "1px solid rgba(255,255,255,0.1)",
-                      }}
-                    >
-                      <th style={{ padding: "12px", textAlign: "left" }}>ID</th>
-                      <th style={{ padding: "12px", textAlign: "left" }}>
-                        {t("shop.product") || "Produit"}
-                      </th>
-                      <th style={{ padding: "12px", textAlign: "left" }}>
-                        {t("shop.price") || "Prix"}
-                      </th>
-                      <th style={{ padding: "12px", textAlign: "left" }}>
-                        {t("common.date") || "Date"}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {userPurchases.map((purchase) => (
-                      <tr
-                        key={purchase.id}
-                        style={{
-                          borderBottom: "1px solid rgba(255,255,255,0.05)",
-                        }}
-                      >
-                        <td style={{ padding: "12px" }}>{purchase.id}</td>
-                        <td style={{ padding: "12px" }}>
-                          {purchase.product_name}
-                        </td>
-                        <td style={{ padding: "12px" }}>{purchase.price}</td>
-                        <td style={{ padding: "12px" }}>
-                          {new Date(purchase.purchased_at).toLocaleString(
-                            "fr-FR"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p style={{ color: "rgba(255,255,255,0.6)", marginTop: "8px" }}>
-                {t("account.noPurchases") || "Aucun achat effectué"}
-              </p>
-            )}
-          </div>
 
           {/* Codes de récupération */}
           <div className="recovery-codes-section">
@@ -576,7 +525,10 @@ function Account({ user, setUser }) {
                   return;
                 }
                 confirm(
-                  t("account.confirmDeleteUserFull").replace("{username}", user)
+                  t("account.confirmDeleteUserFull").replace(
+                    "{username}",
+                    user,
+                  ),
                 ) &&
                   fetch(`${apiBase}/user/delete-user/${user}`, {
                     method: "DELETE",
@@ -585,7 +537,7 @@ function Account({ user, setUser }) {
                     .then((res) => {
                       if (!res.ok) throw new Error("Erreur serveur");
                       const remaining = allUsers.filter(
-                        (u) => u.username !== user
+                        (u) => u.username !== user,
                       );
                       setAllUsers(remaining);
                       if (remaining.length > 0)
@@ -594,8 +546,8 @@ function Account({ user, setUser }) {
                       alert(
                         t("account.deleteUserSuccess").replace(
                           "{username}",
-                          user
-                        )
+                          user,
+                        ),
                       );
                     })
                     .catch((e) => alert(t("common.failedPrefix") + e.message));
@@ -612,8 +564,8 @@ function Account({ user, setUser }) {
                 confirm(
                   t("account.confirmResetUserSessionsFull").replace(
                     "{username}",
-                    user
-                  )
+                    user,
+                  ),
                 ) &&
                   fetch(`${apiBase}/user/reset-sessions/${user}`, {
                     method: "POST",
@@ -625,8 +577,8 @@ function Account({ user, setUser }) {
                       alert(
                         t("account.resetUserSessionsSuccess").replace(
                           "{username}",
-                          user
-                        )
+                          user,
+                        ),
                       );
                     })
                     .catch((e) => alert(t("common.failedPrefix") + e.message))
@@ -661,6 +613,8 @@ function Account({ user, setUser }) {
           onClose={() => setChangeUsername(false)}
           onBackToLogin={() => setChangeUsername(false)}
         />
+
+        <UserInventory user={user} t={t} />
       </>
     );
   }

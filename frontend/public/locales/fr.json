@@ -5,6 +5,7 @@
     "logout": "Déconnexion",
     "account": "Compte",
     "leaderboard": "Classement",
+    "statistics": "Statistiques",
     "rules": "Règles",
     "home": "Accueil",
     "contacts": "Contacts",
@@ -21,9 +22,11 @@
     "saving": "Enregistrement...",
     "failedPrefix": "Échec : ",
     "noData": "Aucune donnée disponible. Merci de contacter le support.",
-    "close": "Fermer"
-    ,"confirm": "Confirmer"
-    ,"cancel": "Annuler"
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "gameState": "État du jeu",
+    "date": "Date"
   },
   "nav": {
     "hello": "Bonjour, maitre",
@@ -50,6 +53,8 @@
     "player": "Joueur",
     "noScoresRecorded": "Aucun score enregistré.",
     "date": "Date/Heure",
+    "top10Games": "Top 10 des meilleures parties",
+    "top10Users": "Top 10 des meilleurs joueurs",
     "chart": {
       "xLabel": "Date/Heure",
       "yLabel": "Score",
@@ -70,7 +75,7 @@
     "loginRequired": "Vous devez être connecté pour voir votre classement.",
     "openLogin": "Se connecter"
   },
-  
+
   "account": {
     "title": "Compte",
     "hello": "Bonjour",
@@ -88,7 +93,7 @@
     "select": "Sélectionner",
     "resetUserScores": "Réinitialiser",
     "resetUserSessions": "Réinitialiser les autres parties d'un joueur",
-    "resetSelfSessions":"Réinitialiser vos parties",
+    "resetSelfSessions": "Réinitialiser vos parties",
     "language": "Langue",
     "confirmResetSelfScore": "Réinitialiser votre propre classement ?",
     "confirmResetSelfSessions": "Réinitialiser vos autres parties ?",
@@ -110,27 +115,46 @@
     "openLogin": "Se connecter",
     "deleteXpHistory": "Supprimer l'historique XP",
     "confirmDeleteXpHistory": "Supprimer l'historique XP de {username} ?",
-    "deleteXpHistorySuccess": "Historique XP supprimé pour {username}."
-    ,"deleteXpHistoryDesc": "Supprime toutes les entrées d'historique XP pour l'utilisateur sélectionné."
-    ,"deleteUserDesc": "Supprime l'utilisateur et toutes les données associées (irréversible)."
-    ,"setAdmin": "Donner droits administrateur"
-    ,"removeAdmin": "Retirer droits administrateur"
-    ,"confirmSetAdmin": "Donner les droits administrateur à {username} ?"
-    ,"confirmRemoveAdmin": "Retirer les droits administrateur à {username} ?"
-    ,"setAdminSuccess": "{username} est maintenant administrateur."
-    ,"removeAdminSuccess": "{username} n'est plus administrateur."
-    ,"adminManagementDesc": "Gérer les droits administrateur de cet utilisateur."
-    ,"banUser": "Bannir l'utilisateur"
-    ,"unbanUser": "Débannir l'utilisateur"
-    ,"confirmBanUser": "Bannir {username} pour {duration} ?"
-    ,"confirmUnbanUser": "Débannir {username} ?"
-    ,"banUserSuccess": "{username} a été banni."
-    ,"unbanUserSuccess": "{username} a été débanni."
-    ,"banManagementDesc": "Bannir temporairement ou définitivement cet utilisateur."
-    ,"banDurationPlaceholder": "Durée en heures (vide = permanent)"
-    ,"banReasonPlaceholder": "Raison du bannissement..."
-    ,"banReasonRequired": "La raison du bannissement est requise"
-    ,"invalidDuration": "La durée doit être positive"
+    "deleteXpHistorySuccess": "Historique XP supprimé pour {username}.",
+    "deleteXpHistoryDesc": "Supprime toutes les entrées d'historique XP pour l'utilisateur sélectionné.",
+    "deleteUserDesc": "Supprime l'utilisateur et toutes les données associées (irréversible).",
+    "setAdmin": "Donner droits administrateur",
+    "removeAdmin": "Retirer droits administrateur",
+    "confirmSetAdmin": "Donner les droits administrateur à {username} ?",
+    "confirmRemoveAdmin": "Retirer les droits administrateur à {username} ?",
+    "setAdminSuccess": "{username} est maintenant administrateur.",
+    "removeAdminSuccess": "{username} n'est plus administrateur.",
+    "adminManagementDesc": "Gérer les droits administrateur de cet utilisateur.",
+    "banUser": "Bannir l'utilisateur",
+    "unbanUser": "Débannir l'utilisateur",
+    "confirmBanUser": "Bannir {username} pour {duration} ?",
+    "confirmUnbanUser": "Débannir {username} ?",
+    "banUserSuccess": "{username} a été banni.",
+    "unbanUserSuccess": "{username} a été débanni.",
+    "banManagementDesc": "Bannir temporairement ou définitivement cet utilisateur.",
+    "banDurationPlaceholder": "Durée en heures (vide = permanent)",
+    "banReasonPlaceholder": "Raison du bannissement...",
+    "banReasonRequired": "La raison du bannissement est requise",
+    "invalidDuration": "La durée doit être positive",
+    "changeUsername": "Changer le nom d'utilisateur",
+    "changePassword": "Changer le mot de passe",
+    "purchaseHistory": "Historique d'achats",
+    "inventory": "Inventaire",
+    "noPurchases": "Aucun article acheté. Rendez-vous à la boutique pour acheter vos premiers articles !",
+    "purchaseDate": "Date d'achat",
+    "alreadyOwned": "Vous possédez déjà cet article",
+    "avatarRequired": "Avatar requis — acheter dans la boutique"
+  },
+  "resetUsername": {
+    "title": "Changer votre nom d'utilisateur",
+    "new-username": "Nouveau nom d'utilisateur",
+    "newUsernamePlaceholder": "Entrez votre nouveau nom d'utilisateur",
+    "resetUsername": "Changer le nom d'utilisateur",
+    "resetSuccess": "Nom d'utilisateur changé avec succès"
+  },
+  "resetPassword": {
+    "old-password": "Ancien mot de passe",
+    "oldPasswordPlaceholder": "Entrez votre ancien mot de passe"
   },
   "statistics": {
     "username": "Nom d'utilisateur",
@@ -143,8 +167,8 @@
     "averageStage": "Stage moyen",
     "highestStage": "Plus haut stage",
     "averagePlayTime": "Durée moyenne par partie",
-    "loginToViewStats": "Connectez-vous pour voir vos statistiques"
-    ,"fetchFailed": "Échec du chargement des statistiques."
+    "loginToViewStats": "Connectez-vous pour voir vos statistiques",
+    "fetchFailed": "Échec du chargement des statistiques."
   },
   "accueil": {
     "readyToPlay": "Prêt à jouer ?",
@@ -183,6 +207,8 @@
     "connectToSave": "Connecte-toi pour jouer et sauvegarder ta progression pendant ton ascension.",
     "oneClickConnect": "3 clic suffit pour créer un compte et 10 clic pour supprimer ton compte après attestation sur l'honneur a envoyé au support par courriel recommandé.",
     "openLogin": "1 compte créer = 1 arbre planter",
+    "alreadyConnected": "Vous êtes déjà connecté ! Votre progression est automatiquement sauvegardée.",
+    "alreadyConnectedButton": "Déjà connecté",
     "adPopupBadge": "OFFRE EXCLUSIVE",
     "adPopupTitle": "-70% sur tous les articles !",
     "adPopupDesc": "Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !",
@@ -264,8 +290,8 @@
     "title": "Créer un compte",
     "submit": "S'inscrire",
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
-    "error": "Erreur lors de l'inscription."
-    ,"confirmPassword": "Confirmer le mot de passe"
+    "error": "Erreur lors de l'inscription.",
+    "confirmPassword": "Confirmer le mot de passe"
   },
   "pageNotFound": {
     "title": "404 — Page introuvable",
@@ -289,6 +315,20 @@
     "salePrefix": "Offre flash se termine dans",
     "saleEnded": "Offre terminée",
     "soldOut": "Indisponible",
+    "outOfStock": "Épuisé",
+    "addToCart": "➕ Ajouter au panier",
+    "onlyRemaining": "Seulement",
+    "remaining": "restants",
+    "reviews": "avis",
+    "viewersViewing": "personnes regardent cet article",
+    "trending": "🔥 TENDANCE",
+    "priceAlert": "Les prix vont augmenter dans",
+    "priceAlertBuy": "! Achetez maintenant !",
+    "product": "Produit",
+    "price": "Prix",
+    "categories": {
+      "avatars": "Avatars"
+    },
     "modal": {
       "title": "Confirmer l'achat",
       "notice": "ATTENTION : Cette offre expire dans quelques secondes ! Les stocks sont limités.",
@@ -322,11 +362,58 @@
         "title": "Pack Bombes (esthétique)",
         "desc": "Icônes et effets de bombe exclusifs (visuels uniquement)."
       },
-      "avatarPack": {
-        "title": "Pack Avatar",
-        "desc": "Avatars premium pour votre profil."
-      }
-      ,
+      "avatarSamourai": {
+        "title": "Avatar Samourai",
+        "desc": "Avatar Samourai pour votre profil."
+      },
+      "avatarBusinessman1": {
+        "title": "Avatar Businessman",
+        "desc": "Avatar Businessman pour votre profil."
+      },
+      "avatarFireman": {
+        "title": "Avatar Pompier",
+        "desc": "Avatar Pompier pour votre profil."
+      },
+      "avatarFiremanTemu": {
+        "title": "Avatar Pompier Temu",
+        "desc": "Avatar Pompier Temu pour votre profil."
+      },
+      "avatarFiremanWoman": {
+        "title": "Avatar Pompier Femme",
+        "desc": "Avatar Pompier Femme pour votre profil."
+      },
+      "avatarGangster": {
+        "title": "Avatar Gangster",
+        "desc": "Avatar Gangster pour votre profil."
+      },
+      "avatarGangsterTemu": {
+        "title": "Avatar Gangster Temu",
+        "desc": "Avatar Gangster Temu pour votre profil."
+      },
+      "avatarPoliceman": {
+        "title": "Avatar Policier",
+        "desc": "Avatar Policier pour votre profil."
+      },
+      "avatarPolicewomen": {
+        "title": "Avatar Policiere",
+        "desc": "Avatar Policiere pour votre profil."
+      },
+      "avatarPoliticianMen": {
+        "title": "Avatar Politicien",
+        "desc": "Avatar Politicien pour votre profil."
+      },
+      "avatarPoliticianWoman": {
+        "title": "Avatar Politicienne",
+        "desc": "Avatar Politicienne pour votre profil."
+      },
+      "avatarRescue": {
+        "title": "Avatar Secouriste",
+        "desc": "Avatar Secouriste pour votre profil."
+      },
+      "avatarWorker": {
+        "title": "Avatar Ouvrier",
+        "desc": "Avatar Ouvrier pour votre profil."
+      },
       "lootboxBasic": {
         "title": "Coffret Mystère",
         "desc": "Un coffret contenant des récompenses aléatoires."
@@ -335,13 +422,37 @@
         "title": "Coffret Rare",
         "desc": "Coffret avec meilleures chances d'objets rares."
       },
+      "lootboxPrecieux": {
+        "title": "Coffret Précieux",
+        "desc": "Coffret avec chances maximales d'objets rares et épiques."
+      },
       "xpPack": {
         "title": "Pack XP +100",
         "desc": "Ajoutez instantanément 100 points d'expérience à votre compte."
       },
+      "xpPack250": {
+        "title": "Pack XP +250",
+        "desc": "Ajoutez instantanément 250 points d'expérience à votre compte."
+      },
+      "xpPack500": {
+        "title": "Pack XP +500",
+        "desc": "Ajoutez instantanément 500 points d'expérience à votre compte."
+      },
+      "xpPack1000": {
+        "title": "Pack XP +1000",
+        "desc": "Ajoutez instantanément 1000 points d'expérience à votre compte."
+      },
       "levelUpPack": {
         "title": "Pack Level Up",
         "desc": "Gagnez instantanément un niveau supplémentaire !"
+      },
+      "levelUpPack2": {
+        "title": "Pack Level Up x2",
+        "desc": "Gagnez un boost d'XP équivalent à deux niveaux."
+      },
+      "levelUpPack5": {
+        "title": "Pack Level Up x5",
+        "desc": "Gagnez un boost d'XP équivalent à cinq niveaux."
       }
     }
   },
@@ -391,8 +502,63 @@
     "text": "Décrivez le problème que vous avez rencontré..."
   },
   "lobby": {
-    "title" : "Recherche de joueur en cours... ",
-    "description" : "Merci de patientez... Le sous-Marin cherche au fin fond de l'océan... des joueurs",
-    "players" : "Joueur connectés dans le lobby"
+    "title": "Recherche de joueur en cours... ",
+    "description": "Merci de patientez... Le sous-Marin cherche au fin fond de l'océan... des joueurs",
+    "players": "Joueur connectés dans le lobby",
+    "tip1": "Astuce : les bombes apparaissent plus vite apres le stage 5.",
+    "tip2": "Conseil : enchaines les sauts pour eviter les bombes basses.",
+    "tip3": "Pense a activer tes cosmetiques depuis ton inventaire.",
+    "tip4": "Les lootbox rares offrent plus de chances d'items epics.",
+    "tip5": "Gagne de l'XP pour monter de niveau plus rapidement.",
+    "tip6": "Astuce : reste en mouvement pour lire les trajectoires.",
+    "tip7": "Conseil : le timing des sauts est plus important que la vitesse.",
+    "tip8": "Pense a tester les packs XP avant un tournoi.",
+    "tip9": "Les avatars epics sont plus rares en lootbox.",
+    "tip10": "Les effets cosmetiques ne changent pas le gameplay.",
+    "tip11": "Regarde le stage pour anticiper la difficulte.",
+    "tip12": "Apres une defaite, refais une partie pour rester chaud.",
+    "tip13": "Les lootbox precieuses offrent les meilleurs taux epics.",
+    "tip14": "Change d'avatar pour varier ton style.",
+    "tip15": "Les bombes basses se dodgent avec un saut court.",
+    "tip16": "Les bombes hautes se dodgent en restant au sol.",
+    "tip17": "La precision vaut mieux que la panique.",
+    "tip18": "Entraine-toi en solo pour maitriser le rythme.",
+    "tip19": "Le mode multijoueur est plus intense apres le stage 10.",
+    "tip20": "Une bonne serie augmente ta confiance, pas ta hitbox.",
+    "quote1": "Le codeur des dunes sait que chaque bug est un grain de sable.",
+    "quote2": "Dans le vent du clavier, la logique trace sa voie.",
+    "quote3": "Le desert n'oublie rien, les logs non plus.",
+    "quote4": "L'algorithme est une caravane : avance, ajuste, avance.",
+    "quote5": "Une fonction claire vaut mille lignes de poussiere.",
+    "quote6": "Le codeur des dunes teste avant la tempete.",
+    "quote7": "La rarete est dans la patience, pas dans le hasard.",
+    "quote8": "Chaque refactor est un oasis temporaire.",
+    "quote9": "Le silence du desert ressemble a une build reussie.",
+    "quote10": "Les erreurs passent, les bonnes pratiques restent.",
+    "quote11": "Les dunes changent, l'architecture tient.",
+    "quote12": "La debogueuse est une boussole.",
+    "quote13": "Un bon commit est une trace nette dans le sable.",
+    "quote14": "Le codeur des dunes maitrise ses dependances.",
+    "quote15": "La simplicite est l'arme la plus rare.",
+    "quote16": "Dans les dunes, chaque merge laisse une empreinte.",
+    "quote17": "Le codeur des dunes respecte la branche principale.",
+    "quote18": "Le vent change, la prod exige des tests solides.",
+    "quote19": "Un diff propre vaut un voyage sans tempete.",
+    "quote20": "Le sable se deplace, les contrats API restent.",
+    "quote21": "La dette technique est un ver qui grandit dans l'ombre.",
+    "quote22": "Les promesses non tenues cassent comme du verre dans le desert.",
+    "quote23": "Le pipeline CI est la caravane : suivez-le.",
+    "quote24": "Le codeur des dunes logue avant de juger.",
+    "quote25": "Un rollback rapide est une retraite honorable.",
+    "quote26": "La production n'oublie pas, comme les dunes.",
+    "quote27": "Le git est une chronologie, pas une poubelle.",
+    "quote28": "La review est un abri contre la chaleur des bugs.",
+    "quote29": "Un cache mal gere est une mirage trompeuse.",
+    "quote30": "Le code propre guide la caravane des features.",
+    "quote31": "Les secrets doivent rester enfouis dans le sable.",
+    "quote32": "Le monitorage est la sentinelle des nuits froides.",
+    "quote33": "Le codeur des dunes livre petit, mais livre souvent.",
+    "quote34": "La simplicite traverse les tempetes de prod.",
+    "quote35": "Le refactor est un voyage, pas une destination."
   }
 }
