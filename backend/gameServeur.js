@@ -288,7 +288,15 @@ wss.on("connection", (ws) => {
         const username = msg.username;
         const matchId = msg.matchId;
         const assignedMatch = assignments.get(username);
+        console.log("[join_game] Received:", { username, matchId, assignedMatch });
         if (!username || !matchId || assignedMatch !== matchId) {
+          console.warn("[join_game] Invalid:", {
+            noUsername: !username,
+            noMatchId: !matchId,
+            mismatchedMatch: assignedMatch !== matchId,
+            assignedMatch,
+            receivedMatchId: matchId,
+          });
           ws.send(JSON.stringify({ type: "error", message: "invalid_match" }));
           return;
         }
@@ -441,7 +449,7 @@ wss.on("connection", (ws) => {
           matchId,
           username: info.username,
         });
-        
+
         match.players.delete(info.username);
         match.playerStates.delete(info.username);
         match.overPlayers.delete(info.username);
