@@ -304,7 +304,10 @@ function App() {
         />
         <Route path="/*" element={<PageNotFound />} />
         <Route path="/regle" element={<Regle />} />
-        <Route path="/shop" element={<Shop />} />
+        <Route
+          path="/shop"
+          element={<Shop user={userState} setUser={setUserAndLoadLang} />}
+        />
         <Route path="/moderation" element={<Moderation user={userState} />} />
       </Routes>
     </>
