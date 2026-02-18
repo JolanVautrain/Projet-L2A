@@ -7,6 +7,11 @@ from pathlib import Path
 from flask import Flask, request
 from werkzeug.exceptions import HTTPException
 
+# Add the backend directory to path before imports so relative imports work
+BASE_DIR = Path(__file__).resolve().parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
 from core import admin, db, utils  # type: ignore
 from pages.accueil import auth, game  # type: ignore
 from pages.classement import scores  # type: ignore
@@ -14,10 +19,6 @@ from pages.compte import users  # type: ignore
 from pages.classement import topUsers  # type: ignore
 from pages.report import report  # type: ignore
 from pages.shop import shop  # type: ignore
-
-BASE_DIR = Path(__file__).resolve().parent
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)

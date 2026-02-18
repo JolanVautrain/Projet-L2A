@@ -51,6 +51,15 @@ print_warning() {
 # Fonction de nettoyage
 cleanup() {
     print_step "Nettoyage du conteneur de test..."
+    
+    # Arrêter le serveur WebSocket s'il est en cours d'exécution
+    if [ -n "$WS_SERVER_PID" ] && kill -0 $WS_SERVER_PID 2>/dev/null; then
+        print_step "Arrêt du serveur WebSocket (PID: $WS_SERVER_PID)..."
+        kill $WS_SERVER_PID 2>/dev/null || true
+        wait $WS_SERVER_PID 2>/dev/null || true
+        print_success "Serveur WebSocket arrêté"
+    fi
+    
     cd "$PROJECT_ROOT"
     docker compose -f docker/docker-compose.test.yml down -v 2>/dev/null || true
     
@@ -81,6 +90,19 @@ print_step "Création des dossiers de test et de rapports..."
 mkdir -p "$REPORTS_DIR"
 mkdir -p "$TEST_DIR/backend"
 print_success "Dossiers créés: $TEST_DIR/backend et $REPORTS_DIR"
+
+# Installer les dépendances de test
+print_step "Installation des dépendances de test..."
+if [ -f "$BACKEND_DIR/requirements-dev.txt" ]; then
+    "$PIP" install -q -r "$BACKEND_DIR/requirements-dev.txt" 2>/dev/null || {
+        print_warning "Installation des dépendances DEV échouée, tentative de réinstallation"
+        "$PIP" install --upgrade pip setuptools wheel
+        "$PIP" install -r "$BACKEND_DIR/requirements-dev.txt"
+    }
+    print_success "Dépendances de test installées"
+else
+    print_warning "Fichier requirements-dev.txt non trouvé"
+fi
 
 # Copier les tests du backend dans le dossier test/backend
 print_step "Copie des tests du backend dans test/backend/..."
@@ -218,6 +240,47 @@ else
 fi
 
 ###############################################################################
+# 3.5 LANCEMENT DU SERVEUR WEBSOCKET POUR LES TESTS
+###############################################################################
+
+echo ""
+print_step "═══════════════════════════════════════════════════════════"
+print_step "DÉMARRAGE DU SERVEUR WEBSOCKET"
+print_step "═══════════════════════════════════════════════════════════"
+
+# Vérifier que Node.js est disponible
+if ! command -v node >/dev/null 2>&1; then
+    print_warning "Node.js non disponible. Les tests WebSocket seront ignorés."
+else
+    # Démarrer le serveur WebSocket en arrière-plan
+    print_step "Démarrage du serveur WebSocket sur le port 3001..."
+    cd "$BACKEND_DIR"
+    
+    # Vérifier les dépendances npm
+    if [ ! -d "$BACKEND_DIR/node_modules" ]; then
+        print_step "Installation des dépendances npm du backend..."
+        npm install > "$REPORTS_DIR/npm-install.log" 2>&1 || {
+            print_warning "Installation npm échouée, vérification du service WebSocket"
+        }
+    fi
+    
+    # Lancer le serveur WebSocket
+    node "$BACKEND_DIR/gameServeur.js" > "$REPORTS_DIR/websocket-server.log" 2>&1 &
+    WS_SERVER_PID=$!
+    print_success "Serveur WebSocket démarré (PID: $WS_SERVER_PID)"
+    
+    # Attendre que le serveur soit prêt
+    sleep 2
+    
+    # Vérifier que le serveur est up
+    if ! kill -0 $WS_SERVER_PID 2>/dev/null; then
+        print_error "Le serveur WebSocket n'a pas pu démarrer"
+        print_warning "Vérifiez $REPORTS_DIR/websocket-server.log pour les détails"
+        WS_SERVER_PID=""
+    fi
+fi
+
+###############################################################################
 # 4. TESTS SCÉNARIOS FRONTEND (via pytest)
 ###############################################################################
 
@@ -242,6 +305,14 @@ if "$PYTEST" test/frontend/ \
 else
     print_error "Tests scénarios frontend: CERTAINS TESTS ONT ÉCHOUÉ"
     echo "Voir les détails dans $REPORTS_DIR/pytest-frontend.log"
+fi
+
+# Arrêter le serveur WebSocket
+if [ -n "$WS_SERVER_PID" ] && kill -0 $WS_SERVER_PID 2>/dev/null; then
+    print_step "Arrêt du serveur WebSocket..."
+    kill $WS_SERVER_PID 2>/dev/null || true
+    wait $WS_SERVER_PID 2>/dev/null || true
+    print_success "Serveur WebSocket arrêté"
 fi
 
 ###############################################################################
