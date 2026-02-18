@@ -1,3 +1,4 @@
+/* global Phaser */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ModalGameOver from "./modals/ModalGameOver.jsx";
@@ -40,10 +41,7 @@ import {
   resetPhysicsState,
   setupCollisions,
 } from "./utils/GamePhysics.js";
-import {
-  initControls,
-  isJumpRequested,
-} from "./utils/GameControls.js";
+import { initControls, isJumpRequested } from "./utils/GameControls.js";
 import {
   calculateXPReward,
   checkAchievements,
@@ -121,7 +119,7 @@ function create() {
   this.physics.add.overlap(
     getPlayer(),
     getObstacles(),
-    handleObstacleCollision
+    handleObstacleCollision,
   );
 
   // Spawn first obstacle
@@ -157,8 +155,8 @@ function update() {
   // Gérer le saut
   if (isJumpRequested()) {
     handleJump(() => {
-        // Effet de particules au saut
-        createDustCloud(gameScene, player.x, player.y + 25, 0x00ffff);
+      // Effet de particules au saut
+      createDustCloud(gameScene, player.x, player.y + 25, 0x00ffff);
     });
   }
 
@@ -186,7 +184,7 @@ function update() {
  */
 function handleObstacleCollision(_player, _obstacle) {
   const { isInvincible } = getInvincibility();
-  const username = getActiveUser()
+  const username = getActiveUser();
 
   // Si mode invincible (admin), ne pas mourir
   if (isInvincible) {
@@ -213,7 +211,7 @@ function handleObstacleCollision(_player, _obstacle) {
   gameOver = true;
   const finalScore = score;
   const timerSeconds = Math.floor(
-    (Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000
+    (Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000,
   );
 
   if (currentSessionId && !sessionPosted) {
@@ -228,7 +226,7 @@ function handleObstacleCollision(_player, _obstacle) {
           score: finalScore,
           stage: getStage(),
           timer: timerSeconds,
-          state: "Solo"
+          state: "Solo",
         }),
       })
         .then((r) => r.json())
@@ -238,7 +236,7 @@ function handleObstacleCollision(_player, _obstacle) {
             const xpAmount = calculateXPReward(
               finalScore,
               getStage(),
-              timerSeconds
+              timerSeconds,
             );
 
             // Vérifier les achievements
@@ -251,7 +249,7 @@ function handleObstacleCollision(_player, _obstacle) {
               finalScore,
               getStage(),
               timerSeconds,
-              userAchievements
+              userAchievements,
             );
 
             // Sauvegarder les nouveaux achievements
@@ -262,7 +260,7 @@ function handleObstacleCollision(_player, _obstacle) {
               ];
               localStorage.setItem(
                 "userAchievements",
-                JSON.stringify(updatedAchievements)
+                JSON.stringify(updatedAchievements),
               );
             }
 

@@ -5,7 +5,10 @@ import logging
 import os
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, List
+from typing import Any
+from typing import Iterator
+from typing import List
+
 import psycopg2  # type: ignore
 from psycopg2 import OperationalError  # type: ignore
 from werkzeug.security import generate_password_hash
@@ -296,7 +299,7 @@ def check_and_recreate_schema() -> None:
                             "ALTER TABLE users ADD COLUMN banned_until TIMESTAMP NULL"
                         )
                         conn.commit()
-                        
+
                     # Vérifie et ajoute les colonnes ban_reason
                     cur.execute(
                         "SELECT column_name FROM information_schema.columns "

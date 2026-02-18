@@ -1,10 +1,11 @@
 """leaderboard related endpoints."""
 
-import datetime
-from typing import Any, List
+from typing import List
 
-from core import db, utils
-from flask import Blueprint, Response, request
+from core import db
+from core import utils
+from flask import Blueprint
+from flask import Response
 
 bp = Blueprint("leaderboard",__name__, url_prefix="/api/leaderboard")
 
@@ -50,5 +51,4 @@ def list_high_scores() -> Response:
             "state": r[4],
         })
         index +=1
-        
     return utils.make_response(result[:10])

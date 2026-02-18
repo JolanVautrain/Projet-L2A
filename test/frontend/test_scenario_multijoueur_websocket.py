@@ -4,10 +4,12 @@ Simule 10 joueurs connectés en simultané, qui rejoignent le lobby,
 attendent le démarrage du jeu, puis jouent avec des actions synchronisées.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import uuid
-from typing import Any, List
+from typing import Any
 
 import pytest
 import websockets
@@ -21,7 +23,7 @@ class WebSocketPlayer:
         self.ws_url = ws_url
         self.ws: Any = None
         self.match_id: str | None = None
-        self.received_messages: List[dict] = []
+        self.received_messages: list[dict] = []
         self.player_count: int = 0
         self.game_started = False
         self.game_over = False
