@@ -1,11 +1,13 @@
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
+import { useLanguage } from "../../autres/Language.jsx";
 
 export function SalesBanner({ showPrice, countdown, formatTime, t }) {
   return (
     <div className="sale-banner">
       {showPrice ? (
         <>
-          {t("shop.salePrefix")} <strong className="sale-timer">{formatTime(countdown)}</strong>
+          {t("shop.salePrefix")}{" "}
+          <strong className="sale-timer">{formatTime(countdown)}</strong>
         </>
       ) : (
         <span className="ended">{t("shop.saleEnded")}</span>
@@ -22,10 +24,12 @@ SalesBanner.propTypes = {
 };
 
 export function PriceWarningBanner({ show, timer }) {
+  const { t } = useLanguage();
   if (!show) return null;
   return (
     <div className="price-warning-banner">
-      ⚠️ <strong>ALERTE PRIX !</strong> Les prix vont augmenter dans <strong>{timer}s</strong> ! Achetez maintenant !
+      ⚠️ <strong>ALERTE PRIX !</strong> {t("shop.priceAlert")}{" "}
+      <strong>{timer}s</strong> {t("shop.priceAlertBuy")}
     </div>
   );
 }
@@ -55,12 +59,18 @@ export function Confetti() {
       {Array.from({ length: 36 }).map((_, i) => {
         const left = Math.round(Math.random() * 100);
         const delay = (Math.random() * 1.2).toFixed(2);
-        const bg = ['#ff6b6b', '#ffd166', '#8bd3dd', '#7c3aed', '#60d394'][i % 5];
+        const bg = ["#ff6b6b", "#ffd166", "#8bd3dd", "#7c3aed", "#60d394"][
+          i % 5
+        ];
         return (
           <span
             key={i}
             className="confetti-piece"
-            style={{ left: `${left}%`, background: bg, animationDelay: `${delay}s` }}
+            style={{
+              left: `${left}%`,
+              background: bg,
+              animationDelay: `${delay}s`,
+            }}
           />
         );
       })}

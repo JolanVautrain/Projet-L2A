@@ -24,7 +24,7 @@ function Account({ user, setUser }) {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [changePassword, setChangePassword] = useState(false);
-   const [changeUsername, setChangeUsername] = useState(false);
+  const [changeUsername, setChangeUsername] = useState(false);
   const [recoveryCodesLoading, setRecoveryCodesLoading] = useState(false);
   const [newRecoveryCode, setNewRecoveryCode] = useState(null);
   const [showNewCode, setShowNewCode] = useState(false);
@@ -138,7 +138,9 @@ function Account({ user, setUser }) {
       localStorage.setItem(`avatar_${user}`, avatar);
       // Déclencher un événement personnalisé pour actualiser l'avatar dans la navbar
       globalThis.dispatchEvent(
-        new CustomEvent("avatarChanged", { detail: { avatar, username: user } })
+        new CustomEvent("avatarChanged", {
+          detail: { avatar, username: user },
+        }),
       );
     }
   };
@@ -194,7 +196,7 @@ function Account({ user, setUser }) {
                 averageScore: 0,
               };
             }
-          })
+          }),
         );
         setAllUsers(enriched);
         if (enriched.length > 0 && !selectedUser)
@@ -308,7 +310,7 @@ function Account({ user, setUser }) {
         confirm(
           t("account.confirmAwardXp")
             .replace("{username}", selectedUser)
-            .replace("{xp}", xp)
+            .replace("{xp}", xp),
         )
       ) {
         setAwardXpLoading(true);
@@ -332,7 +334,7 @@ function Account({ user, setUser }) {
             alert(
               t("account.awardXpSuccess")
                 .replace("{username}", selectedUser)
-                .replace("{xp}", xp)
+                .replace("{xp}", xp),
             );
             // Rafraîchir la liste des utilisateurs après succès
             loadAdminUsers(user);
@@ -471,12 +473,12 @@ function Account({ user, setUser }) {
                       >
                         <td style={{ padding: "12px" }}>{purchase.id}</td>
                         <td style={{ padding: "12px" }}>
-                          {purchase.product_name}
+                          {t(purchase.product_name) || purchase.product_name}
                         </td>
                         <td style={{ padding: "12px" }}>{purchase.price}</td>
                         <td style={{ padding: "12px" }}>
                           {new Date(purchase.purchased_at).toLocaleString(
-                            "fr-FR"
+                            "fr-FR",
                           )}
                         </td>
                       </tr>
@@ -576,7 +578,10 @@ function Account({ user, setUser }) {
                   return;
                 }
                 confirm(
-                  t("account.confirmDeleteUserFull").replace("{username}", user)
+                  t("account.confirmDeleteUserFull").replace(
+                    "{username}",
+                    user,
+                  ),
                 ) &&
                   fetch(`${apiBase}/user/delete-user/${user}`, {
                     method: "DELETE",
@@ -585,7 +590,7 @@ function Account({ user, setUser }) {
                     .then((res) => {
                       if (!res.ok) throw new Error("Erreur serveur");
                       const remaining = allUsers.filter(
-                        (u) => u.username !== user
+                        (u) => u.username !== user,
                       );
                       setAllUsers(remaining);
                       if (remaining.length > 0)
@@ -594,8 +599,8 @@ function Account({ user, setUser }) {
                       alert(
                         t("account.deleteUserSuccess").replace(
                           "{username}",
-                          user
-                        )
+                          user,
+                        ),
                       );
                     })
                     .catch((e) => alert(t("common.failedPrefix") + e.message));
@@ -612,8 +617,8 @@ function Account({ user, setUser }) {
                 confirm(
                   t("account.confirmResetUserSessionsFull").replace(
                     "{username}",
-                    user
-                  )
+                    user,
+                  ),
                 ) &&
                   fetch(`${apiBase}/user/reset-sessions/${user}`, {
                     method: "POST",
@@ -625,8 +630,8 @@ function Account({ user, setUser }) {
                       alert(
                         t("account.resetUserSessionsSuccess").replace(
                           "{username}",
-                          user
-                        )
+                          user,
+                        ),
                       );
                     })
                     .catch((e) => alert(t("common.failedPrefix") + e.message))

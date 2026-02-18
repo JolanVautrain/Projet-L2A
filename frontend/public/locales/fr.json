@@ -5,6 +5,7 @@
     "logout": "Déconnexion",
     "account": "Compte",
     "leaderboard": "Classement",
+    "statistics": "Statistiques",
     "rules": "Règles",
     "home": "Accueil",
     "contacts": "Contacts",
@@ -23,7 +24,9 @@
     "noData": "Aucune donnée disponible. Merci de contacter le support.",
     "close": "Fermer",
     "confirm": "Confirmer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "gameState": "État du jeu",
+    "date": "Date"
   },
   "nav": {
     "hello": "Bonjour, maitre",
@@ -50,6 +53,8 @@
     "player": "Joueur",
     "noScoresRecorded": "Aucun score enregistré.",
     "date": "Date/Heure",
+    "top10Games": "Top 10 des meilleures parties",
+    "top10Users": "Top 10 des meilleurs joueurs",
     "chart": {
       "xLabel": "Date/Heure",
       "yLabel": "Score",
@@ -130,7 +135,21 @@
     "banDurationPlaceholder": "Durée en heures (vide = permanent)",
     "banReasonPlaceholder": "Raison du bannissement...",
     "banReasonRequired": "La raison du bannissement est requise",
-    "invalidDuration": "La durée doit être positive"
+    "invalidDuration": "La durée doit être positive",
+    "changeUsername": "Changer le nom d'utilisateur",
+    "changePassword": "Changer le mot de passe",
+    "purchaseHistory": "Historique d'achats"
+  },
+  "resetUsername": {
+    "title": "Changer votre nom d'utilisateur",
+    "new-username": "Nouveau nom d'utilisateur",
+    "newUsernamePlaceholder": "Entrez votre nouveau nom d'utilisateur",
+    "resetUsername": "Changer le nom d'utilisateur",
+    "resetSuccess": "Nom d'utilisateur changé avec succès"
+  },
+  "resetPassword": {
+    "old-password": "Ancien mot de passe",
+    "oldPasswordPlaceholder": "Entrez votre ancien mot de passe"
   },
   "statistics": {
     "username": "Nom d'utilisateur",
@@ -291,6 +310,17 @@
     "salePrefix": "Offre flash se termine dans",
     "saleEnded": "Offre terminée",
     "soldOut": "Indisponible",
+    "outOfStock": "Épuisé",
+    "addToCart": "➕ Ajouter au panier",
+    "onlyRemaining": "Seulement",
+    "remaining": "restants",
+    "reviews": "avis",
+    "viewersViewing": "personnes regardent cet article",
+    "trending": "🔥 TENDANCE",
+    "priceAlert": "Les prix vont augmenter dans",
+    "priceAlertBuy": "! Achetez maintenant !",
+    "product": "Produit",
+    "price": "Prix",
     "modal": {
       "title": "Confirmer l'achat",
       "notice": "ATTENTION : Cette offre expire dans quelques secondes ! Les stocks sont limités.",
@@ -335,6 +365,10 @@
       "lootboxRare": {
         "title": "Coffret Rare",
         "desc": "Coffret avec meilleures chances d'objets rares."
+      },
+      "lootboxPrecieux": {
+        "title": "Coffret Précieux",
+        "desc": "Coffret avec chances maximales d'objets rares et épiques."
       },
       "xpPack": {
         "title": "Pack XP +100",

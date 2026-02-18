@@ -5,6 +5,7 @@
     "logout": "Logout",
     "account": "Account",
     "leaderboard": "Leaderboard",
+    "statistics": "Statistics",
     "rules": "Rules",
     "home": "Home",
     "contacts": "Contacts",
@@ -23,7 +24,9 @@
     "noData": "No data available",
     "close": "Close",
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "gameState": "Game State",
+    "date": "Date"
   },
   "nav": {
     "hello": "Hello",
@@ -46,6 +49,8 @@
     "player": "Player",
     "noScoresRecorded": "No scores recorded.",
     "date": "Date/Time",
+    "top10Games": "Top 10 Best Games",
+    "top10Users": "Top 10 Best Players",
     "chart": {
       "xLabel": "Date/Time",
       "yLabel": "Score",
@@ -120,7 +125,21 @@
     "banDurationPlaceholder": "Duration in hours (empty = permanent)",
     "banReasonPlaceholder": "Ban reason...",
     "banReasonRequired": "Ban reason is required",
-    "invalidDuration": "Duration must be positive"
+    "invalidDuration": "Duration must be positive",
+    "changeUsername": "Change Username",
+    "changePassword": "Change Password",
+    "purchaseHistory": "Purchase History"
+  },
+  "resetUsername": {
+    "title": "Change Your Username",
+    "new-username": "New Username",
+    "newUsernamePlaceholder": "Enter your new username",
+    "resetUsername": "Change Username",
+    "resetSuccess": "Username changed successfully"
+  },
+  "resetPassword": {
+    "old-password": "Old Password",
+    "oldPasswordPlaceholder": "Enter your old password"
   },
   "statistics": {
     "title": "Your Statistics",
@@ -312,6 +331,17 @@
     "salePrefix": "Flash sale ends in",
     "saleEnded": "Sale ended",
     "soldOut": "Out of stock",
+    "outOfStock": "Out of Stock",
+    "addToCart": "➕ Add to Cart",
+    "onlyRemaining": "Only",
+    "remaining": "left",
+    "reviews": "reviews",
+    "viewersViewing": "people viewing this item",
+    "trending": "🔥 TRENDING",
+    "priceAlert": "Prices will increase in",
+    "priceAlertBuy": "s! Buy now!",
+    "product": "Product",
+    "price": "Price",
     "modal": {
       "title": "Confirm Purchase",
       "notice": "WARNING: This offer expires in a few seconds! Stocks are limited.",
@@ -356,6 +386,10 @@
       "lootboxRare": {
         "title": "Rare Box",
         "desc": "Box with better chances of rare items."
+      },
+      "lootboxPrecieux": {
+        "title": "Precious Box",
+        "desc": "Box with maximum chances of rare and epic items."
       },
       "xpPack": {
         "title": "XP Pack +100",
