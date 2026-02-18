@@ -21,9 +21,9 @@
     "saving": "Enregistrement...",
     "failedPrefix": "Échec : ",
     "noData": "Aucune donnée disponible. Merci de contacter le support.",
-    "close": "Fermer"
-    ,"confirm": "Confirmer"
-    ,"cancel": "Annuler"
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "cancel": "Annuler"
   },
   "nav": {
     "hello": "Bonjour, maitre",
@@ -70,7 +70,7 @@
     "loginRequired": "Vous devez être connecté pour voir votre classement.",
     "openLogin": "Se connecter"
   },
-  
+
   "account": {
     "title": "Compte",
     "hello": "Bonjour",
@@ -88,7 +88,7 @@
     "select": "Sélectionner",
     "resetUserScores": "Réinitialiser",
     "resetUserSessions": "Réinitialiser les autres parties d'un joueur",
-    "resetSelfSessions":"Réinitialiser vos parties",
+    "resetSelfSessions": "Réinitialiser vos parties",
     "language": "Langue",
     "confirmResetSelfScore": "Réinitialiser votre propre classement ?",
     "confirmResetSelfSessions": "Réinitialiser vos autres parties ?",
@@ -110,27 +110,27 @@
     "openLogin": "Se connecter",
     "deleteXpHistory": "Supprimer l'historique XP",
     "confirmDeleteXpHistory": "Supprimer l'historique XP de {username} ?",
-    "deleteXpHistorySuccess": "Historique XP supprimé pour {username}."
-    ,"deleteXpHistoryDesc": "Supprime toutes les entrées d'historique XP pour l'utilisateur sélectionné."
-    ,"deleteUserDesc": "Supprime l'utilisateur et toutes les données associées (irréversible)."
-    ,"setAdmin": "Donner droits administrateur"
-    ,"removeAdmin": "Retirer droits administrateur"
-    ,"confirmSetAdmin": "Donner les droits administrateur à {username} ?"
-    ,"confirmRemoveAdmin": "Retirer les droits administrateur à {username} ?"
-    ,"setAdminSuccess": "{username} est maintenant administrateur."
-    ,"removeAdminSuccess": "{username} n'est plus administrateur."
-    ,"adminManagementDesc": "Gérer les droits administrateur de cet utilisateur."
-    ,"banUser": "Bannir l'utilisateur"
-    ,"unbanUser": "Débannir l'utilisateur"
-    ,"confirmBanUser": "Bannir {username} pour {duration} ?"
-    ,"confirmUnbanUser": "Débannir {username} ?"
-    ,"banUserSuccess": "{username} a été banni."
-    ,"unbanUserSuccess": "{username} a été débanni."
-    ,"banManagementDesc": "Bannir temporairement ou définitivement cet utilisateur."
-    ,"banDurationPlaceholder": "Durée en heures (vide = permanent)"
-    ,"banReasonPlaceholder": "Raison du bannissement..."
-    ,"banReasonRequired": "La raison du bannissement est requise"
-    ,"invalidDuration": "La durée doit être positive"
+    "deleteXpHistorySuccess": "Historique XP supprimé pour {username}.",
+    "deleteXpHistoryDesc": "Supprime toutes les entrées d'historique XP pour l'utilisateur sélectionné.",
+    "deleteUserDesc": "Supprime l'utilisateur et toutes les données associées (irréversible).",
+    "setAdmin": "Donner droits administrateur",
+    "removeAdmin": "Retirer droits administrateur",
+    "confirmSetAdmin": "Donner les droits administrateur à {username} ?",
+    "confirmRemoveAdmin": "Retirer les droits administrateur à {username} ?",
+    "setAdminSuccess": "{username} est maintenant administrateur.",
+    "removeAdminSuccess": "{username} n'est plus administrateur.",
+    "adminManagementDesc": "Gérer les droits administrateur de cet utilisateur.",
+    "banUser": "Bannir l'utilisateur",
+    "unbanUser": "Débannir l'utilisateur",
+    "confirmBanUser": "Bannir {username} pour {duration} ?",
+    "confirmUnbanUser": "Débannir {username} ?",
+    "banUserSuccess": "{username} a été banni.",
+    "unbanUserSuccess": "{username} a été débanni.",
+    "banManagementDesc": "Bannir temporairement ou définitivement cet utilisateur.",
+    "banDurationPlaceholder": "Durée en heures (vide = permanent)",
+    "banReasonPlaceholder": "Raison du bannissement...",
+    "banReasonRequired": "La raison du bannissement est requise",
+    "invalidDuration": "La durée doit être positive"
   },
   "statistics": {
     "username": "Nom d'utilisateur",
@@ -143,8 +143,8 @@
     "averageStage": "Stage moyen",
     "highestStage": "Plus haut stage",
     "averagePlayTime": "Durée moyenne par partie",
-    "loginToViewStats": "Connectez-vous pour voir vos statistiques"
-    ,"fetchFailed": "Échec du chargement des statistiques."
+    "loginToViewStats": "Connectez-vous pour voir vos statistiques",
+    "fetchFailed": "Échec du chargement des statistiques."
   },
   "accueil": {
     "readyToPlay": "Prêt à jouer ?",
@@ -183,6 +183,8 @@
     "connectToSave": "Connecte-toi pour jouer et sauvegarder ta progression pendant ton ascension.",
     "oneClickConnect": "3 clic suffit pour créer un compte et 10 clic pour supprimer ton compte après attestation sur l'honneur a envoyé au support par courriel recommandé.",
     "openLogin": "1 compte créer = 1 arbre planter",
+    "alreadyConnected": "Vous êtes déjà connecté ! Votre progression est automatiquement sauvegardée.",
+    "alreadyConnectedButton": "Déjà connecté",
     "adPopupBadge": "OFFRE EXCLUSIVE",
     "adPopupTitle": "-70% sur tous les articles !",
     "adPopupDesc": "Profitez de nos lootboxes mystères et packs exclusifs. Offre limitée !",
@@ -264,8 +266,8 @@
     "title": "Créer un compte",
     "submit": "S'inscrire",
     "passwordMismatch": "Les mots de passe ne correspondent pas.",
-    "error": "Erreur lors de l'inscription."
-    ,"confirmPassword": "Confirmer le mot de passe"
+    "error": "Erreur lors de l'inscription.",
+    "confirmPassword": "Confirmer le mot de passe"
   },
   "pageNotFound": {
     "title": "404 — Page introuvable",
@@ -325,8 +327,7 @@
       "avatarPack": {
         "title": "Pack Avatar",
         "desc": "Avatars premium pour votre profil."
-      }
-      ,
+      },
       "lootboxBasic": {
         "title": "Coffret Mystère",
         "desc": "Un coffret contenant des récompenses aléatoires."
@@ -391,8 +392,8 @@
     "text": "Décrivez le problème que vous avez rencontré..."
   },
   "lobby": {
-    "title" : "Recherche de joueur en cours... ",
-    "description" : "Merci de patientez... Le sous-Marin cherche au fin fond de l'océan... des joueurs",
-    "players" : "Joueur connectés dans le lobby"
+    "title": "Recherche de joueur en cours... ",
+    "description": "Merci de patientez... Le sous-Marin cherche au fin fond de l'océan... des joueurs",
+    "players": "Joueur connectés dans le lobby"
   }
 }

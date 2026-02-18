@@ -413,6 +413,8 @@ function Game() {
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showGameWonModal, setShowGameWonModal] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+  const [opponentUsername, setOpponentUsername] = useState(null);
+  const [isMultiplayer, setIsMultiplayer] = useState(false);
   const [confirmedLeavingGame, setConfirmedLeavingGame] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -435,9 +437,14 @@ function Game() {
     }
     const storedMatchId = sessionStorage.getItem("activeMatchId");
     const storedOffset = sessionStorage.getItem("serverTimeOffsetMs");
+    const storedOpponent = sessionStorage.getItem("opponentUsername");
     activeMatchId = storedMatchId;
     serverTimeOffsetMs = storedOffset ? Number(storedOffset) : 0;
     multiplayerEnabled = Boolean(storedMatchId);
+    setIsMultiplayer(multiplayerEnabled);
+    if (storedOpponent) {
+      setOpponentUsername(storedOpponent);
+    }
     setMultiplayerMode(multiplayerEnabled);
     console.log("[Game.jsx useEffect] Initialized:", {
       activeMatchId,
@@ -449,11 +456,11 @@ function Game() {
   useEffect(() => {
     const username = getActiveUser();
     const matchId = sessionStorage.getItem("activeMatchId");
-    
+
     // Réutiliser le WebSocket existant du lobby si disponible
     let ws = globalThis.gameWebSocket;
     let isReusedSocket = !!ws && ws.readyState === WebSocket.OPEN;
-    
+
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       console.log("[Game.jsx] Creating new WebSocket (no existing one)");
       const wsUrl = getWebSocketUrl();
@@ -463,7 +470,7 @@ function Game() {
       console.log("[Game.jsx] Reusing existing WebSocket from lobby");
       isReusedSocket = true;
     }
-    
+
     inputSocket = ws;
     let isUnmounting = false;
     let closeAfterOpen = false;
@@ -491,7 +498,7 @@ function Game() {
     } else {
       ws.onopen = handleOpen;
     }
-    
+
     ws.onerror = (e) => {
       if (isUnmounting) return;
       console.error("WS error", e);
@@ -563,6 +570,7 @@ function Game() {
           if (username === usernameOpponent) return; // C'est notre action, on ignore
 
           setOpponentDisconnected(false);
+          setOpponentUsername(usernameOpponent); // Stocker le nom de l'adversaire
 
           // Mettre à jour l'état de l'adversaire dans la prédiction
           if (clientPrediction && data.serverState) {
@@ -727,6 +735,7 @@ function Game() {
     sessionStorage.setItem("confirmedLeavingGame", "1");
     sessionStorage.removeItem("activeMatchId");
     sessionStorage.removeItem("serverTimeOffsetMs");
+    sessionStorage.removeItem("opponentUsername");
     // Nettoyer la référence globale du WebSocket
     globalThis.gameWebSocket = null;
     navigate("/lobby");
@@ -736,6 +745,7 @@ function Game() {
     setShowGameOverModal(false);
     setConfirmedLeavingGame(true);
     sessionStorage.setItem("confirmedLeavingGame", "1");
+    sessionStorage.removeItem("opponentUsername");
     try {
       gameScene.scene.resume();
     } catch (e) {
@@ -853,6 +863,40 @@ function Game() {
   return (
     <>
       <div className="game-wrap">
+        {/* Affichage des avatars en mode multijoueur */}
+        {isMultiplayer && (
+          <div className="multiplayer-avatars">
+            <div className="player-avatar-container">
+              <img
+                src={
+                  getActiveUser() === "admin"
+                    ? "/assets/avatar/admin.jpg"
+                    : "/assets/avatar/" +
+                      (localStorage.getItem("avatar_" + getActiveUser()) ||
+                        "businessman1.png")
+                }
+                alt="Your Avatar"
+                className="player-avatar"
+              />
+              <div className="player-label">{getActiveUser()}</div>
+            </div>
+            <div className="vs-divider">VS</div>
+            <div className="player-avatar-container opponent">
+              <img
+                src={
+                  opponentUsername === "admin"
+                    ? "/assets/avatar/admin.jpg"
+                    : "/assets/avatar/" +
+                      (localStorage.getItem("avatar_" + opponentUsername) ||
+                        "businessman1.png")
+                }
+                alt="Opponent Avatar"
+                className="player-avatar"
+              />
+              <div className="player-label">{opponentUsername || "..."}</div>
+            </div>
+          </div>
+        )}
         <div className="phaser-container" ref={gameContainer} />
 
         <div className="game-overlay">
@@ -877,6 +921,7 @@ function Game() {
             isOpen={true}
             score={scoreDisplay}
             stage={stage}
+            username={getActiveUser()}
             timerSeconds={timerSeconds}
             onReplay={handleReplay}
             onReturnHome={handleReturnHome}
@@ -900,6 +945,7 @@ function Game() {
             isOpen={true}
             score={scoreDisplay}
             stage={stage}
+            username={getActiveUser()}
             timerSeconds={timerSeconds}
             onReplay={handleReplay}
             onReturnHome={handleReturnHome}

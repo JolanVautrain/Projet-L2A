@@ -10,6 +10,7 @@
   align-items: center;
   gap: 18px;
   font-family: 'Courier New', monospace;
+  margin-top: 2rem;
 }
 
 .phaser-canvas {
@@ -161,8 +162,97 @@
     opacity: 0;
     transform: translateX(-50%) translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Affichage des avatars en mode multijoueur */
+.multiplayer-avatars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(10, 14, 22, 0.9), rgba(20, 25, 35, 0.9));
+  border-radius: 12px;
+  border: 2px solid #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  margin-bottom: 1rem;
+}
+
+.player-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid #00ffff;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+  object-fit: cover;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.player-avatar-container.opponent .player-avatar {
+  border-color: #ff00ff;
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+}
+
+.player-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+}
+
+.player-avatar-container.opponent .player-avatar:hover {
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+}
+
+.player-label {
+  color: #00ffff;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  max-width: 120px;
+  word-wrap: break-word;
+  word-break: break-word;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.player-avatar-container.opponent .player-label {
+  color: #ff00ff;
+  text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+}
+
+.vs-divider {
+  font-family: 'Courier New', monospace;
+  font-weight: 900;
+  font-size: 24px;
+  color: #fff;
+  text-shadow:
+    0 0 10px rgba(0, 255, 255, 0.8),
+    0 0 20px rgba(255, 0, 255, 0.6);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
   }
 }

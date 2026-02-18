@@ -14,15 +14,15 @@ const GameWaitingRoom = () => {
   const wsRef = useRef(null);
   const username = getActiveUser();
   const { t } = useLanguage();
-  
+
   // Récupérer l'avatar de l'utilisateur actuel
   const getCurrentAvatar = (user) => {
     if (!user) return "businessman1.png";
     if (user === "admin") return "admin.jpg";
     const saved = localStorage.getItem(`avatar_${user}`);
-    return (saved && saved !== "admin.jpg") ? saved : "businessman1.png";
+    return saved && saved !== "admin.jpg" ? saved : "businessman1.png";
   };
-  
+
   const currentAvatar = getCurrentAvatar(username);
   const opponentAvatar = getCurrentAvatar(opponentUsername);
 
@@ -33,15 +33,16 @@ const GameWaitingRoom = () => {
     }
 
     const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
-    
+
     // Nettoyer les données stales d'une session précédente
     if (!confirmedLeaving) {
       sessionStorage.removeItem("activeMatchId");
-      sessionStorage.removeItem("serverTimeOffsetMs");      // Nettoyer aussi le WebSocket global s'il existe
+      sessionStorage.removeItem("serverTimeOffsetMs"); // Nettoyer aussi le WebSocket global s'il existe
       if (globalThis.gameWebSocket) {
         globalThis.gameWebSocket = null;
-      }    }
-    
+      }
+    }
+
     if (confirmedLeaving) {
       sessionStorage.removeItem("confirmedLeavingGame");
     }
@@ -69,7 +70,7 @@ const GameWaitingRoom = () => {
         case "player_count":
           setPlayerCount(msg.count);
           break;
-        
+
         case "match_found":
           // Nouveau cas: quand un match est trouvé, afficher les deux joueurs
           if (msg.opponent) {
@@ -83,12 +84,13 @@ const GameWaitingRoom = () => {
           const resolvedMatchId = msg.matchId || msg.match_id || msg.matchID;
           if (resolvedMatchId) {
             sessionStorage.setItem("activeMatchId", resolvedMatchId);
+            // Stocker l'adversaire dans sessionStorage
+            if (opponentUsername) {
+              sessionStorage.setItem("opponentUsername", opponentUsername);
+            }
             if (typeof msg.serverTime === "number") {
               const offset = msg.serverTime - Date.now();
-              sessionStorage.setItem(
-                "serverTimeOffsetMs",
-                String(offset)
-              );
+              sessionStorage.setItem("serverTimeOffsetMs", String(offset));
             } else {
               sessionStorage.setItem("serverTimeOffsetMs", "0");
             }
@@ -133,12 +135,14 @@ const GameWaitingRoom = () => {
     <div className="lobby-overlay">
       <h2>{t("lobby.title")}</h2>
       <h3>{t("lobby.description")}</h3>
-      <p>{t("lobby.players")}: {playerCount} / {MIN_PLAYERS}</p>      
+      <p>
+        {t("lobby.players")}: {playerCount} / {MIN_PLAYERS}
+      </p>
       {matchReady && opponentUsername ? (
         <div className="versus-container">
           <div className="player-avatar-box">
-            <img 
-              src={`/assets/avatar/${currentAvatar}`} 
+            <img
+              src={`/assets/avatar/${currentAvatar}`}
               alt={username}
               className="player-lobby-avatar"
             />
@@ -146,8 +150,8 @@ const GameWaitingRoom = () => {
           </div>
           <div className="versus-text">VS</div>
           <div className="player-avatar-box">
-            <img 
-              src={`/assets/avatar/${opponentAvatar}`} 
+            <img
+              src={`/assets/avatar/${opponentAvatar}`}
               alt={opponentUsername}
               className="player-lobby-avatar"
             />
@@ -157,8 +161,8 @@ const GameWaitingRoom = () => {
       ) : (
         <div className="searching-container">
           <div className="player-avatar-searching">
-            <img 
-              src={`/assets/avatar/${currentAvatar}`} 
+            <img
+              src={`/assets/avatar/${currentAvatar}`}
               alt={username}
               className="player-lobby-avatar pulse"
             />
@@ -169,21 +173,21 @@ const GameWaitingRoom = () => {
       )}
       <div className="sea">
         <div className="circle-wrapper">
-            <div className="bubble"></div>
-            <div className="submarine-wrapper">
-                <div className="submarine-body">
-                    <div className="window"></div>
-                    <div className="engine"></div>
-                    <div className="light"></div>
-                </div>
-                <div className="helix"></div>
-                <div className="hat">
-                  <div className="leds-wrapper">
-                      <div className="periscope"></div>
-                      <div className="leds"></div>
-                  </div>
-                </div>
+          <div className="bubble"></div>
+          <div className="submarine-wrapper">
+            <div className="submarine-body">
+              <div className="window"></div>
+              <div className="engine"></div>
+              <div className="light"></div>
             </div>
+            <div className="helix"></div>
+            <div className="hat">
+              <div className="leds-wrapper">
+                <div className="periscope"></div>
+                <div className="leds"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
