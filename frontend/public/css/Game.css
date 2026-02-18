@@ -227,9 +227,21 @@
   line-height: 1.2;
 }
 
+.player-level {
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+}
+
 .player-avatar-container.opponent .player-label {
   color: #ff00ff;
   text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
+}
+
+.player-avatar-container.opponent .player-level {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .vs-divider {

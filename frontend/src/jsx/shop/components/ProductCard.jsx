@@ -10,8 +10,11 @@ export function ProductCard({
   saleActive,
   viewerCount,
   reviewCount,
+  isAlreadyOwned = false,
+  t: parentT,
 }) {
-  const { t } = useLanguage();
+  const { t: contextT } = useLanguage();
+  const t = parentT || contextT;
 
   return (
     <article
@@ -44,12 +47,14 @@ export function ProductCard({
           </div>
           <button
             onClick={() => onAddToCart(product)}
-            disabled={!saleActive || product.stock === 0}
-            className={`btn primary ${product.stock <= 2 ? "pulse" : ""} ${!saleActive || product.stock === 0 ? "disabled" : ""}`}
+            disabled={!saleActive || product.stock === 0 || isAlreadyOwned}
+            className={`btn primary ${product.stock <= 2 ? "pulse" : ""} ${!saleActive || product.stock === 0 || isAlreadyOwned ? "disabled" : ""}`}
           >
-            {!saleActive || product.stock === 0
-              ? t("shop.outOfStock")
-              : t("shop.addToCart")}
+            {isAlreadyOwned
+              ? t("account.alreadyOwned")
+              : !saleActive || product.stock === 0
+                ? t("shop.outOfStock")
+                : t("shop.addToCart")}
           </button>
         </div>
         {product.stock !== undefined && (
@@ -98,9 +103,12 @@ ProductCard.propTypes = {
     badge: PropTypes.string,
     hot: PropTypes.bool,
     stock: PropTypes.number,
+    unique: PropTypes.bool,
   }).isRequired,
   onAddToCart: PropTypes.func.isRequired,
   saleActive: PropTypes.bool.isRequired,
   viewerCount: PropTypes.number.isRequired,
   reviewCount: PropTypes.number.isRequired,
+  isAlreadyOwned: PropTypes.bool,
+  t: PropTypes.func,
 };

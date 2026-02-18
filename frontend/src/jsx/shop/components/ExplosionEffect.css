@@ -1,0 +1,114 @@
+/* Explosion Effect Styles */
+
+.explosion {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.explosion-burst {
+    position: absolute;
+    font-size: 2.5rem;
+    animation: burst 0.8s ease-out forwards;
+    transform-origin: center;
+}
+
+.explosion-particle {
+    position: absolute;
+    font-size: 1rem;
+    animation: particle-fly 0.8s ease-out forwards;
+}
+
+.particle-1 {
+    animation-delay: 0s;
+    transform: rotate(0deg);
+}
+
+.particle-2 {
+    animation-delay: 0.05s;
+    transform: rotate(60deg);
+}
+
+.particle-3 {
+    animation-delay: 0.1s;
+    transform: rotate(120deg);
+}
+
+.particle-4 {
+    animation-delay: 0.15s;
+    transform: rotate(180deg);
+}
+
+.particle-5 {
+    animation-delay: 0.2s;
+    transform: rotate(240deg);
+}
+
+.particle-6 {
+    animation-delay: 0.25s;
+    transform: rotate(300deg);
+}
+
+@keyframes burst {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2) rotate(180deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.5) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes particle-fly {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(var(--tx), var(--ty)) scale(0.2);
+        opacity: 0;
+    }
+}
+
+/* Direction des particules */
+.particle-1 {
+    --tx: 100px;
+    --ty: 0;
+}
+
+.particle-2 {
+    --tx: 70px;
+    --ty: -70px;
+}
+
+.particle-3 {
+    --tx: 0;
+    --ty: -100px;
+}
+
+.particle-4 {
+    --tx: -70px;
+    --ty: -70px;
+}
+
+.particle-5 {
+    --tx: -100px;
+    --ty: 0;
+}
+
+.particle-6 {
+    --tx: -70px;
+    --ty: 70px;
+}

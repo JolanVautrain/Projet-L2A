@@ -1,7 +1,15 @@
-import PropTypes from 'prop-types';
-import './FeaturedSection.css';
+import PropTypes from "prop-types";
+import { useLanguage } from "../../autres/Language.jsx";
+import "./FeaturedSection.css";
 
-export function FeaturedSection({ trendingProducts, onAddToCart, viewerCounts, reviewCounts }) {
+export function FeaturedSection({
+  trendingProducts,
+  onAddToCart,
+  viewerCounts,
+  reviewCounts,
+  userPurchasedProducts = [],
+}) {
+  const { t } = useLanguage();
   if (trendingProducts.length === 0) return null;
 
   return (
@@ -9,28 +17,44 @@ export function FeaturedSection({ trendingProducts, onAddToCart, viewerCounts, r
       <div className="featured-header">
         <h2 className="featured-title">
           {/* eslint-disable-next-line jsx-a11y/no-trailing-whitespace */}
-          <span className="featured-icon">⭐</span> En vedette cette semaine <span className="featured-icon">⭐</span>
+          <span className="featured-icon">⭐</span> En vedette cette semaine{" "}
+          <span className="featured-icon">⭐</span>
         </h2>
         <p className="featured-subtitle">Les articles les plus populaires</p>
       </div>
-      
+
       <div className="featured-carousel">
         {trendingProducts.slice(0, 3).map((product, idx) => (
-          <div key={product.id} className="featured-item" style={{ animationDelay: `${idx * 0.1}s` }}>
+          <div
+            key={product.id}
+            className="featured-item"
+            style={{ animationDelay: `${idx * 0.1}s` }}
+          >
             <div className="featured-rank">#{idx + 1}</div>
-            <img src={product.img} alt={product.title} className="featured-img" />
+            <img
+              src={product.img}
+              alt={product.title}
+              className="featured-img"
+            />
             <div className="featured-content">
               <h3>{product.title}</h3>
               <div className="featured-meta">
                 <span className="featured-price">{product.price}</span>
-                <span className="featured-viewers">👁️ {viewerCounts[product.id]}</span>
+                <span className="featured-viewers">
+                  👁️ {viewerCounts[product.id]}
+                </span>
               </div>
-              <button 
-                className="btn small primary" 
+              <button
+                className="btn small primary"
                 onClick={() => onAddToCart(product)}
-                style={{ width: '100%', marginTop: '0.5rem' }}
+                disabled={
+                  product.unique && userPurchasedProducts.includes(product.id)
+                }
+                style={{ width: "100%", marginTop: "0.5rem" }}
               >
-                + Ajouter
+                {product.unique && userPurchasedProducts.includes(product.id)
+                  ? t("account.alreadyOwned")
+                  : "+ Ajouter"}
               </button>
             </div>
           </div>
@@ -45,4 +69,5 @@ FeaturedSection.propTypes = {
   onAddToCart: PropTypes.func.isRequired,
   viewerCounts: PropTypes.object.isRequired,
   reviewCounts: PropTypes.object.isRequired,
+  userPurchasedProducts: PropTypes.array,
 };

@@ -1,0 +1,219 @@
+/* User Inventory Styles */
+
+.user-inventory {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.inventory-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(251, 191, 36, 0.2);
+}
+
+.inventory-tab {
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.inventory-tab:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.inventory-tab.active {
+    color: #fbbf24;
+}
+
+.inventory-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #fbbf24;
+}
+
+.inventory-content {
+    animation: fadeIn 0.3s ease;
+}
+
+.inventory-content h3 {
+    color: #fbbf24;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.inventory-item {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    padding: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.inventory-item:hover {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(251, 191, 36, 0.6);
+    transform: translateY(-5px);
+}
+
+.inventory-item-img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px;
+}
+
+.inventory-item-info {
+    width: 100%;
+}
+
+.inventory-item-info h4 {
+    margin: 0 0 5px 0;
+    color: #eaf6ff;
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+.inventory-item-price {
+    color: #fbbf24;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 3px 0;
+}
+
+.inventory-item-date {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    margin: 3px 0 0 0;
+}
+
+.cosmetic-toggle {
+    width: 100%;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cosmetic-toggle:hover {
+    background: rgba(251, 191, 36, 0.4);
+    transform: scale(1.05);
+}
+
+.cosmetic-toggle.active {
+    background: #fbbf24;
+    color: #1a1f2e;
+    font-weight: 700;
+}
+
+.cosmetic-toggle.inactive {
+    opacity: 0.7;
+}
+
+.purchase-history-table {
+    overflow-x: auto;
+}
+
+.purchase-history-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.purchase-history-table thead {
+    background: rgba(15, 23, 42, 0.6);
+    border-bottom: 2px solid rgba(251, 191, 36, 0.3);
+}
+
+.purchase-history-table th {
+    padding: 12px;
+    text-align: left;
+    color: #fbbf24;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.purchase-history-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+    color: #eaf6ff;
+    font-size: 0.9rem;
+}
+
+.purchase-history-table tbody tr:hover {
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.purchase-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 3px;
+}
+
+.no-purchases {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .inventory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    .purchase-history-table {
+        font-size: 0.85rem;
+    }
+
+    .purchase-history-table th,
+    .purchase-history-table td {
+        padding: 8px;
+    }
+}

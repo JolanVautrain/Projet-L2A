@@ -1,6 +1,40 @@
-import PropTypes from 'prop-types';
+import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 
-export function LootboxModal({ isOpen, product, prize, isWaiting, countdown, onClose, t }) {
+export function LootboxModal({
+  isOpen,
+  product,
+  prize,
+  isWaiting,
+  countdown,
+  onClose,
+  t,
+}) {
+  const [visibleCount, setVisibleCount] = useState(0);
+  const prizeItems = prize?.items || (prize ? [prize] : []);
+  const remainingCount = Math.max(prizeItems.length - visibleCount, 0);
+
+  useEffect(() => {
+    if (!isOpen || isWaiting || prizeItems.length === 0) {
+      setVisibleCount(0);
+      return undefined;
+    }
+
+    setVisibleCount(1);
+    if (prizeItems.length <= 1) return undefined;
+
+    let current = 1;
+    const intervalId = setInterval(() => {
+      current += 1;
+      setVisibleCount(current);
+      if (current >= prizeItems.length) {
+        clearInterval(intervalId);
+      }
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [isOpen, isWaiting, prize?.batchId, prizeItems.length]);
+
   if (!isOpen) return null;
 
   return (
@@ -18,7 +52,7 @@ export function LootboxModal({ isOpen, product, prize, isWaiting, countdown, onC
             </div>
           </>
         ) : (
-          <p className="modal-notice">{t('shop.loot.revealing')}</p>
+          <p className="modal-notice">{t("shop.loot.revealing")}</p>
         )}
         <div className="modal-product">
           <img src={product?.img} alt="" />
@@ -28,18 +62,40 @@ export function LootboxModal({ isOpen, product, prize, isWaiting, countdown, onC
           </div>
         </div>
         <div className="loot-reveal">
-          {prize ? (
-            <div className="prize">
-              <img src={prize.img} alt="" />
-              <div className="prize-name">{prize.name}</div>
+          {prizeItems.length > 0 ? (
+            <div className="prize-list">
+              {prizeItems[visibleCount - 1] && (
+                <div
+                  className="prize"
+                  key={
+                    prizeItems[visibleCount - 1].rewardId ||
+                    prizeItems[visibleCount - 1].productId ||
+                    prizeItems[visibleCount - 1].name
+                  }
+                >
+                  <img src={prizeItems[visibleCount - 1].img} alt="" />
+                  <div className="prize-name">
+                    {prizeItems[visibleCount - 1].name}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="prize-placeholder">{t('shop.loot.loading')}</div>
+            <div className="prize-placeholder">{t("shop.loot.loading")}</div>
           )}
         </div>
+        {!isWaiting && prizeItems.length > 0 && (
+          <p className="modal-notice">
+            {`Récompenses restantes : ${remainingCount}`}
+          </p>
+        )}
         <div className="modal-actions">
-          <button className="btn primary" onClick={onClose} disabled={isWaiting}>
-            {isWaiting ? 'Patientez...' : t('shop.loot.close')}
+          <button
+            className="btn primary"
+            onClick={onClose}
+            disabled={isWaiting}
+          >
+            {isWaiting ? "Patientez..." : t("shop.loot.close")}
           </button>
         </div>
       </div>

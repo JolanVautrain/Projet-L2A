@@ -770,6 +770,12 @@
   gap: 8px
 }
 
+.prize-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
 .prize img {
   width: 96px;
   height: 96px;
@@ -880,9 +886,10 @@
 }
 
 .cart-modal {
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
+  max-width: 950px;
+  width: 95%;
+  max-height: none;
+  height: auto;
   display: flex;
   flex-direction: column;
 }
@@ -913,10 +920,11 @@
 }
 
 .cart-items {
-  flex: 1;
-  overflow-y: auto;
+  flex: none;
+  overflow: visible;
   padding-right: 8px;
   margin-bottom: 16px;
+  height: auto;
 }
 
 .cart-item {
@@ -1038,12 +1046,52 @@
   border-top: 2px solid rgba(251, 191, 36, 0.3);
 }
 
+.cart-extras {
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.cart-extras h4 {
+  margin: 0 0 10px 0;
+  color: #fbbf24;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.cart-extra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  color: #eaf6ff;
+  font-size: 14px;
+}
+
+.cart-extra input {
+  margin-right: 10px;
+}
+
+.cart-extra-price {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
 .cart-total {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
   font-size: 20px;
+}
+
+.cart-total--small {
+  font-size: 16px;
+  margin-bottom: 10px;
 }
 
 .cart-total span {

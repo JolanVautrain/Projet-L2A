@@ -53,6 +53,7 @@ import { getWebSocketUrl } from "../utils/wsClient.js";
 import {
   calculateXPReward,
   checkAchievements,
+  getLevelFromXP,
 } from "./utils/GameGamification.js";
 import { getActiveUser, getUserAchievementsKey } from "../utils/userSession.js";
 import {
@@ -416,8 +417,18 @@ function Game() {
   const [opponentUsername, setOpponentUsername] = useState(null);
   const [isMultiplayer, setIsMultiplayer] = useState(false);
   const [confirmedLeavingGame, setConfirmedLeavingGame] = useState(false);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [opponentLevel, setOpponentLevel] = useState(1);
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const resolveLevel = (data) => {
+    if (!data) return 1;
+    if (typeof data.level === "number" && data.level > 1) return data.level;
+    if (typeof data.xp === "number") return getLevelFromXP(data.xp);
+    return typeof data.level === "number" ? data.level : 1;
+  };
 
   // Vérifier si l'utilisateur essaie d'accéder directement sans passer par le lobby
   useEffect(() => {
@@ -952,6 +963,27 @@ function Game() {
   }, []);
 
   useEffect(() => {
+    const activeUser = getActiveUser();
+    if (!activeUser) return;
+    fetch(`${apiBase}/api/user/xp/${activeUser}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setPlayerLevel(resolveLevel(data));
+      })
+      .catch(() => {});
+  }, [apiBase]);
+
+  useEffect(() => {
+    if (!opponentUsername) return;
+    fetch(`${apiBase}/api/user/xp/${opponentUsername}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        setOpponentLevel(resolveLevel(data));
+      })
+      .catch(() => {});
+  }, [opponentUsername, apiBase]);
+
+  useEffect(() => {
     const config = {
       type: Phaser.AUTO,
       scale: {
@@ -1000,6 +1032,7 @@ function Game() {
                 className="player-avatar"
               />
               <div className="player-label">{getActiveUser()}</div>
+              <div className="player-level">Lv. {playerLevel}</div>
             </div>
             <div className="vs-divider">VS</div>
             <div className="player-avatar-container opponent">
@@ -1015,6 +1048,7 @@ function Game() {
                 className="player-avatar"
               />
               <div className="player-label">{opponentUsername || "..."}</div>
+              <div className="player-level">Lv. {opponentLevel}</div>
             </div>
           </div>
         )}

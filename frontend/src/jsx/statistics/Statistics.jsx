@@ -121,7 +121,7 @@ function Statistics({ user, setUser }) {
       });
     // Charger XP / niveau du user connecté
     if (user) {
-      fetch(`${apiBase}/user/xp/${user}`)
+      fetch(`${apiBase}/api/user/xp/${user}`)
         .then((r) => {
           if (r.ok) {
             return r.json();
@@ -136,7 +136,7 @@ function Statistics({ user, setUser }) {
         })
         .catch(() => {});
       // Charger l'historique XP
-      fetch(`${apiBase}/user/xp/history/${user}?limit=100`)
+      fetch(`${apiBase}/api/user/xp/history/${user}?limit=100`)
         .then((r) => (r.ok ? r.json() : []))
         .then((h) => {
           if (mounted) setXpHistory(h || []);
@@ -221,7 +221,7 @@ function Statistics({ user, setUser }) {
   const sortedUserSessions =
     userSessions && userSessions.length > 0
       ? [...userSessions].sort(
-          (a, b) => new Date(b.playedAt) - new Date(a.playedAt)
+          (a, b) => new Date(b.playedAt) - new Date(a.playedAt),
         )
       : [];
 
@@ -384,7 +384,7 @@ function ScoreChart({ sessions, t }) {
     const height = 260;
     const margin = { top: 18, right: 30, bottom: 36, left: 48 };
     const sorted = [...sessions].sort(
-      (a, b) => new Date(a.playedAt) - new Date(b.playedAt)
+      (a, b) => new Date(a.playedAt) - new Date(b.playedAt),
     );
     const times = sorted.map((s) => new Date(s.playedAt).getTime());
     const xMin = Math.min(...times);
@@ -575,7 +575,7 @@ function ProgressHistoryChart({ history, t }) {
     const height = 180;
     const margin = { top: 12, right: 18, bottom: 28, left: 48 };
     const sorted = [...history].sort(
-      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     );
     const values = sorted.map((h) => Number(h.xp || 0));
     const times = sorted.map((h) => new Date(h.createdAt).getTime());

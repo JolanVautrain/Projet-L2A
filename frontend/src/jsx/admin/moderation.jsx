@@ -57,10 +57,10 @@ function Moderation({ user }) {
       const res = await fetch(`${apiBase}/admin/users`, {
         headers: { "X-Admin-User": currentUser },
       });
-        // Silently ignore 401 (user not admin)
-        if (res.status === 401) {
-          return;
-        }
+      // Silently ignore 401 (user not admin)
+      if (res.status === 401) {
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         // Enrichir chaque utilisateur avec XP et stats (parallèle)
@@ -68,13 +68,11 @@ function Moderation({ user }) {
           data.map(async (u) => {
             try {
               const [xpRes, statsRes] = await Promise.all([
-                fetch(`${apiBase}/user/xp/${u.username}`),
+                fetch(`${apiBase}/api/user/xp/${u.username}`),
                 fetch(`${apiBase}/user/stats/${u.username}`),
               ]);
               const xpJson =
-                xpRes && xpRes.ok
-                  ? await xpRes.json()
-                  : { xp: 0, level: 1 };
+                xpRes && xpRes.ok ? await xpRes.json() : { xp: 0, level: 1 };
               const statsJson =
                 statsRes && statsRes.ok
                   ? await statsRes.json()
@@ -104,27 +102,28 @@ function Moderation({ user }) {
                 averageScore: 0,
               };
             }
-          })
+          }),
         );
         setAllUsers(enriched);
-        if (enriched.length > 0 && !selectedUser) setSelectedUser(enriched[0].username);
+        if (enriched.length > 0 && !selectedUser)
+          setSelectedUser(enriched[0].username);
         return enriched;
       }
     } catch (err) {
       console.warn("Failed to load users", err);
     }
-  }; 
+  };
 
   const loadReports = async () => {
-  try {
-    const res = await fetch(apiUrl("report"));
-    if (!res.ok) throw new Error("Erreur chargement reports");
-    const data = await res.json();
-    setReports(data.reports);
-  } catch (err) {
-    console.error(err);
-  }
-};
+    try {
+      const res = await fetch(apiUrl("report"));
+      if (!res.ok) throw new Error("Erreur chargement reports");
+      const data = await res.json();
+      setReports(data.reports);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const loadUserPurchases = async (username) => {
     if (!username) {
@@ -142,7 +141,7 @@ function Moderation({ user }) {
     }
   };
 
-  const handleCancelPurchase = async (purchaseId) => {
+  const handleCancelPurchase = async (purchaseId, productId) => {
     if (!confirm("Êtes-vous sûr de vouloir annuler cet achat ?")) return;
 
     setCancelPurchaseLoading(purchaseId);
@@ -151,11 +150,102 @@ function Moderation({ user }) {
         method: "DELETE",
         headers: { "X-Admin-User": user },
       });
-      
+
       if (!res.ok) throw new Error("Erreur annulation achat");
-      
+
+      // Désactiver les effets cosmétiques associés si c'est un item cosmétique
+      if (
+        selectedUser &&
+        (productId === "skin-neo" || productId === "bomb-icon")
+      ) {
+        const activeItemsKey = `activeItems:${selectedUser}`;
+        const activeItems = localStorage.getItem(activeItemsKey);
+        if (activeItems) {
+          try {
+            const items = JSON.parse(activeItems);
+            const updated = items.filter((id) => id !== productId);
+            localStorage.setItem(activeItemsKey, JSON.stringify(updated));
+          } catch (e) {
+            console.error("Erreur désactivation effet cosmétique:", e);
+          }
+        }
+      }
+
       alert("Achat annulé avec succès");
       loadUserPurchases(selectedUser); // Recharger la liste de l'utilisateur
+    } catch (err) {
+      alert("Erreur: " + err.message);
+    } finally {
+      setCancelPurchaseLoading(null);
+    }
+  };
+
+  const handleCancelAllPurchases = async () => {
+    if (!selectedUser || selectedUserPurchases.length === 0) {
+      alert("Veuillez sélectionner un utilisateur avec des achats");
+      return;
+    }
+
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir annuler TOUS les ${selectedUserPurchases.length} achat(s) de ${selectedUser} ?`,
+      )
+    ) {
+      return;
+    }
+
+    setCancelPurchaseLoading("all");
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Supprimer chaque achat individuellement
+      for (const purchase of selectedUserPurchases) {
+        try {
+          const res = await fetch(
+            `${apiBase}/shop/admin/purchase/${purchase.id}`,
+            {
+              method: "DELETE",
+              headers: { "X-Admin-User": user },
+            },
+          );
+
+          if (!res.ok) {
+            throw new Error("Erreur annulation achat");
+          }
+
+          // Désactiver les effets cosmétiques associés
+          if (
+            purchase.product_id === "skin-neo" ||
+            purchase.product_id === "bomb-icon"
+          ) {
+            const activeItemsKey = `activeItems:${selectedUser}`;
+            const activeItems = localStorage.getItem(activeItemsKey);
+            if (activeItems) {
+              try {
+                const items = JSON.parse(activeItems);
+                const updated = items.filter(
+                  (id) => id !== purchase.product_id,
+                );
+                localStorage.setItem(activeItemsKey, JSON.stringify(updated));
+              } catch (e) {
+                console.error("Erreur désactivation effet cosmétique:", e);
+              }
+            }
+          }
+
+          successCount++;
+        } catch (err) {
+          errorCount++;
+          console.error(`Erreur suppression achat ${purchase.id}:`, err);
+        }
+      }
+
+      // Recharger la liste
+      await loadUserPurchases(selectedUser);
+
+      const message = `${successCount} achat(s) annulé(s) avec succès${errorCount > 0 ? ` (${errorCount} erreur(s))` : ""}`;
+      alert(message);
     } catch (err) {
       alert("Erreur: " + err.message);
     } finally {
@@ -166,52 +256,51 @@ function Moderation({ user }) {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-      const data = new FormData(event.target);
-      let xp = parseInt(data.get("number"), 10);
+    const data = new FormData(event.target);
+    let xp = parseInt(data.get("number"), 10);
 
-      if (data.get("sub_xp")) {
-        xp = -xp;
-      }
+    if (data.get("sub_xp")) {
+      xp = -xp;
+    }
 
-      if (
-        selectedUser &&
-        confirm(
-          t("account.confirmAwardXp")
-            .replace("{username}", selectedUser)
-            .replace("{xp}", xp)
-        )
-      ) {
-        setAwardXpLoading(true);
+    if (
+      selectedUser &&
+      confirm(
+        t("account.confirmAwardXp")
+          .replace("{username}", selectedUser)
+          .replace("{xp}", xp),
+      )
+    ) {
+      setAwardXpLoading(true);
 
-        fetch(`${apiBase}/user/xp`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Admin-User": user,
-          },
-          body: JSON.stringify({
-            username: selectedUser,
-            xp: xp,
-          }),
+      fetch(`${apiBase}/api/user/xp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Admin-User": user,
+        },
+        body: JSON.stringify({
+          username: selectedUser,
+          xp: xp,
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Erreur serveur");
+          return res.json();
         })
-          .then((res) => {
-            if (!res.ok) throw new Error("Erreur serveur");
-            return res.json();
-          })
-          .then(() => {
-            alert(
-              t("account.awardXpSuccess")
-                .replace("{username}", selectedUser)
-                .replace("{xp}", xp)
-            );
-            // Rafraîchir la liste des utilisateurs après succès
-            loadAdminUsers(user);
-          })
-          .catch((e) => alert(t("common.failedPrefix") + e.message))
-          .finally(() => setAwardXpLoading(false));
-      }
-    };
-
+        .then(() => {
+          alert(
+            t("account.awardXpSuccess")
+              .replace("{username}", selectedUser)
+              .replace("{xp}", xp),
+          );
+          // Rafraîchir la liste des utilisateurs après succès
+          loadAdminUsers(user);
+        })
+        .catch((e) => alert(t("common.failedPrefix") + e.message))
+        .finally(() => setAwardXpLoading(false));
+    }
+  };
 
   // Composants internes
   const xp_form = (
@@ -331,7 +420,11 @@ function Moderation({ user }) {
                   }}
                 >
                   <td>{u.username}</td>
-                  <td>{u.username === "admin" ? "admin ne peut pas être banni" : "-"}</td>
+                  <td>
+                    {u.username === "admin"
+                      ? "admin ne peut pas être banni"
+                      : "-"}
+                  </td>
                   <td>{u.issue ?? "-"}</td>
                 </tr>
               ))}
@@ -339,12 +432,12 @@ function Moderation({ user }) {
         </table>
       </div>
     </div>
-  )
+  );
 
   const bannedList = (
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
-         <input
+        <input
           type="search"
           placeholder={
             t("account.searchPlaceholder") || "Rechercher un joueur..."
@@ -366,13 +459,15 @@ function Moderation({ user }) {
             {allUsers
               .filter((u) => u.banned_until)
               .map((u) => {
-                const bannedUntil = u.banned_until ? new Date(u.banned_until) : null;
+                const bannedUntil = u.banned_until
+                  ? new Date(u.banned_until)
+                  : null;
                 let banDisplay = "-";
 
                 if (bannedUntil) {
                   const now = new Date();
                   const diffMs = bannedUntil - now; // différence en millisecondes
-                  const diffHours = (diffMs / (1000 * 60 * 60))+1;
+                  const diffHours = diffMs / (1000 * 60 * 60) + 1;
 
                   if (diffHours <= 24) {
                     // Affichage en compte à rebours
@@ -386,13 +481,15 @@ function Moderation({ user }) {
                 }
 
                 return (
-                  <tr key={u.username} 
-                  className={u.username === selectedUser ? "selected" : ""}
-                  onClick={() => setSelectedUser(u.username)}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") setSelectedUser(u.username);
-                  }}>
+                  <tr
+                    key={u.username}
+                    className={u.username === selectedUser ? "selected" : ""}
+                    onClick={() => setSelectedUser(u.username)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setSelectedUser(u.username);
+                    }}
+                  >
                     <td>{u.username}</td>
                     <td>{u.banReason || "-"}</td>
                     <td>{banDisplay}</td>
@@ -403,14 +500,38 @@ function Moderation({ user }) {
         </table>
       </div>
     </div>
-  )
+  );
 
   const userPurchaseHistory = (
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
         <h4 style={{ textAlign: "center" }}>
-          Historique d'Achats - {selectedUser || "Aucun utilisateur sélectionné"}
+          Historique d'Achats -{" "}
+          {selectedUser || "Aucun utilisateur sélectionné"}
         </h4>
+        {selectedUserPurchases.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <button
+              className="btn danger"
+              disabled={cancelPurchaseLoading === "all"}
+              onClick={handleCancelAllPurchases}
+              style={{
+                padding: "8px 16px",
+                fontSize: "0.9rem",
+              }}
+            >
+              {cancelPurchaseLoading === "all"
+                ? "Suppression en cours..."
+                : "Annuler TOUS les achats"}
+            </button>
+          </div>
+        )}
         {selectedUserPurchases.length > 0 ? (
           <div className="admin-users-list">
             <table className="admin-users-table">
@@ -429,13 +550,13 @@ function Moderation({ user }) {
                     <td>{p.id}</td>
                     <td>{p.product_name}</td>
                     <td>{p.price}</td>
-                    <td>{new Date(p.purchased_at).toLocaleString('fr-FR')}</td>
+                    <td>{new Date(p.purchased_at).toLocaleString("fr-FR")}</td>
                     <td>
                       <button
                         className="btn danger"
                         style={{ padding: "4px 8px", fontSize: "0.85rem" }}
                         disabled={cancelPurchaseLoading === p.id}
-                        onClick={() => handleCancelPurchase(p.id)}
+                        onClick={() => handleCancelPurchase(p.id, p.product_id)}
                       >
                         {cancelPurchaseLoading === p.id ? "..." : "Annuler"}
                       </button>
@@ -447,210 +568,214 @@ function Moderation({ user }) {
           </div>
         ) : (
           <p style={{ textAlign: "center", color: "rgba(255,255,255,0.6)" }}>
-            {selectedUser ? "Aucun achat trouvé pour cet utilisateur" : "Sélectionnez un utilisateur dans le tableau ci-dessus"}
+            {selectedUser
+              ? "Aucun achat trouvé pour cet utilisateur"
+              : "Sélectionnez un utilisateur dans le tableau ci-dessus"}
           </p>
         )}
       </div>
     </div>
-  )
+  );
 
   const ban_user = (
-  <div className="admin-action">
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-        <input
-          type="number"
-          placeholder={
-            t("account.banDurationPlaceholder") ||
-            "Durée en heures (vide = permanent)"
-          }
-          value={banDuration}
-          onChange={(e) => setBanDuration(e.target.value)}
-          min="1"
-          style={{
-            padding: "10px 14px",
-            borderRadius: "10px",
-            border: "1px solid rgba(255,255,255,0.06)",
-            background: "rgba(255,255,255,0.02)",
-            color: "inherit",
-            flex: 1,
-            minWidth: "150px",
-          }}
-        />
+    <div className="admin-action">
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <input
+            type="number"
+            placeholder={
+              t("account.banDurationPlaceholder") ||
+              "Durée en heures (vide = permanent)"
+            }
+            value={banDuration}
+            onChange={(e) => setBanDuration(e.target.value)}
+            min="1"
+            style={{
+              padding: "10px 14px",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.02)",
+              color: "inherit",
+              flex: 1,
+              minWidth: "150px",
+            }}
+          />
 
-        <input
-          type="text"
-          placeholder={
-            t("account.banReasonPlaceholder") ||
-            "Raison du bannissement..."
-          }
-          value={banReason}
-          onChange={(e) => setBanReason(e.target.value)}
-          style={{
-            padding: "10px 14px",
-            borderRadius: "10px",
-            border: "1px solid rgba(255,255,255,0.06)",
-            background: "rgba(255,255,255,0.02)",
-            color: "inherit",
-            flex: 1,
-            minWidth: "200px",
-          }}
-        />
+          <input
+            type="text"
+            placeholder={
+              t("account.banReasonPlaceholder") || "Raison du bannissement..."
+            }
+            value={banReason}
+            onChange={(e) => setBanReason(e.target.value)}
+            style={{
+              padding: "10px 14px",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.02)",
+              color: "inherit",
+              flex: 1,
+              minWidth: "200px",
+            }}
+          />
+        </div>
+
+        {selectedUser &&
+          selectedUser !== "admin" &&
+          !allUsers.find((u) => u.username === selectedUser)?.banned_until && (
+            <button
+              className="btn danger"
+              disabled={banUserLoading}
+              onClick={() => {
+                if (!banReason.trim()) {
+                  alert(
+                    t("account.banReasonRequired") ||
+                      "La raison du bannissement est requise",
+                  );
+                  return;
+                }
+
+                const durationHours = banDuration
+                  ? parseInt(banDuration)
+                  : null;
+
+                if (durationHours !== null && durationHours <= 0) {
+                  alert(
+                    t("account.invalidDuration") ||
+                      "La durée doit être positive",
+                  );
+                  return;
+                }
+
+                const banType = durationHours
+                  ? `${durationHours}h`
+                  : "permanent";
+
+                if (
+                  confirm(
+                    t("account.confirmBanUser")
+                      ?.replace("{username}", selectedUser)
+                      ?.replace("{duration}", banType) ||
+                      `Bannir ${selectedUser} pour ${banType} ?`,
+                  )
+                ) {
+                  setBanUserLoading(true);
+
+                  fetch(`${apiBase}/admin/ban-user/${selectedUser}`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "X-Admin-User": user,
+                    },
+                    body: JSON.stringify({
+                      duration_hours: durationHours,
+                      reason: banReason.trim(),
+                    }),
+                  })
+                    .then((res) => {
+                      if (!res.ok) throw new Error("Erreur serveur");
+
+                      const updated = allUsers.map((u) =>
+                        u.username === selectedUser
+                          ? {
+                              ...u,
+                              banned_until: durationHours
+                                ? new Date(
+                                    Date.now() + durationHours * 3600000,
+                                  ).toISOString()
+                                : new Date(8640000000000000).toISOString(),
+                            }
+                          : u,
+                      );
+
+                      setAllUsers(updated);
+                      setBanDuration("");
+                      setBanReason("");
+
+                      alert(
+                        t("account.banUserSuccess")?.replace(
+                          "{username}",
+                          selectedUser,
+                        ) || `${selectedUser} a été banni.`,
+                      );
+                    })
+                    .catch((e) =>
+                      alert(
+                        (t("common.failedPrefix") || "Erreur: ") + e.message,
+                      ),
+                    )
+                    .finally(() => setBanUserLoading(false));
+                }
+              }}
+            >
+              {banUserLoading
+                ? t("common.saving")
+                : t("account.banUser") || "Bannir"}
+            </button>
+          )}
+
+        {selectedUser &&
+          allUsers.find((u) => u.username === selectedUser)?.banned_until && (
+            <button
+              className="btn warning"
+              disabled={unbanUserLoading}
+              onClick={() => {
+                if (
+                  confirm(
+                    t("account.confirmUnbanUser")?.replace(
+                      "{username}",
+                      selectedUser,
+                    ) || `Débannir ${selectedUser} ?`,
+                  )
+                ) {
+                  setUnbanUserLoading(true);
+
+                  fetch(`${apiBase}/admin/unban-user/${selectedUser}`, {
+                    method: "POST",
+                    headers: { "X-Admin-User": user },
+                  })
+                    .then((res) => {
+                      if (!res.ok) throw new Error("Erreur serveur");
+
+                      const updated = allUsers.map((u) =>
+                        u.username === selectedUser
+                          ? { ...u, banned_until: null, ban_reason: null }
+                          : u,
+                      );
+
+                      setAllUsers(updated);
+                      setBanDuration("");
+                      setBanReason("");
+
+                      alert(
+                        t("account.unbanUserSuccess")?.replace(
+                          "{username}",
+                          selectedUser,
+                        ) || `${selectedUser} a été débanni.`,
+                      );
+                    })
+                    .catch((e) =>
+                      alert(
+                        (t("common.failedPrefix") || "Erreur: ") + e.message,
+                      ),
+                    )
+                    .finally(() => setUnbanUserLoading(false));
+                }
+              }}
+            >
+              {unbanUserLoading
+                ? t("common.saving")
+                : t("account.unbanUser") || "Débannir"}
+            </button>
+          )}
       </div>
 
-      {selectedUser &&
-        selectedUser !== "admin" &&
-        !allUsers.find((u) => u.username === selectedUser)?.banned_until && (
-          <button
-            className="btn danger"
-            disabled={banUserLoading}
-            onClick={() => {
-              if (!banReason.trim()) {
-                alert(
-                  t("account.banReasonRequired") ||
-                    "La raison du bannissement est requise"
-                );
-                return;
-              }
-
-              const durationHours = banDuration
-                ? parseInt(banDuration)
-                : null;
-
-              if (durationHours !== null && durationHours <= 0) {
-                alert(
-                  t("account.invalidDuration") ||
-                    "La durée doit être positive"
-                );
-                return;
-              }
-
-              const banType = durationHours
-                ? `${durationHours}h`
-                : "permanent";
-
-              if (
-                confirm(
-                  t("account.confirmBanUser")
-                    ?.replace("{username}", selectedUser)
-                    ?.replace("{duration}", banType) ||
-                    `Bannir ${selectedUser} pour ${banType} ?`
-                )
-              ) {
-                setBanUserLoading(true);
-
-                fetch(`${apiBase}/admin/ban-user/${selectedUser}`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "X-Admin-User": user,
-                  },
-                  body: JSON.stringify({
-                    duration_hours: durationHours,
-                    reason: banReason.trim(),
-                  }),
-                })
-                  .then((res) => {
-                    if (!res.ok) throw new Error("Erreur serveur");
-
-                    const updated = allUsers.map((u) =>
-                      u.username === selectedUser
-                        ? {
-                            ...u,
-                            banned_until: durationHours
-                              ? new Date(
-                                  Date.now() + durationHours * 3600000
-                                ).toISOString()
-                              : new Date(8640000000000000).toISOString(),
-                          }
-                        : u
-                    );
-
-                    setAllUsers(updated);
-                    setBanDuration("");
-                    setBanReason("");
-
-                    alert(
-                      t("account.banUserSuccess")?.replace(
-                        "{username}",
-                        selectedUser
-                      ) || `${selectedUser} a été banni.`
-                    );
-                  })
-                  .catch((e) =>
-                    alert((t("common.failedPrefix") || "Erreur: ") + e.message)
-                  )
-                  .finally(() => setBanUserLoading(false));
-              }
-            }}
-          >
-            {banUserLoading
-              ? t("common.saving")
-              : t("account.banUser") || "Bannir"}
-          </button>
-        )}
-
-      {selectedUser &&
-        allUsers.find((u) => u.username === selectedUser)?.banned_until && (
-          <button
-            className="btn warning"
-            disabled={unbanUserLoading}
-            onClick={() => {
-              if (
-                confirm(
-                  t("account.confirmUnbanUser")?.replace(
-                    "{username}",
-                    selectedUser
-                  ) || `Débannir ${selectedUser} ?`
-                )
-              ) {
-                setUnbanUserLoading(true);
-
-                fetch(`${apiBase}/admin/unban-user/${selectedUser}`, {
-                  method: "POST",
-                  headers: { "X-Admin-User": user },
-                })
-                  .then((res) => {
-                    if (!res.ok) throw new Error("Erreur serveur");
-
-                    const updated = allUsers.map((u) =>
-                      u.username === selectedUser
-                        ? { ...u, banned_until: null, ban_reason: null }
-                        : u
-                    );
-
-                    setAllUsers(updated);
-                    setBanDuration("");
-                    setBanReason("");
-
-                    alert(
-                      t("account.unbanUserSuccess")?.replace(
-                        "{username}",
-                        selectedUser
-                      ) || `${selectedUser} a été débanni.`
-                    );
-                  })
-                  .catch((e) =>
-                    alert((t("common.failedPrefix") || "Erreur: ") + e.message)
-                  )
-                  .finally(() => setUnbanUserLoading(false));
-              }
-            }}
-          >
-            {unbanUserLoading
-              ? t("common.saving")
-              : t("account.unbanUser") || "Débannir"}
-          </button>
-        )}
+      <p className="admin-action__desc">
+        {t("account.banManagementDesc") ||
+          "Bannir temporairement ou définitivement cet utilisateur."}
+      </p>
     </div>
-
-    <p className="admin-action__desc">
-      {t("account.banManagementDesc") ||
-        "Bannir temporairement ou définitivement cet utilisateur."}
-    </p>
-  </div>
-);
-
+  );
 
   // Retour principal
   return isAdmin ? (
