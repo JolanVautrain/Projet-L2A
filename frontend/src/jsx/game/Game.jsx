@@ -541,6 +541,34 @@ function Game() {
         // ========== ERREUR SERVEUR ==========
         if (data.type === "error") {
           console.error("[ERROR] Serveur error:", data.message);
+
+          // Rediriger vers le lobby en cas d'erreur invalid_match
+          if (
+            data.message === "invalid_match" ||
+            data.errorType === "invalid_match"
+          ) {
+            console.warn("[ERROR] Invalid match, redirecting to lobby");
+            isUnmounting = true;
+
+            // Nettoyer sessionStorage
+            sessionStorage.removeItem("activeMatchId");
+            sessionStorage.removeItem("opponentUsername");
+            sessionStorage.removeItem("serverTimeOffsetMs");
+
+            // Fermer la WebSocket si ouverte
+            try {
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+              }
+            } catch (e) {
+              console.warn("Failed to close WebSocket", e);
+            }
+
+            // Rediriger vers le lobby
+            setTimeout(() => {
+              navigate("/lobby", { replace: true });
+            }, 300);
+          }
           return;
         }
 
@@ -738,8 +766,77 @@ function Game() {
       }
     };
 
+    // Fermer le WebSocket quand l'utilisateur quitte la page
+    const handleBeforeUnload = () => {
+      console.log("[Game.jsx] beforeunload - notifying server");
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(
+            JSON.stringify({
+              type: "player_leaving",
+              username: getActiveUser(),
+              matchId: activeMatchId,
+            }),
+          );
+          console.log("[Game.jsx] player_leaving message sent");
+        } catch (e) {
+          console.warn("Failed to send player_leaving message:", e);
+        }
+      }
+    };
+
+    const handlePageHide = () => {
+      console.log("[Game.jsx] pagehide - notifying server");
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try {
+          ws.send(
+            JSON.stringify({
+              type: "player_leaving",
+              username: getActiveUser(),
+              matchId: activeMatchId,
+            }),
+          );
+          console.log("[Game.jsx] player_leaving message sent");
+        } catch (e) {
+          console.warn("Failed to send player_leaving message:", e);
+        }
+        // Ne pas fermer le WebSocket ici - le serveur le fermera
+        // Cela donne le maximum de temps pour que le message arrive
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
+
     return () => {
       isUnmounting = true;
+
+      // Envoyer le message player_leaving avant de fermer
+      if (
+        activeMatchId &&
+        !isReusedSocket &&
+        ws &&
+        ws.readyState === WebSocket.OPEN
+      ) {
+        try {
+          console.log(
+            "[Game.jsx cleanup] Sending player_leaving message on component unmount",
+          );
+          ws.send(
+            JSON.stringify({
+              type: "player_leaving",
+              username: getActiveUser(),
+              matchId: activeMatchId,
+            }),
+          );
+        } catch (e) {
+          console.warn("Failed to send player_leaving on cleanup:", e);
+        }
+      }
+
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+
       // Ne fermer le socket que s'il a été créé par ce composant (pas réutilisé du lobby)
       if (!isReusedSocket) {
         if (ws.readyState === WebSocket.CONNECTING) {

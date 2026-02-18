@@ -8,30 +8,6 @@
   overflow: hidden;
 }
 
-.home::before,
-.home::after {
-  content: "";
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  filter: blur(160px);
-  opacity: 0.25;
-  z-index: 0;
-}
-
-.home::before {
-  background: radial-gradient(circle at center, #1d4ed8 0%, #1d4ed880 30%, transparent 70%);
-  top: -250px;
-  left: -200px;
-}
-
-.home::after {
-  background: radial-gradient(circle at center, #0ea5e9 0%, #0ea5e980 30%, transparent 70%);
-  bottom: -280px;
-  right: -220px;
-}
-
 .hero {
   position: relative;
   display: grid;
@@ -50,7 +26,8 @@
 .hero__eyebrow {
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #ffffff; /* ignore l'erreur */
+  color: #ffffff;
+  /* ignore l'erreur */
   font-weight: 700;
   font-size: 0.78rem;
   margin: 0;
@@ -70,7 +47,8 @@
 .hero__lede {
   margin: 0;
   max-width: 640px;
-  color: #ffffff; /* ignore l'erreur */
+  color: #ffffff;
+  /* ignore l'erreur */
 }
 
 .hero__actions {
@@ -116,6 +94,7 @@
   box-shadow: none;
   transform: none;
 }
+
 .btn:disabled:hover,
 .btn[disabled]:hover {
   transform: none;
@@ -153,12 +132,15 @@
 
 .stat-value {
   font-size: 1.5rem;
-  color: #ffffff; /* increased contrast against panel background */ /* ignore l'erreur */
+  color: #ffffff;
+  /* increased contrast against panel background */
+  /* ignore l'erreur */
 }
 
 .stat-note {
   margin: 6px 0 0;
-  color: #ffffff; /* ignore l'erreur */
+  color: #ffffff;
+  /* ignore l'erreur */
   font-size: 0.9rem;
 }
 
@@ -177,7 +159,8 @@
 }
 
 .panel-label {
-  color: #ffffff; /* ignore l'erreur */
+  color: #ffffff;
+  /* ignore l'erreur */
   font-weight: 700;
   margin: 0 0 6px;
   letter-spacing: 0.05em;
@@ -190,7 +173,8 @@
 
 .panel-copy {
   margin: 0;
-  color: #ffffff; /* ignore l'erreur */
+  color: #ffffff;
+  /* ignore l'erreur */
 }
 
 .highlight-grid {
@@ -219,7 +203,8 @@
 
 .highlight-card p {
   margin: 0;
-  color: #ffffff; /* ignore l'erreur */
+  color: #ffffff;
+  /* ignore l'erreur */
 }
 
 .steps {
@@ -286,7 +271,8 @@
 
 .step-card p {
   margin: 0;
-  color: #ffffff; /* ignore l'erreur */
+  color: #ffffff;
+  /* ignore l'erreur */
 }
 
 .cta-banner {
@@ -310,9 +296,11 @@
   0% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-6px);
   }
+
   100% {
     transform: translateY(0px);
   }
@@ -357,9 +345,17 @@
 }
 
 @keyframes rainbowShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Slight glow when hovered */
@@ -382,8 +378,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .ad-popup-card {
@@ -399,8 +400,15 @@
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .ad-close {
@@ -412,7 +420,8 @@
   color: #fff;
   width: 32px;
   height: 32px;
-  border-radius: 50%;\n  font-size: 18px;
+  border-radius: 50%;
+  \n font-size: 18px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -439,8 +448,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .ad-title {
@@ -456,8 +472,13 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 .ad-image {
@@ -472,8 +493,15 @@
 }
 
 @keyframes imageFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .ad-desc {
@@ -494,8 +522,15 @@
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .ad-cta {
@@ -509,8 +544,17 @@
 }
 
 @keyframes buttonPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4); }
-  50% { transform: scale(1.02); box-shadow: 0 8px 24px rgba(251, 191, 36, 0.6); }
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+  }
+
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(251, 191, 36, 0.6);
+  }
 }
 
 .ad-later {

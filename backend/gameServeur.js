@@ -260,6 +260,12 @@ function sendStateCorrection(ws, username, state) {
 wss.on("connection", (ws) => {
   console.log(`[X] Client connecté. Total: ${wss.clients.size}`);
 
+  // Initialiser un ping/pong pour détecter les connexions mortes
+  ws.isAlive = true;
+  ws.on("pong", () => {
+    ws.isAlive = true;
+  });
+
   ws.on("message", (raw) => {
     try {
       const msg = JSON.parse(raw.toString());
@@ -460,6 +466,42 @@ wss.on("connection", (ws) => {
           sendStateCorrection(ws, info?.username, receivedState);
         }
       }
+
+      // ========== JOUEUR QUITTANT LE MATCH ==========
+      if (msg.type === "player_leaving") {
+        const username = msg.username;
+        const matchId = msg.matchId;
+        console.log(`[X] ${username} quitte le match ${matchId} (message received)`);
+
+        if (matchId) {
+          const match = matches.get(matchId);
+          if (match) {
+            console.log(`[X] Notifying other players in match ${matchId} about ${username} leaving`);
+            // Notifier l'autre joueur que son adversaire s'est déconnecté
+            broadcastToMatch(matchId, {
+              type: "opponent_disconnected",
+              matchId,
+              username,
+            });
+
+            match.players.delete(username);
+            match.playerStates.delete(username);
+            match.overPlayers.delete(username);
+            if (match.players.size === 0) {
+              if (match.spawnTimer) {
+                clearTimeout(match.spawnTimer);
+              }
+              matches.delete(matchId);
+            }
+          } else {
+            console.warn(`[!] Match ${matchId} not found for leaving player ${username}`);
+          }
+          if (username) {
+            assignments.delete(username);
+          }
+        }
+        return;
+      }
     } catch (e) {
       console.error("[!] Erreur parsing message:", e);
     }
@@ -508,6 +550,22 @@ wss.on("connection", (ws) => {
     console.error("Erreur WebSocket:", error);
   });
 });
+
+// Heartbeat pour détecter les connexions mortes
+setInterval(() => {
+  wss.clients.forEach((ws) => {
+    const info = connectionInfo.get(ws);
+    if (!info) return;
+
+    if (ws.isAlive === false) {
+      console.log(`[!] Ping timeout pour ${info.username}, fermeture de la connexion`);
+      return ws.terminate();
+    }
+
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000); // Ping tous les 30 secondes
 
 console.log("[X] Serveur de jeu WebSocket démarré sur le port 3001");
 console.log("[X] Anti-cheat activé avec configuration:", ANTI_CHEAT_CONFIG);
