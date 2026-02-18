@@ -8,27 +8,27 @@ Ce guide explique comment déployer l'application multijoueur sur un Raspberry P
 
 ```
 ┌─────────────────────────────────────────────────┐
-│         Raspberry Pi 4 (Port 15256)            │
+│         Raspberry Pi 4 (Port 15256)             │
 ├─────────────────────────────────────────────────┤
-│  ┌───────────────────────────────────────────┐ │
-│  │         Nginx (Reverse Proxy)             │ │
-│  │  - Sert le frontend statique (React)      │ │
-│  │  - Proxy vers Backend Flask (/api)        │ │
-│  │  - Proxy vers WebSocket (/ws)             │ │
-│  └───────────────────────────────────────────┘ │
+│  ┌───────────────────────────────────────────┐  │
+│  │         Nginx (Reverse Proxy)             │  │
+│  │  - Sert le frontend statique (React)      │  │
+│  │  - Proxy vers Backend Flask (/api)        │  │
+│  │  - Proxy vers WebSocket (/ws)             │  │
+│  └───────────────────────────────────────────┘  │
 │                     │                           │
-│         ┌───────────┴───────────┐              │
+│         ┌───────────┴───────────┐               │
 │         │                       │               │
-│  ┌──────▼──────┐        ┌──────▼─────────┐    │
-│  │   Backend   │        │   WebSocket    │    │
-│  │   Flask     │        │   Node.js      │    │
-│  │  (Port 5000)│        │  (Port 3001)   │    │
-│  └──────┬──────┘        └────────────────┘    │
+│  ┌──────▼──────┐        ┌──────▼─────────┐      │
+│  │   Backend   │        │   WebSocket    │      │
+│  │   Flask     │        │   Node.js      │      │
+│  │  (Port 5000)│        │  (Port 3001)   │      │
+│  └──────┬──────┘        └────────────────┘      │
 │         │                                       │
-│  ┌──────▼──────────────────────┐              │
-│  │   PostgreSQL (Port 5432)    │              │
-│  │   Optimisé pour 2GB RAM     │              │
-│  └─────────────────────────────┘              │
+│  ┌──────▼──────────────────────┐                │
+│  │   PostgreSQL (Port 5432)    │                │
+│  │   Optimisé pour 2GB RAM     │                │
+│  └─────────────────────────────┘                │
 └─────────────────────────────────────────────────┘
 ```
 

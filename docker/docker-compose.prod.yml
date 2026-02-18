@@ -2,7 +2,6 @@ name: projetl2a-prod
 
 services:
   # ================= DATABASE =================
-  # PostgreSQL optimisé pour Raspberry Pi 4 2GB
   db:
     image: postgres:16-alpine
     environment:
