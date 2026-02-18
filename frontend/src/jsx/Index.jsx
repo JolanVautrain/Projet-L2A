@@ -111,7 +111,7 @@ function App() {
   useEffect(() => {
     const handleAvatarChange = (event) => {
       if (event.detail.username === userState) {
-        setNavbarAvatarKey(prev => prev + 1); // Force le re-rendu de l'avatar
+        setNavbarAvatarKey((prev) => prev + 1); // Force le re-rendu de l'avatar
       }
     };
 
@@ -120,10 +120,6 @@ function App() {
       globalThis.removeEventListener("avatarChanged", handleAvatarChange);
     };
   }, [userState]);
-
-
-
-
 
   useEffect(() => {
     if (!userState) return undefined;
@@ -140,9 +136,10 @@ function App() {
       try {
         navigator.sendBeacon(
           "/api/logout",
-          new Blob([payload], { type: "application/json" })
+          new Blob([payload], { type: "application/json" }),
         );
-      } catch (e) { //eslint-disable-line
+      } catch (e) {
+        //eslint-disable-line
         // Ignore unload failures
       }
     };
@@ -168,22 +165,44 @@ function App() {
     navigate("/");
   };
 
+  /**
+   * Demande à l'utilisateur de confirmer avant de quitter si un match est en cours.
+   * @param {string} path - Chemin de destination
+   */
+  const requestLeaveIfInMatch = (path) => {
+    // Vérifier si un match est en cours dans le localStorage
+    const sessionId = localStorage.getItem("current_session_id");
+    if (sessionId && path !== "/account" && path !== "/shop") {
+      // On quitte le match en arrière-plan
+      apiFetch("/api/matchs/leave", {
+        method: "POST",
+        headers: {
+          "X-Session-User": userState,
+          "X-Session-Token": getActiveSessionToken(),
+        },
+        body: JSON.stringify({ session_id: sessionId }),
+      }).catch(() => {});
+      localStorage.removeItem("current_session_id");
+    }
+    navigate(path);
+  };
+
   return (
     <>
       <header>
         <nav className="navbar">
-          <NavLink to="/" onClick={(e) => requestLeaveIfInMatch("/", e)}>
+          <NavLink to="/" onClick={() => requestLeaveIfInMatch("/")}>
             {t("common.home")}
           </NavLink>
           <NavLink
             to="/leaderboard"
-            onClick={(e) => requestLeaveIfInMatch("/leaderboard", e)}
+            onClick={() => requestLeaveIfInMatch("/leaderboard")}
           >
             {t("common.leaderboard")}
           </NavLink>
           <NavLink
             to="/statistics"
-            onClick={(e) => requestLeaveIfInMatch("/statistics", e)}
+            onClick={() => requestLeaveIfInMatch("/statistics")}
           >
             {t("common.statistics")}
           </NavLink>
@@ -192,15 +211,20 @@ function App() {
               <NavLink
                 className="nav-user-profile"
                 to="/account"
-                onClick={(e) => requestLeaveIfInMatch("/account", e)}
+                onClick={() => requestLeaveIfInMatch("/account")}
               >
                 <img
                   key={navbarAvatarKey}
-                  src={"/assets/avatar/" + (() => {
-                    if (userState === "admin") return "admin.jpg";
-                    const saved = localStorage.getItem("avatar_" + userState);
-                    return (saved && saved !== "admin.jpg") ? saved : "businessman1.png";
-                  })()}
+                  src={
+                    "/assets/avatar/" +
+                    (() => {
+                      if (userState === "admin") return "admin.jpg";
+                      const saved = localStorage.getItem("avatar_" + userState);
+                      return saved && saved !== "admin.jpg"
+                        ? saved
+                        : "businessman1.png";
+                    })()
+                  }
                   alt="Avatar"
                   className="nav-avatar"
                 />
@@ -217,17 +241,17 @@ function App() {
           ) : (
             <NavLink
               to="/account"
-              onClick={(e) => requestLeaveIfInMatch("/account", e)}
+              onClick={() => requestLeaveIfInMatch("/account")}
             >
               {t("account.title")}
             </NavLink>
           )}
-          <NavLink to="/shop" onClick={(e) => requestLeaveIfInMatch("/shop", e)}>
+          <NavLink to="/shop" onClick={() => requestLeaveIfInMatch("/shop")}>
             {t("common.shop")}
           </NavLink>
           <NavLink
             to="/contacts"
-            onClick={(e) => requestLeaveIfInMatch("/contacts", e)}
+            onClick={() => requestLeaveIfInMatch("/contacts")}
           >
             {t("common.contacts")}
           </NavLink>
@@ -247,9 +271,7 @@ function App() {
         />
         <Route
           path="/statistics"
-          element={
-            <Statistics user={userState} setUser={setUserAndLoadLang} />
-          }
+          element={<Statistics user={userState} setUser={setUserAndLoadLang} />}
         />
         <Route
           path="/account"
@@ -272,7 +294,14 @@ function App() {
             </RequireAuth>
           }
         />
-        <Route path="/lobby" element={<RequireAuth user={userState}><GameWaitingRoom /></RequireAuth>}/>
+        <Route
+          path="/lobby"
+          element={
+            <RequireAuth user={userState}>
+              <GameWaitingRoom />
+            </RequireAuth>
+          }
+        />
         <Route path="/*" element={<PageNotFound />} />
         <Route path="/regle" element={<Regle />} />
         <Route path="/shop" element={<Shop />} />

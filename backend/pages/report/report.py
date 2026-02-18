@@ -1,6 +1,7 @@
-from flask import Blueprint, request
-from core import db, utils
-
+from core import db
+from core import utils
+from flask import Blueprint
+from flask import request
 
 bp = Blueprint("report", __name__)
 

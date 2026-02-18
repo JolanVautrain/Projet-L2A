@@ -1,13 +1,23 @@
 """Configuration pytest et fixtures partagés pour les tests frontend (scénarios end-to-end via API)."""
 
 import os
+import sys
 import uuid
+from pathlib import Path
 from typing import Any, Generator
 
 import psycopg2
 import pytest
 from flask import Flask
 from flask.testing import FlaskClient
+
+# Add backend directory to path for imports
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+BACKEND_DIR = PROJECT_ROOT / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.app import app as flask_app
 

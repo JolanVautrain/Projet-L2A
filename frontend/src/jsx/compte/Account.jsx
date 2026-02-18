@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import Statistics from "./Statistics.jsx";
 import { LanguageSelector, useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
 import { getActiveSessionToken } from "../utils/userSession.js";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
+import ChangePasswordModal from "./modals/ChangePasswordModal.jsx";
+import ChangeUsernameModal from "./modals/ChangeUsernameModal.jsx";
 
 /**
  * Composant Account
@@ -20,18 +21,10 @@ function Account({ user, setUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
-  const [awardXpLoading, setAwardXpLoading] = useState(false);
-  const [removeXpLoading, setRemoveXpLoading] = useState(false);
-  const [deleteHistoryLoading, setDeleteHistoryLoading] = useState(false);
-  const [setAdminLoading, setSetAdminLoading] = useState(false);
-  const [removeAdminLoading, setRemoveAdminLoading] = useState(false);
-  const [banUserLoading, setBanUserLoading] = useState(false);
-  const [unbanUserLoading, setUnbanUserLoading] = useState(false);
-  const [banDuration, setBanDuration] = useState("");
-  const [banReason, setBanReason] = useState("");
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [changePassword, setChangePassword] = useState(false);
+   const [changeUsername, setChangeUsername] = useState(false);
   const [recoveryCodesLoading, setRecoveryCodesLoading] = useState(false);
   const [newRecoveryCode, setNewRecoveryCode] = useState(null);
   const [showNewCode, setShowNewCode] = useState(false);
@@ -64,11 +57,11 @@ function Account({ user, setUser }) {
   useEffect(() => {
     if (user && user !== "admin") {
       fetch(`${apiBase}/shop/has-product/${user}/avatar-logo`)
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           setOwnsAvatarPack(data.has_product || false);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Failed to check avatar pack ownership:", err);
           setOwnsAvatarPack(false);
         });
@@ -79,11 +72,11 @@ function Account({ user, setUser }) {
   useEffect(() => {
     if (user) {
       fetch(`${apiBase}/shop/purchases/${user}`)
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           setUserPurchases(data.purchases || []);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Failed to load purchase history:", err);
           setUserPurchases([]);
         });
@@ -99,10 +92,14 @@ function Account({ user, setUser }) {
         localStorage.setItem(`avatar_${user}`, "admin.jpg");
         return;
       }
-      
+
       const savedAvatar = localStorage.getItem(`avatar_${user}`);
       // Empêcher les utilisateurs normaux d'utiliser admin.jpg
-      if (savedAvatar && savedAvatar !== "admin.jpg" && availableAvatars.includes(savedAvatar)) {
+      if (
+        savedAvatar &&
+        savedAvatar !== "admin.jpg" &&
+        availableAvatars.includes(savedAvatar)
+      ) {
         // si l'avatar sauvegardé est autorisé (samourai toujours autorisé) ou l'utilisateur possède le pack
         if (savedAvatar === "samourai.png" || ownsAvatarPack) {
           setSelectedAvatar(savedAvatar);
@@ -125,14 +122,14 @@ function Account({ user, setUser }) {
     if (user === "admin") {
       return;
     }
-    
+
     // Empêcher de sélectionner admin.jpg
     if (avatar === "admin.jpg") {
       return;
     }
     if (avatar !== "samourai.png" && !ownsAvatarPack) {
       // Ne pas permettre la sélection ; rediriger vers la boutique pour achat
-      navigate('/shop');
+      navigate("/shop");
       return;
     }
 
@@ -140,7 +137,9 @@ function Account({ user, setUser }) {
     if (user) {
       localStorage.setItem(`avatar_${user}`, avatar);
       // Déclencher un événement personnalisé pour actualiser l'avatar dans la navbar
-      globalThis.dispatchEvent(new CustomEvent("avatarChanged", { detail: { avatar, username: user } }));
+      globalThis.dispatchEvent(
+        new CustomEvent("avatarChanged", { detail: { avatar, username: user } })
+      );
     }
   };
 
@@ -150,10 +149,10 @@ function Account({ user, setUser }) {
       const res = await fetch(`${apiBase}/admin/users`, {
         headers: { "X-Admin-User": currentUser },
       });
-        // Silently ignore 401 (user not admin)
-        if (res.status === 401) {
-          return;
-        }
+      // Silently ignore 401 (user not admin)
+      if (res.status === 401) {
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         // Enrichir chaque utilisateur avec XP et stats (parallèle)
@@ -165,9 +164,7 @@ function Account({ user, setUser }) {
                 fetch(`${apiBase}/user/stats/${u.username}`),
               ]);
               const xpJson =
-                xpRes && xpRes.ok
-                  ? await xpRes.json()
-                  : { xp: 0, level: 1 };
+                xpRes && xpRes.ok ? await xpRes.json() : { xp: 0, level: 1 };
               const statsJson =
                 statsRes && statsRes.ok
                   ? await statsRes.json()
@@ -200,7 +197,8 @@ function Account({ user, setUser }) {
           })
         );
         setAllUsers(enriched);
-        if (enriched.length > 0 && !selectedUser) setSelectedUser(enriched[0].username);
+        if (enriched.length > 0 && !selectedUser)
+          setSelectedUser(enriched[0].username);
         return enriched;
       }
     } catch (err) {
@@ -240,7 +238,6 @@ function Account({ user, setUser }) {
     checkAdmin();
   }, [user, apiBase]);
 
-
   const handleGenerateRecoveryCode = async () => {
     setRecoveryCodesLoading(true);
     try {
@@ -261,7 +258,7 @@ function Account({ user, setUser }) {
       setRecoveryCodesLoading(false);
     }
   };
-  
+
   const handleDownloadRecoveryCode = () => {
     if (!newRecoveryCode) return;
     const payload = { username: user, recovery_code: newRecoveryCode };
@@ -352,7 +349,7 @@ function Account({ user, setUser }) {
           <p>
             {t("account.hello")} {user}, {t("account.yourAccountPage")}.
           </p>
-          
+
           {/* Sélecteur d'avatar */}
           {user !== "admin" ? (
             <div className="avatar-selector">
@@ -363,11 +360,18 @@ function Account({ user, setUser }) {
                   return (
                     <div
                       key={avatar}
-                      className={`avatar-option ${selectedAvatar === avatar ? "selected" : ""} ${locked ? "locked" : ""}`}
+                      className={`avatar-option ${
+                        selectedAvatar === avatar ? "selected" : ""
+                      } ${locked ? "locked" : ""}`}
                       onClick={() => handleAvatarSelect(avatar)}
                       role="button"
                       tabIndex={0}
-                      title={locked ? (t("account.avatarPackRequired") || "Pack avatar cyber requis — acheter dans la boutique") : avatar.replace(".png", "")}
+                      title={
+                        locked
+                          ? t("account.avatarPackRequired") ||
+                            "Pack avatar cyber requis — acheter dans la boutique"
+                          : avatar.replace(".png", "")
+                      }
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           handleAvatarSelect(avatar);
@@ -400,46 +404,80 @@ function Account({ user, setUser }) {
                   width="150"
                   height="150"
                 />
-                <p style={{color: "#66e3b8", marginTop: "12px"}}>Avatar unique et non modifiable</p>
+                <p style={{ color: "#66e3b8", marginTop: "12px" }}>
+                  Avatar unique et non modifiable
+                </p>
               </div>
             </div>
           )}
-          
+
+          <button
+            type="button"
+            className="btn danger"
+            onClick={() => setChangeUsername(true)}
+          >
+            {t("account.changeUsername")}
+          </button>
+          <button
+            type="button"
+            className="btn danger"
+            onClick={() => setChangePassword(true)}
+          >
+            {t("account.changePassword")}
+          </button>
           <LanguageSelector />
-          
+
           {/* Historique d'achats */}
           <div className="purchase-history-section">
             <h3>{t("account.purchaseHistory") || "Historique d'achats"}</h3>
             {userPurchases.length > 0 ? (
               <div style={{ overflowX: "auto", marginTop: "12px" }}>
-                <table className="purchase-history-table" style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  background: "rgba(255,255,255,0.02)",
-                  borderRadius: "10px",
-                  overflow: "hidden"
-                }}>
+                <table
+                  className="purchase-history-table"
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    background: "rgba(255,255,255,0.02)",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                  }}
+                >
                   <thead>
-                    <tr style={{
-                      background: "rgba(255,255,255,0.05)",
-                      borderBottom: "1px solid rgba(255,255,255,0.1)"
-                    }}>
+                    <tr
+                      style={{
+                        background: "rgba(255,255,255,0.05)",
+                        borderBottom: "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    >
                       <th style={{ padding: "12px", textAlign: "left" }}>ID</th>
-                      <th style={{ padding: "12px", textAlign: "left" }}>{t("shop.product") || "Produit"}</th>
-                      <th style={{ padding: "12px", textAlign: "left" }}>{t("shop.price") || "Prix"}</th>
-                      <th style={{ padding: "12px", textAlign: "left" }}>{t("common.date") || "Date"}</th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>
+                        {t("shop.product") || "Produit"}
+                      </th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>
+                        {t("shop.price") || "Prix"}
+                      </th>
+                      <th style={{ padding: "12px", textAlign: "left" }}>
+                        {t("common.date") || "Date"}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {userPurchases.map((purchase) => (
-                      <tr key={purchase.id} style={{
-                        borderBottom: "1px solid rgba(255,255,255,0.05)"
-                      }}>
+                      <tr
+                        key={purchase.id}
+                        style={{
+                          borderBottom: "1px solid rgba(255,255,255,0.05)",
+                        }}
+                      >
                         <td style={{ padding: "12px" }}>{purchase.id}</td>
-                        <td style={{ padding: "12px" }}>{purchase.product_name}</td>
+                        <td style={{ padding: "12px" }}>
+                          {purchase.product_name}
+                        </td>
                         <td style={{ padding: "12px" }}>{purchase.price}</td>
                         <td style={{ padding: "12px" }}>
-                          {new Date(purchase.purchased_at).toLocaleString('fr-FR')}
+                          {new Date(purchase.purchased_at).toLocaleString(
+                            "fr-FR"
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -452,7 +490,7 @@ function Account({ user, setUser }) {
               </p>
             )}
           </div>
-          
+
           {/* Codes de récupération */}
           <div className="recovery-codes-section">
             <h3>Codes de récupération</h3>
@@ -462,43 +500,59 @@ function Account({ user, setUser }) {
               className="btn primary"
               style={{ marginTop: "8px" }}
             >
-              {recoveryCodesLoading ? "Génération..." : "Générer un nouveau code"}
+              {recoveryCodesLoading
+                ? "Génération..."
+                : "Générer un nouveau code"}
             </button>
-            
+
             {showNewCode && newRecoveryCode && (
-              <div className="new-recovery-code-alert" style={{
-                background: "linear-gradient(180deg, rgba(59, 130, 246, 0.15), rgba(29, 78, 216, 0.10))",
-                border: "1px solid rgba(59, 130, 246, 0.35)",
-                borderRadius: "10px",
-                padding: "16px",
-                marginTop: "12px",
-                textAlign: "center"
-              }}>
+              <div
+                className="new-recovery-code-alert"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(59, 130, 246, 0.15), rgba(29, 78, 216, 0.10))",
+                  border: "1px solid rgba(59, 130, 246, 0.35)",
+                  borderRadius: "10px",
+                  padding: "16px",
+                  marginTop: "12px",
+                  textAlign: "center",
+                }}
+              >
                 <p style={{ fontSize: "0.9rem", margin: "0 0 8px 0" }}>
                   Votre nouveau code de récupération (à noter en sûr place) :
                 </p>
-                <code style={{
-                  fontSize: "1.1rem",
-                  fontWeight: "bold",
-                  color: "#60a5fa",
-                  wordBreak: "break-all"
-                }}>
+                <code
+                  style={{
+                    fontSize: "1.1rem",
+                    fontWeight: "bold",
+                    color: "#60a5fa",
+                    wordBreak: "break-all",
+                  }}
+                >
                   {newRecoveryCode}
                 </code>
-                <p style={{ fontSize: "0.85rem", color: "#999", margin: "8px 0 0 0" }}>
-                  {t("forgotPassword.downloadNotice") || "Ce code ne s'affichera qu'une seule fois. À utiliser sur la page de connexion si vous oubliez votre mot de passe."}
+                <p
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "#999",
+                    margin: "8px 0 0 0",
+                  }}
+                >
+                  {t("forgotPassword.downloadNotice") ||
+                    "Ce code ne s'affichera qu'une seule fois. À utiliser sur la page de connexion si vous oubliez votre mot de passe."}
                 </p>
-                <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "8px" }}>
-                  <button
-                    onClick={handleDownloadRecoveryCode}
-                    className="btn"
-                  >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    justifyContent: "center",
+                    marginTop: "8px",
+                  }}
+                >
+                  <button onClick={handleDownloadRecoveryCode} className="btn">
                     {t("forgotPassword.downloadJson") || "Télécharger (JSON)"}
                   </button>
-                  <button
-                    onClick={() => setShowNewCode(false)}
-                    className="btn"
-                  >
+                  <button onClick={() => setShowNewCode(false)} className="btn">
                     {t("common.close") || "Fermer"}
                   </button>
                 </div>
@@ -550,7 +604,7 @@ function Account({ user, setUser }) {
             >
               {t("account.deleteSelf")}
             </button>
-            
+
             <button
               className="btn danger"
               disabled={resetSessionsLoading}
@@ -582,18 +636,31 @@ function Account({ user, setUser }) {
               {resetSessionsLoading
                 ? t("account.resetting")
                 : t("account.resetSelfSessions")}
-                {/*bouton pour acceder au panneau de moderation */}
+              {/*bouton pour acceder au panneau de moderation */}
+            </button>
+            {isAdmin && (
+              <button
+                className="btn primary"
+                onClick={() => navigate("/moderation")}
+              >
+                boutton de la toute puissance
               </button>
-              {isAdmin && (
-                <button
-                  className="btn primary"
-                  onClick={() => navigate("/moderation")}
-                >
-                  boutton de la toute puissance
-                </button>
-              )}
+            )}
           </div>
         </div>
+        <ChangePasswordModal
+          isOpen={changePassword}
+          user={user}
+          onClose={() => setChangePassword(false)}
+          onBackToLogin={() => setChangePassword(false)}
+        />
+        <ChangeUsernameModal
+          isOpen={changeUsername}
+          user={user}
+          setUser={setUser}
+          onClose={() => setChangeUsername(false)}
+          onBackToLogin={() => setChangeUsername(false)}
+        />
       </>
     );
   }

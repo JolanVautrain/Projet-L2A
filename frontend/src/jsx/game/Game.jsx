@@ -1,3 +1,4 @@
+/* global Phaser */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ModalGameOver from "./modals/ModalGameOver.jsx";
@@ -53,10 +54,7 @@ import {
   calculateXPReward,
   checkAchievements,
 } from "./utils/GameGamification.js";
-import {
-  getActiveUser,
-  getUserAchievementsKey,
-} from "../utils/userSession.js";
+import { getActiveUser, getUserAchievementsKey } from "../utils/userSession.js";
 import {
   initParticles,
   updateParticles,
@@ -123,7 +121,7 @@ export function sendGameInput(type) {
     applyActionLocally,
     inputSocket,
     username,
-    activeMatchId
+    activeMatchId,
   );
 }
 
@@ -131,7 +129,7 @@ export function sendGameOver() {
   const username = getActiveUser();
   if (!inputSocket || inputSocket.readyState !== WebSocket.OPEN) return;
   inputSocket.send(
-    JSON.stringify({ type: "gameOver", username, matchId: activeMatchId })
+    JSON.stringify({ type: "gameOver", username, matchId: activeMatchId }),
   );
 }
 
@@ -172,7 +170,7 @@ function create() {
   initDayNightSystem(this);
   initWeatherSystem(this);
   createBackgroundSystem(this);
-  initPhysics(this,false);
+  initPhysics(this, false);
   initObstacles(this);
   initControls(this, handleAdminInvincible);
   initParticles(this);
@@ -189,7 +187,7 @@ function create() {
   this.physics.add.overlap(
     getPlayer(),
     getObstacles(),
-    handleObstacleCollision
+    handleObstacleCollision,
   );
 
   // Spawn first obstacle
@@ -243,7 +241,7 @@ function update() {
           type: "stage_update",
           matchId: activeMatchId,
           stage: newStage,
-        })
+        }),
       );
     }
   }
@@ -294,7 +292,7 @@ function handleObstacleCollision(_player, _obstacle) {
   gameOver = true;
   const finalScore = score;
   const timerSeconds = Math.floor(
-    (Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000
+    (Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000,
   );
 
   if (currentSessionId && !sessionPosted) {
@@ -310,7 +308,7 @@ function handleObstacleCollision(_player, _obstacle) {
           score: finalScore,
           stage: getStage(),
           timer: timerSeconds,
-          state: "Defeat"
+          state: "Defeat",
         }),
       })
         .then((r) => r.json())
@@ -320,7 +318,7 @@ function handleObstacleCollision(_player, _obstacle) {
             const xpAmount = calculateXPReward(
               finalScore,
               getStage(),
-              timerSeconds
+              timerSeconds,
             );
 
             // Vérifier les achievements
@@ -334,7 +332,7 @@ function handleObstacleCollision(_player, _obstacle) {
               finalScore,
               getStage(),
               timerSeconds,
-              userAchievements
+              userAchievements,
             );
 
             // Sauvegarder les nouveaux achievements
@@ -345,7 +343,7 @@ function handleObstacleCollision(_player, _obstacle) {
               ];
               localStorage.setItem(
                 userAchievementsKey,
-                JSON.stringify(updatedAchievements)
+                JSON.stringify(updatedAchievements),
               );
             }
 
@@ -423,7 +421,7 @@ function Game() {
   useEffect(() => {
     const storedMatchId = sessionStorage.getItem("activeMatchId");
     const confirmedLeaving = sessionStorage.getItem("confirmedLeavingGame");
-    
+
     // Si pas de matchId et pas de replay confirmé, rediriger vers le lobby
     if (!storedMatchId && !confirmedLeaving) {
       navigate("/lobby", { replace: true });
@@ -476,20 +474,14 @@ function Game() {
         return;
       }
       console.log("WS connected");
-      // Lire activeMatchId directement de sessionStorage (pas la variable globale)
-      const mId = sessionStorage.getItem("activeMatchId");
-      console.log("[ws.onopen] matchId from sessionStorage:", mId);
-      console.log("[ws.onopen] username:", username);
-      if (mId && username) {
-        const payload = {
-          type: "join_game",
-          username,
-          matchId: mId,
-        };
-        ws.send(JSON.stringify(payload));
-        console.log("[ws.onopen] Sent join_game payload:", JSON.stringify(payload));
-      } else {
-        console.warn("[ws.onopen] Missing username or matchId:", { username, mId });
+      if (activeMatchId) {
+        ws.send(
+          JSON.stringify({
+            type: "join_game",
+            username,
+            matchId: activeMatchId,
+          }),
+        );
       }
     };
 
@@ -533,7 +525,9 @@ function Game() {
               clientPrediction.confirmAction(data.sequence);
               console.log(`✅ Input confirmé (seq: ${data.sequence})`);
             } else {
-              console.warn(`❌ Input rejeté par le serveur (seq: ${data.sequence})`);
+              console.warn(
+                `❌ Input rejeté par le serveur (seq: ${data.sequence})`,
+              );
             }
           }
           return;
@@ -555,7 +549,7 @@ function Game() {
                 valid: true,
               },
               player,
-              null
+              null,
             );
           }
           return;
@@ -572,7 +566,10 @@ function Game() {
 
           // Mettre à jour l'état de l'adversaire dans la prédiction
           if (clientPrediction && data.serverState) {
-            clientPrediction.updateOpponentState(usernameOpponent, data.serverState);
+            clientPrediction.updateOpponentState(
+              usernameOpponent,
+              data.serverState,
+            );
           }
 
           // Appliquer l'action immédiatement
@@ -582,7 +579,9 @@ function Game() {
               opponent.setVelocityY(-500);
             }
           }
-          console.log(`[X] Action adversaire: ${usernameOpponent} ${data.input}`);
+          console.log(
+            `[X] Action adversaire: ${usernameOpponent} ${data.input}`,
+          );
         }
 
         if (data.type === "spawn_wave") {
@@ -626,7 +625,8 @@ function Game() {
           gameOver = true;
           const finalScore = score;
           const timerSeconds = Math.floor(
-            (Date.now() - (gameScene ? gameScene.startTime : Date.now())) / 1000
+            (Date.now() - (gameScene ? gameScene.startTime : Date.now())) /
+              1000,
           );
 
           if (currentSessionId && !sessionPosted) {
@@ -640,7 +640,7 @@ function Game() {
                   score: finalScore,
                   stage: getStage(),
                   timer: timerSeconds,
-                  state: "Victory"
+                  state: "Victory",
                 }),
               })
                 .then((r) => r.json())
@@ -650,7 +650,7 @@ function Game() {
                     const xpAmount = calculateXPReward(
                       finalScore,
                       getStage(),
-                      timerSeconds
+                      timerSeconds,
                     );
 
                     // Vérifier les achievements
@@ -665,7 +665,7 @@ function Game() {
                       finalScore,
                       getStage(),
                       timerSeconds,
-                      userAchievements
+                      userAchievements,
                     );
 
                     // Sauvegarder les nouveaux achievements
@@ -676,7 +676,7 @@ function Game() {
                       ];
                       localStorage.setItem(
                         userAchievementsKey,
-                        JSON.stringify(updatedAchievements)
+                        JSON.stringify(updatedAchievements),
                       );
                     }
 
@@ -772,7 +772,7 @@ function Game() {
       globalThis.dispatchEvent(
         new CustomEvent("request-leave-match", {
           detail: { target: "/lobby", reason: "tab" },
-        })
+        }),
       );
     };
 
@@ -888,7 +888,8 @@ function Game() {
             <div className="notification-content">
               <span className="notification-icon">⚠️</span>
               <span className="notification-text">
-                {t("game.opponentDisconnected") || "L'adversaire s'est déconnecté"}
+                {t("game.opponentDisconnected") ||
+                  "L'adversaire s'est déconnecté"}
               </span>
             </div>
           </div>

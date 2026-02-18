@@ -1,10 +1,14 @@
 """High score related endpoints."""
 
 import datetime
-from typing import Any, List
+from typing import Any
+from typing import List
 
-from core import db, utils
-from flask import Blueprint, Response, request
+from core import db
+from core import utils
+from flask import Blueprint
+from flask import Response
+from flask import request
 
 bp = Blueprint("scores", __name__)
 
