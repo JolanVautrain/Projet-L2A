@@ -408,7 +408,7 @@ function Account({ user, setUser }) {
             </div>
           ) : (
             <div className="avatar-selector">
-              <h3>Avatar Administrateur</h3>
+              <h3>{t("account.adminAvatar")}</h3>
               <div className="admin-avatar-display">
                 <img
                   src="/assets/avatar/admin.jpg"
@@ -418,7 +418,7 @@ function Account({ user, setUser }) {
                   height="150"
                 />
                 <p style={{ color: "#66e3b8", marginTop: "12px" }}>
-                  Avatar unique et non modifiable
+                  {t("account.unmodifiableAvatar")}
                 </p>
               </div>
             </div>
@@ -450,8 +450,8 @@ function Account({ user, setUser }) {
               style={{ marginTop: "8px" }}
             >
               {recoveryCodesLoading
-                ? "Génération..."
-                : "Générer un nouveau code"}
+                ? t("account.generatingCode")
+                : t("account.generateCode")}
             </button>
 
             {showNewCode && newRecoveryCode && (
@@ -468,7 +468,7 @@ function Account({ user, setUser }) {
                 }}
               >
                 <p style={{ fontSize: "0.9rem", margin: "0 0 8px 0" }}>
-                  Votre nouveau code de récupération (à noter en sûr place) :
+                  {t("account.newCode")} :
                 </p>
                 <code
                   style={{
@@ -595,7 +595,7 @@ function Account({ user, setUser }) {
                 className="btn primary"
                 onClick={() => navigate("/moderation")}
               >
-                boutton de la toute puissance
+                {t("account.adminTools")}
               </button>
             )}
           </div>

@@ -143,7 +143,12 @@
     "noPurchases": "Aucun article acheté. Rendez-vous à la boutique pour acheter vos premiers articles !",
     "purchaseDate": "Date d'achat",
     "alreadyOwned": "Vous possédez déjà cet article",
-    "avatarRequired": "Avatar requis — acheter dans la boutique"
+    "avatarRequired": "Avatar requis — acheter dans la boutique",
+    "adminAvatar": "Avatar administrateur",
+    "unmodifiableAvatar": "Avatar unique et non modifiable",
+    "generateCode": "Générer un nouveau code",
+    "generatingCode": "Génération...",
+    "newCode": "Votre nouveau code de récupération (à noter en lieu sûr)"
   },
   "resetUsername": {
     "title": "Changer votre nom d'utilisateur",
@@ -324,11 +329,21 @@
     "trending": "🔥 TENDANCE",
     "priceAlert": "Les prix vont augmenter dans",
     "priceAlertBuy": "! Achetez maintenant !",
+    "popularArticles":"Les articles les plus populaires",
+    "trendingThisWeek": "En vedette cette semaine",
+    "alertPrice":"PRICE ALERT !",
+    "economies": "Economies",
     "product": "Produit",
     "price": "Prix",
     "categories": {
-      "avatars": "Avatars"
+      "avatars": "Avatars",
+      "hot": "Tendance",
+      "mystery": "Mystères",
+      "boosts": "Boosts",
+      "seeAll": "Tout Voir",
+      "skins":"Skins"
     },
+    "cart": "Panier",
     "modal": {
       "title": "Confirmer l'achat",
       "notice": "ATTENTION : Cette offre expire dans quelques secondes ! Les stocks sont limités.",
@@ -496,10 +511,19 @@
       "content": "Les utilisateurs doivent utiliser un langage approprié en tout temps."
     }
   },
-  "report": {
+  "report":{
+    "button": "Signaler un utilisateur",
     "title": "Signalement",
     "desc": "Formulaire de signalement.",
-    "text": "Décrivez le problème que vous avez rencontré..."
+    "text": "Décrivez le problème que vous avez rencontré...",
+    "reportSubmitted":"Signalement envoyé",
+    "incorrectUsername":"Nom d'utilisateur incorrect.",
+    "usernameAccusationRequired": "Un nom d'utilisateur est requis.",
+    "username":"Nom d'utilisateur à signaler",
+    "accusation": "Motif de signalement",
+    "sending":"Envoie en cours",
+    "send":"Envoyer le signalement",
+    "cancel":"Annuler"
   },
   "lobby": {
     "title": "Recherche de joueur en cours... ",

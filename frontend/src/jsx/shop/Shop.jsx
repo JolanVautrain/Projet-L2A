@@ -267,16 +267,16 @@ function Shop({ user, setUser }) {
 
   // Définition des catégories pour les filtres
   const categories = [
-    { id: "all", label: "Tout voir", icon: "🏪", count: products.length },
+    { id: "all", label: t("shop.categories.seeAll"), icon: "🏪", count: products.length },
     {
       id: "hot",
-      label: "Tendance",
+      label: t("shop.categories.hot"),
       icon: "🔥",
       count: products.filter((p) => p.hot).length,
     },
     {
       id: "skins",
-      label: "Skins",
+      label: t("shop.categories.skins"),
       icon: "👕",
       count: products.filter((p) => p.category === "skins").length,
     },
@@ -288,13 +288,13 @@ function Shop({ user, setUser }) {
     },
     {
       id: "lootboxes",
-      label: "Mystères",
+      label: t("shop.categories.mystery"),
       icon: "🎁",
       count: products.filter((p) => p.category === "lootboxes").length,
     },
     {
       id: "boosters",
-      label: "Boosts",
+      label: t("shop.categories.boosts"),
       icon: "⚡",
       count: products.filter((p) => p.category === "boosters").length,
     },
@@ -515,7 +515,7 @@ function Shop({ user, setUser }) {
             className="btn primary cart-button"
             onClick={() => setShowCart(true)}
           >
-            🛒 Panier{" "}
+            🛒 {t("shop.cart")}
             {getItemCount() > 0 && (
               <span className="cart-badge">{getItemCount()}</span>
             )}

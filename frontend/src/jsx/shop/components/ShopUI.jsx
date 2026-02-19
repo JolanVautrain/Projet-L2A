@@ -28,7 +28,7 @@ export function PriceWarningBanner({ show, timer }) {
   if (!show) return null;
   return (
     <div className="price-warning-banner">
-      ⚠️ <strong>ALERTE PRIX !</strong> {t("shop.priceAlert")}{" "}
+      ⚠️ <strong>{t("shop.alertPrice")}</strong> {t("shop.priceAlert")}{" "}
       <strong>{timer}s</strong> {t("shop.priceAlertBuy")}
     </div>
   );
