@@ -87,7 +87,7 @@ function Shop({ user, setUser }) {
 
     const fetchUserPurchases = async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const apiBase = import.meta.env.VITE_API_URL || "";
         const res = await fetch(`${apiBase}/api/shop/purchases/${user}`);
         if (!res.ok) throw new Error("Erreur chargement achats");
 
@@ -163,7 +163,7 @@ function Shop({ user, setUser }) {
           ? t(rewardProduct.titleKey)
           : rewardProduct.title || item.name;
         fetch(
-          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/shop/purchase`,
+          `${import.meta.env.VITE_API_URL || ""}/api/shop/purchase`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -195,7 +195,7 @@ function Shop({ user, setUser }) {
 
       if (user && xpRewards[item.productId]) {
         fetch(
-          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/user/xp`,
+          `${import.meta.env.VITE_API_URL || ""}/api/user/xp`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -317,7 +317,7 @@ function Shop({ user, setUser }) {
         for (let q = 0; q < item.quantity; q++) {
           try {
             await fetch(
-              `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/shop/purchase`,
+              `${import.meta.env.VITE_API_URL || ""}/api/shop/purchase`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -356,7 +356,7 @@ function Shop({ user, setUser }) {
             if (xpRewards[item.id]) {
               try {
                 await fetch(
-                  `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/user/xp`,
+                  `${import.meta.env.VITE_API_URL || ""}/api/user/xp`,
                   {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
