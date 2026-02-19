@@ -439,8 +439,6 @@ function Account({ user, setUser }) {
             {t("account.changePassword")}
           </button>
           <LanguageSelector />
-
-          {/* Codes de récupération */}
           <div className="recovery-codes-section">
             <h3>Codes de récupération</h3>
             <button
@@ -453,7 +451,6 @@ function Account({ user, setUser }) {
                 ? "Génération..."
                 : "Générer un nouveau code"}
             </button>
-
             {showNewCode && newRecoveryCode && (
               <div
                 className="new-recovery-code-alert"
@@ -508,7 +505,6 @@ function Account({ user, setUser }) {
               </div>
             )}
           </div>
-
           <div className="user-action">
             <button
               className="btn ghost no-border account__logout"
@@ -516,7 +512,6 @@ function Account({ user, setUser }) {
             >
               {t("common.logout")}
             </button>
-
             <button
               className="btn ghost danger user__delete"
               onClick={() => {
@@ -556,7 +551,6 @@ function Account({ user, setUser }) {
             >
               {t("account.deleteSelf")}
             </button>
-
             <button
               className="btn danger"
               disabled={resetSessionsLoading}
@@ -588,7 +582,6 @@ function Account({ user, setUser }) {
               {resetSessionsLoading
                 ? t("account.resetting")
                 : t("account.resetSelfSessions")}
-              {/*bouton pour acceder au panneau de moderation */}
             </button>
             {isAdmin && (
               <button

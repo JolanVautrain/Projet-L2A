@@ -145,6 +145,7 @@ export function useLootbox() {
     }, 1000);
   };
 
+  // Fermer la lootbox et réinitialiser l'état
   const closeLootbox = () => {
     if (audioRef.current) {
       audioRef.current.pause();

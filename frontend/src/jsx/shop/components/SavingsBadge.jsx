@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import './SavingsBadge.css';
 
+// Composant de badge d'économies pour les produits en promotion
 export function SavingsBadge({ originalPrice, originalOldPrice }) {
   if (!originalOldPrice || !originalPrice) return null;
 

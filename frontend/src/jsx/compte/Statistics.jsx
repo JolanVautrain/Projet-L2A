@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../autres/Language.jsx";
 
+// Composant Statistics
+// Affiche les statistiques de jeu de l'utilisateur connecté
 function Statistics({ user }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);

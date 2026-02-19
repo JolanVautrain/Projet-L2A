@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
 import "./FeaturedSection.css";
 
+// Section de produits en vedette sur la page d'accueil du shop
 export function FeaturedSection({
   trendingProducts,
   onAddToCart,
