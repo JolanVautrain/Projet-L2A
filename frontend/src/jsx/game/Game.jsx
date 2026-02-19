@@ -50,6 +50,7 @@ import {
   isJumpRequested,
 } from "./utils/GameControls.js";
 import { getWebSocketUrl } from "../utils/wsClient.js";
+import { getApiBaseUrl } from "../utils/apiClient.js";
 import {
   calculateXPReward,
   checkAchievements,
@@ -421,7 +422,7 @@ function Game() {
   const [opponentLevel, setOpponentLevel] = useState(1);
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = getApiBaseUrl();
 
   const resolveLevel = (data) => {
     if (!data) return 1;
@@ -965,7 +966,7 @@ function Game() {
   useEffect(() => {
     const activeUser = getActiveUser();
     if (!activeUser) return;
-    fetch(`${apiBase}/api/user/xp/${activeUser}`)
+    fetch(`${apiBase}/user/xp/${activeUser}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setPlayerLevel(resolveLevel(data));
@@ -975,7 +976,7 @@ function Game() {
 
   useEffect(() => {
     if (!opponentUsername) return;
-    fetch(`${apiBase}/api/user/xp/${opponentUsername}`)
+    fetch(`${apiBase}/user/xp/${opponentUsername}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setOpponentLevel(resolveLevel(data));

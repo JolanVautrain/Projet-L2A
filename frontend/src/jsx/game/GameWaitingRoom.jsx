@@ -4,6 +4,7 @@ import { getWebSocketUrl } from "../utils/wsClient.js";
 import { getActiveUser } from "../utils/userSession.js";
 import { useLanguage } from "../autres/Language.jsx";
 import { getLevelFromXP } from "./utils/GameGamification.js";
+import { getApiBaseUrl } from "../utils/apiClient.js";
 
 const MIN_PLAYERS = 2;
 
@@ -18,7 +19,7 @@ const GameWaitingRoom = () => {
   const wsRef = useRef(null);
   const username = getActiveUser();
   const { t } = useLanguage();
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const apiBase = getApiBaseUrl();
 
   // Récupérer l'avatar de l'utilisateur actuel
   const getCurrentAvatar = (user) => {
@@ -97,7 +98,7 @@ const GameWaitingRoom = () => {
 
   useEffect(() => {
     if (!username) return;
-    fetch(`${apiBase}/api/user/xp/${username}`)
+    fetch(`${apiBase}/user/xp/${username}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setCurrentLevel(resolveLevel(data));
@@ -107,7 +108,7 @@ const GameWaitingRoom = () => {
 
   useEffect(() => {
     if (!opponentUsername) return;
-    fetch(`${apiBase}/api/user/xp/${opponentUsername}`)
+    fetch(`${apiBase}/user/xp/${opponentUsername}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setOpponentLevel(resolveLevel(data));

@@ -121,7 +121,7 @@ function Statistics({ user, setUser }) {
       });
     // Charger XP / niveau du user connecté
     if (user) {
-      fetch(`${apiBase}/api/user/xp/${user}`)
+      fetch(`${apiBase}/user/xp/${user}`)
         .then((r) => {
           if (r.ok) {
             return r.json();
@@ -136,7 +136,7 @@ function Statistics({ user, setUser }) {
         })
         .catch(() => {});
       // Charger l'historique XP
-      fetch(`${apiBase}/api/user/xp/history/${user}?limit=100`)
+      fetch(`${apiBase}/user/xp/history/${user}?limit=100`)
         .then((r) => (r.ok ? r.json() : []))
         .then((h) => {
           if (mounted) setXpHistory(h || []);
