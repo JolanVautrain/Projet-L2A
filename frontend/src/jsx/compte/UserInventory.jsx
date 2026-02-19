@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import shopProductsData from "../shop/shopProducts.json";
 import { useSkins } from "../shop/hooks/useSkins.js";
 import { useBombPack } from "../shop/hooks/useBombPack.js";
-import "./UserInventory.css";
 
 export function UserInventory({ user, t }) {
   const [purchases, setPurchases] = useState([]);
@@ -132,17 +131,14 @@ export function UserInventory({ user, t }) {
     }
     return false;
   };
-
   // Lors du changement d'utilisateur, afficher un message de chargement le temps de récupérer les données
   if (loading) {
     return <div className="user-inventory">{t("common.loading")}</div>;
   }
-
   // Si aucun utilisateur n'est connecté, afficher un message d'invite à se connecter
   if (!user) {
     return <div className="user-inventory">{t("account.loginRequired")}</div>;
   }
-
   return (
     <div className="user-inventory">
       <div className="inventory-tabs">
@@ -159,7 +155,6 @@ export function UserInventory({ user, t }) {
           {t("account.purchaseHistory")}
         </button>
       </div>
-
       {activeTab === "inventory" && (
         <div className="inventory-content">
           <h3>{t("account.inventory")}</h3>
@@ -175,7 +170,6 @@ export function UserInventory({ user, t }) {
                   product?.category === "avatars";
                 const isActivatable = product?.activatable === true;
                 const isActive = getCosmeticStatus(item.product_id, product);
-
                 return (
                   <div key={item.product_id} className="inventory-item">
                     <img

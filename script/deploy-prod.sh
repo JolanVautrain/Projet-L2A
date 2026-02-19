@@ -5,8 +5,8 @@
 set -e
 
 echo "=========================================="
-echo "  Build & Déploiement Production"
-echo "  Raspberry Pi"
+echo "Build & Déploiement Production"
+echo "Raspberry Pi"
 echo "=========================================="
 
 # Couleurs
@@ -21,30 +21,30 @@ PROJECT_ROOT=$(pwd)
 
 echo ""
 echo "========================================="
-echo "   Étape 1 : Build Frontend"
+echo "Étape 1 : Build Frontend"
 echo "========================================="
 
 # Vérifier si .env.production existe
 if [ ! -f "$PROJECT_ROOT/frontend/.env.production" ]; then
-    echo -e "${YELLOW}  Fichier .env.production non trouvé.${NC}"
-    echo "   Copie de .env.production.example..."
+    echo -e "${YELLOW} Fichier .env.production non trouvé.${NC}"
+    echo "Copie de .env.production.example..."
     if [ -f "$PROJECT_ROOT/frontend/.env.production.example" ]; then
         cp "$PROJECT_ROOT/frontend/.env.production.example" "$PROJECT_ROOT/frontend/.env.production"
     fi
     echo ""
-    echo -e "${RED}  IMPORTANT : Modifiez .env.production avec l'IP de votre Raspberry Pi !${NC}"
-    echo "   Exemple : VITE_WS_URL=ws://192.168.1.100:15256/ws"
+    echo -e "${RED} IMPORTANT : Modifiez .env.production avec l'IP de votre Raspberry Pi !${NC}"
+    echo "Exemple : VITE_WS_URL=ws://192.168.1.100:15256/ws"
     echo ""
     read -p "Appuyez sur Entrée pour continuer après avoir modifié le fichier..."
 fi
 
 echo ""
-echo " Installation des dépendances frontend..."
+echo "Installation des dépendances frontend..."
 cd "$PROJECT_ROOT/frontend"
 npm install
 
 echo ""
-echo " Build de l'application..."
+echo "Build de l'application..."
 npm run build
 
 echo ""
@@ -52,19 +52,19 @@ echo -e "${GREEN} Build frontend terminé avec succès !${NC}"
 
 echo ""
 echo "========================================="
-echo "  Étape 2 : Déploiement Docker"
+echo "Étape 2 : Déploiement Docker"
 echo "========================================="
 
 cd "$PROJECT_ROOT/docker"
 
 # Vérifier si .env existe
 if [ ! -f ".env" ]; then
-    echo -e "${YELLOW}  Fichier .env non trouvé. Copie de .env.prod.example...${NC}"
+    echo -e "${YELLOW} Fichier .env non trouvé. Copie de .env.prod.example...${NC}"
     if [ -f ".env.prod.example" ]; then
         cp .env.prod.example .env
     fi
-    echo -e "${RED}  IMPORTANT : Modifiez le fichier .env avec vos valeurs sécurisées !${NC}"
-    echo -e "${YELLOW}   Arrêt du script. Relancez après avoir configuré .env${NC}"
+    echo -e "${RED} IMPORTANT : Modifiez le fichier .env avec vos valeurs sécurisées !${NC}"
+    echo -e "${YELLOW} Arrêt du script. Relancez après avoir configuré .env${NC}"
     exit 1
 fi
 
@@ -99,7 +99,7 @@ docker compose -f docker-compose.prod.yml ps
 
 echo ""
 echo -e "${GREEN}=========================================="
-echo "  Déploiement terminé avec succès !"
+echo "Déploiement terminé avec succès !"
 echo "==========================================${NC}"
 echo ""
 echo "L'application est accessible sur :"

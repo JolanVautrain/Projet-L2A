@@ -31,7 +31,6 @@ import { FilterTabs } from "./components/FilterTabs.jsx";
 import { FeaturedSection } from "./components/FeaturedSection.jsx";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
-import "./components/ShopAnimations.css";
 
 function Shop({ user, setUser }) {
   const { t } = useLanguage();
@@ -162,19 +161,16 @@ function Shop({ user, setUser }) {
         const rewardName = rewardProduct.titleKey
           ? t(rewardProduct.titleKey)
           : rewardProduct.title || item.name;
-        fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/shop/purchase`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: user,
-              product_id: rewardProduct.id,
-              product_name: rewardName,
-              price: "0€",
-            }),
-          },
-        ).catch((error) =>
+        fetch(`${import.meta.env.VITE_API_URL || ""}/api/shop/purchase`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: user,
+            product_id: rewardProduct.id,
+            product_name: rewardName,
+            price: "0€",
+          }),
+        }).catch((error) =>
           console.error("Failed to record lootbox reward:", error),
         );
 
@@ -194,17 +190,14 @@ function Shop({ user, setUser }) {
       }
 
       if (user && xpRewards[item.productId]) {
-        fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/user/xp`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: user,
-              xp: xpRewards[item.productId],
-            }),
-          },
-        ).catch((error) => console.error("Failed to award XP:", error));
+        fetch(`${import.meta.env.VITE_API_URL || ""}/api/user/xp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: user,
+            xp: xpRewards[item.productId],
+          }),
+        }).catch((error) => console.error("Failed to award XP:", error));
       }
     });
   }, [
@@ -267,7 +260,12 @@ function Shop({ user, setUser }) {
 
   // Définition des catégories pour les filtres
   const categories = [
-    { id: "all", label: t("shop.categories.seeAll"), icon: "🏪", count: products.length },
+    {
+      id: "all",
+      label: t("shop.categories.seeAll"),
+      icon: "🏪",
+      count: products.length,
+    },
     {
       id: "hot",
       label: t("shop.categories.hot"),

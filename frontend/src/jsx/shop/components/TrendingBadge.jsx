@@ -1,8 +1,7 @@
-import PropTypes from 'prop-types';
-import './TrendingBadge.css';
+import PropTypes from "prop-types";
 
 // Composant de badge de tendance pour les produits populaires
-export function TrendingBadge({ type = 'hot', text = t("shop.trending") }) {
+export function TrendingBadge({ type = "hot", text = t("shop.trending") }) {
   return (
     <div className={`trending-badge trending-${type}`}>
       <span className="trending-animated">{text}</span>
@@ -11,6 +10,6 @@ export function TrendingBadge({ type = 'hot', text = t("shop.trending") }) {
 }
 
 TrendingBadge.propTypes = {
-  type: PropTypes.oneOf(['hot', 'new', 'limited']),
+  type: PropTypes.oneOf(["hot", "new", "limited"]),
   text: PropTypes.string,
 };

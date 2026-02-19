@@ -6,7 +6,6 @@ import {
   formatPrice,
 } from "../utils/shopUtils.js";
 
-// Modal de panier avec options supplémentaires
 export function CartModal({
   isOpen,
   cart,

@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
-import "./FeaturedSection.css";
 
 // Section de produits en vedette sur la page d'accueil du shop
 export function FeaturedSection({
@@ -17,8 +16,8 @@ export function FeaturedSection({
     <section className="featured-section">
       <div className="featured-header">
         <h2 className="featured-title">
-          {/* eslint-disable-next-line jsx-a11y/no-trailing-whitespace */}
-          <span className="featured-icon">⭐</span>{t("shop.trendingThisWeek")}
+          <span className="featured-icon">⭐</span>
+          {t("shop.trendingThisWeek")}
           <span className="featured-icon">⭐</span>
         </h2>
         <p className="featured-subtitle">{t("shop.popularArticles")}</p>

@@ -2,7 +2,6 @@ import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
 import { SavingsBadge } from "./SavingsBadge.jsx";
 import { TrendingBadge } from "./TrendingBadge.jsx";
-import "./ProductCard.css";
 
 // Composant de carte de produit pour la boutique
 export function ProductCard({

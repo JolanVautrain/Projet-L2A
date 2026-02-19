@@ -1,4 +1,4 @@
-# Projet L2A — Jeu en ligne (Groupe G34)
+# **Projet T Rex Game Evolve** — Jeu en ligne (Groupe G34)
 
 ## Structure du dépôt
 
@@ -6,11 +6,7 @@
 - `backend/` : API serveur (Flask). Point d'entrée : `backend/app.py`.
 - `docker/` : Dockerfiles, scripts et `docker-compose.yml` pour orchestrer les services.
 
-## Lancer le projet V2
-
-- PowerShell (Windows) :
-
-Il n'est plus pris en charge dans le développement. Merci de basculer sur Linux.
+## Lancer le projet
 
 - Bash (Linux / macOS) :
 
@@ -27,17 +23,17 @@ CTRL + MAJ + P => Recharger la page/Reload the page
 
 Pour accéder au serveur de développpement, il faut passer par le docker nginx soit le l'url :
 
-http://localhost:15256/
+http://localhost:5173/
 
 ## Mettre à jour les dockers
 
-Pour un redémarrage complet utile pour le docker websocket
-
+```bash
+# Pour un redémarrage complet utile pour le docker websocket
 bash ./script/docker-dev.sh update
 
-Pour un redémarrage rapide (à éviter et fais par défaut par le docker)
-
+# Pour un redémarrage rapide (à éviter et fais par défaut par le docker)
 bash ./script/docker-dev.sh
+```
 
 ## Lancer les tests localement
 
@@ -50,21 +46,15 @@ Il n'est plus pris en charge dans le développement. Merci de basculer sur Linux
 - Bash (Linux / macOS) :
 
 ```bash
-# lancer les tests (génère rapports dans backend/tests/reports)
+# lancer les tests (génère rapports dans tests/reports)
 bash ./script/run_tests_V2.sh
 ```
 
-Les rapports et logs de tests sont écrits dans `backend/tests/reports/` :
+Les rapports et logs de tests sont écrits dans `tests/reports/` :
 
-- `backend/tests/reports/junit.xml` (JUnit)
-- `backend/tests/reports/coverage.xml` (coverage, format Cobertura)
-- `backend/tests/reports/pytest.log` (log console)
-
-Vous pouvez lancer manuellement `pytest` comme suit :
-
-```powershell
-pytest backend --junitxml=backend/tests/reports/junit.xml --cov=backend --cov-report=xml:backend/tests/reports/coverage.xml
-```
+- `tests/reports/junit.xml` (JUnit)
+- `tests/reports/coverage.xml` (coverage, format Cobertura)
+- `tests/reports/pytest.log` (log console)
 
 Docker / debug :
 
@@ -77,7 +67,7 @@ docker compose logs backend --tail 200
 il suffit de faire la commande :
 
 ```bash
-./script/script/install_requirements_V2.sh
+./script/script/install_requirements.sh
 ```
 
 ## En cas de probleme de css sur le navigateur lors du développement
