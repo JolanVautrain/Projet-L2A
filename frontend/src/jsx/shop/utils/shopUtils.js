@@ -9,6 +9,7 @@ export const formatPrice = (n) => {
   return n.toFixed(2).replace('.', ',') + '€';
 };
 
+// Convertit un nombre de secondes en format HH:MM:SS pour les alertes de temps restant
 export const formatTime = (seconds) => {
   const hours = Math.floor(seconds / 3600).toString().padStart(2, '0');
   const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
@@ -16,6 +17,7 @@ export const formatTime = (seconds) => {
   return `${hours}:${mins}:${secs}`;
 };
 
+// Mise à jour des prix avec l'augmentation des prix
 export const applyPriceMultiplier = (product, multiplier, t) => {
   const basePrice = parsePrice(product.price);
   const scaledPrice = basePrice * multiplier;
@@ -31,6 +33,7 @@ export const applyPriceMultiplier = (product, multiplier, t) => {
   };
 };
 
+// Coûts supplémentaires pour les options dans le modal
 export const EXTRA_COSTS = {
   delivery: { name: 'delivery', price: 1.99 },
   express: { name: 'express', price: 4.99 },
@@ -50,6 +53,7 @@ export const calculateModalTotal = (basePrice, extras) => {
   return total.toFixed(2) + '€';
 };
 
+// Génère des notifications aléatoires pour les tests
 export const FAKE_NOTIFICATIONS = [
   (names) => `${names[Math.floor(Math.random() * names.length)]} vient d'acheter un article !`,
   () => `⚡ Plus que ${Math.floor(Math.random() * 5) + 1} articles en stock !`,
@@ -69,4 +73,5 @@ export const FAKE_NOTIFICATIONS = [
   () => `⚡ Plus que ${Math.floor(Math.random() * 3) + 1} articles en stock !`,
 ];
 
-export const FAKE_NAMES = ['Marie', 'Thomas', 'Sophie', 'Lucas', 'Emma', 'Hugo', 'Léa', 'Nathan'];
+// Génère des noms aléatoires pour les notifications
+export const FAKE_NAMES = ['Ethan', 'Jolan', 'Gabriel', 'Lalo', 'Yasser', 'Ewen', 'Pierre', 'Seven', 'Martin', 'Camille', 'Khadija', 'Donatien', 'Dylan', 'Adnane', 'Sofian'];

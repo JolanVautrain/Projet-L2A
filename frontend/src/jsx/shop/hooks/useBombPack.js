@@ -39,6 +39,7 @@ export function useBombPack(username) {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [username]);
 
+    // Écouter les événements personnalisés pour les changements de bomb pack
     useEffect(() => {
         const handleBombPackChanged = (e) => {
             if (!username) return;
@@ -64,6 +65,7 @@ export function useBombPack(username) {
         }
     };
 
+    // Activer un item (ajouter à activeItems) dans l'inventaire
     const activateItem = (itemId) => {
         if (username) {
             const activeItems = localStorage.getItem(`${ACTIVE_ITEMS_KEY}:${username}`);
@@ -85,6 +87,7 @@ export function useBombPack(username) {
         }
     };
 
+    // Désactiver un item (le retirer des actifs) dans l'inventaire
     const deactivateItem = (itemId) => {
         if (username) {
             const activeItems = localStorage.getItem(`${ACTIVE_ITEMS_KEY}:${username}`);

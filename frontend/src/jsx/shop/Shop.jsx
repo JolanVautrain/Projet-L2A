@@ -450,7 +450,6 @@ function Shop({ user, setUser }) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3200);
     }
-    // Note: localStorage backup supprimé, on utilise maintenant la BDD
     clearCart();
   };
 
@@ -499,7 +498,7 @@ function Shop({ user, setUser }) {
       </div>
     );
   }
-
+  // sinon afficher la boutique
   return (
     <div className="shop-page">
       <section className="hero">
@@ -522,7 +521,6 @@ function Shop({ user, setUser }) {
           </button>
         </div>
       </section>
-
       <FeaturedSection
         trendingProducts={products.filter((p) => p.hot)}
         onAddToCart={addToCart}
@@ -530,15 +528,12 @@ function Shop({ user, setUser }) {
         reviewCounts={reviewCounts}
         userPurchasedProducts={userPurchasedProducts}
       />
-
       <PriceWarningBanner show={showPriceWarning} timer={priceWarningTimer} />
-
       <FilterTabs
         activeTab={activeFilter}
         onTabChange={setActiveFilter}
         categories={categories}
       />
-
       <section className="shop-grid">
         {filteredProducts.map((p) => (
           <ProductCard
@@ -553,7 +548,6 @@ function Shop({ user, setUser }) {
           />
         ))}
       </section>
-
       <CartModal
         isOpen={showCart}
         cart={cart}
@@ -565,7 +559,6 @@ function Shop({ user, setUser }) {
         onRemove={removeFromCart}
         t={t}
       />
-
       <LootboxModal
         isOpen={lootOpen}
         product={lootProduct}
@@ -575,11 +568,8 @@ function Shop({ user, setUser }) {
         onClose={closeLootbox}
         t={t}
       />
-
       {showConfetti && <Confetti />}
-
       <Notification message={notification} />
-
       <BombPackManager hasActiveBombPack={hasActiveBombPack} />
     </div>
   );
