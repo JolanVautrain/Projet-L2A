@@ -74,6 +74,7 @@ export function useSkins(username) {
     };
 }
 
+// Fonction pour appliquer ou retirer la classe CSS du skin néon
 function applyNeonSkinToDOM(skinId) {
     const html = document.documentElement;
 

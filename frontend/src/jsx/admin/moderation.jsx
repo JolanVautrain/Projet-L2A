@@ -68,7 +68,7 @@ function Moderation({ user }) {
           data.map(async (u) => {
             try {
               const [xpRes, statsRes] = await Promise.all([
-                fetch(`${apiBase}/api/user/xp/${u.username}`),
+                fetch(`${apiBase}/user/xp/${u.username}`),
                 fetch(`${apiBase}/user/stats/${u.username}`),
               ]);
               const xpJson =
@@ -273,7 +273,7 @@ function Moderation({ user }) {
     ) {
       setAwardXpLoading(true);
 
-      fetch(`${apiBase}/api/user/xp`, {
+      fetch(`${apiBase}/user/xp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

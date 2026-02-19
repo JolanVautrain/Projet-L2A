@@ -23,7 +23,7 @@ export function UserInventory({ user, t }) {
 
     const fetchPurchases = async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const apiBase = import.meta.env.VITE_API_URL || "";
         const res = await fetch(`${apiBase}/api/shop/purchases/${user}`);
         if (!res.ok) throw new Error("Erreur chargement achats");
 
@@ -80,6 +80,7 @@ export function UserInventory({ user, t }) {
     fetchPurchases();
   }, [user, t]);
 
+  // Charger l'avatar actif depuis le localStorage
   useEffect(() => {
     if (!user) return;
     const savedAvatar = localStorage.getItem(`avatar_${user}`) || "";
@@ -119,6 +120,7 @@ export function UserInventory({ user, t }) {
     }
   };
 
+  // Vérifie si un article cosmétique est actif pour l'utilisateur
   const getCosmeticStatus = (itemId, product) => {
     if (itemId === "skin-neo") {
       return activeSkin === itemId;
@@ -131,10 +133,12 @@ export function UserInventory({ user, t }) {
     return false;
   };
 
+  // Lors du changement d'utilisateur, afficher un message de chargement le temps de récupérer les données
   if (loading) {
     return <div className="user-inventory">{t("common.loading")}</div>;
   }
 
+  // Si aucun utilisateur n'est connecté, afficher un message d'invite à se connecter
   if (!user) {
     return <div className="user-inventory">{t("account.loginRequired")}</div>;
   }
@@ -207,7 +211,6 @@ export function UserInventory({ user, t }) {
           )}
         </div>
       )}
-
       {activeTab === "history" && (
         <div className="inventory-content">
           <h3>{t("account.purchaseHistory")}</h3>
@@ -217,7 +220,7 @@ export function UserInventory({ user, t }) {
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>🖼️</th>
+                    <th>Image</th>
                     <th>Produit</th>
                     <th>Prix</th>
                     <th>{t("account.purchaseDate")}</th>

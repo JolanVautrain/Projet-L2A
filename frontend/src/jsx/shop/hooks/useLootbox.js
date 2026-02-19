@@ -17,6 +17,7 @@ export function useLootbox() {
     }
   }, []);
 
+  // Nettoyer l'élément audio à la destruction du hook
   const openLootbox = (product, lootboxRewards, possibleProducts, waitTime = 3) => {
     setLootProduct(product);
     setLootOpen(true);
@@ -65,6 +66,7 @@ export function useLootbox() {
       };
     }
 
+    // Jouer la musique en fonction de la rareté du gain
     const musicMap = {
       'none': null,
       'common': '/assets/sound/victory_commun.mp3',
@@ -96,6 +98,7 @@ export function useLootbox() {
     }, 1000);
   };
 
+  // Ouvrir une lootbox avec plusieurs récompenses (ex: pack de cartes)
   const openLootboxBatch = (product, items, waitTime = 3) => {
     const batchId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setLootProduct(product);
@@ -142,6 +145,7 @@ export function useLootbox() {
     }, 1000);
   };
 
+  // Fermer la lootbox et réinitialiser l'état
   const closeLootbox = () => {
     if (audioRef.current) {
       audioRef.current.pause();

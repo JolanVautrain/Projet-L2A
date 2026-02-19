@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import './FilterTabs.css';
 
+// Composant de filtres sous forme d'onglets pour la page du shop
 export function FilterTabs({ activeTab, onTabChange, categories }) {
   return (
     <div className="filter-tabs-container">

@@ -6,7 +6,6 @@ import { useLanguage } from "../autres/Language.jsx";
 // Règles du jeu
 function RulesCard({ rule }) {
     return(
-
         <div className="rules-card">
             <h3>{rule.name}</h3>
             <p>{rule.content}</p>
@@ -14,7 +13,7 @@ function RulesCard({ rule }) {
     )
 }
 
-// 
+// PropTypes pour la validation des props de RulesCard
 RulesCard.propTypes = {
     rule : PropTypes.shape({
         name : PropTypes.string.isRequired,
@@ -22,7 +21,7 @@ RulesCard.propTypes = {
     }).isRequired
 }
 
-// 
+// Page des règles du jeu
 function Regle() {
     const { t } = useLanguage();
 
@@ -72,13 +71,14 @@ function Regle() {
         content : t("rules.rule9.content")
     }];
 
+    // État pour gérer l'ouverture du modal de signalement
     const [isReportOpen, setIsReportOpen] = useState(false);
 
         const reportForm = () => {
             setIsReportOpen(true);
         };
 
-    
+    // Mise en page des règles et du bouton de signalement
     return (
         <div className="regle-container">    
             <div className="rules-container">
@@ -92,8 +92,6 @@ function Regle() {
           {t("report.button")}
         </button>
       </div>
-
-        {/* MODAL */}
         <ReportModal
             isOpen={isReportOpen}
             onClose={() => setIsReportOpen(false)}

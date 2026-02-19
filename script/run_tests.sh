@@ -152,9 +152,9 @@ echo -e "${BRIGHT_GREEN}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
-║           🚀  SUITE DE TESTS COMPLÈTE - PROJET G34  🚀           ║
+║               SUITE DE TESTS COMPLÈTE - PROJET G34                ║
 ║                                                                   ║
-║              Backend + Frontend + WebSocket + ESLint             ║
+║              Backend + Frontend + WebSocket + ESLint              ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 EOF
@@ -208,7 +208,7 @@ fi
 # 1. DÉMARRAGE DE LA BASE DE DONNÉES DE TEST
 ###############################################################################
 
-print_section "1️⃣  BASE DE DONNÉES DE TEST"
+print_section "1)  BASE DE DONNÉES DE TEST"
 
 print_step "Démarrage de la base de données..."
 cd "$PROJECT_ROOT"
@@ -252,7 +252,7 @@ export POSTGRES_DB=testdb
 # 2. TESTS DE FORMATAGE ET QUALITÉ DU CODE BACKEND
 ###############################################################################
 
-print_section "2️⃣  ANALYSE DE QUALITÉ DU CODE BACKEND"
+print_section "2)  ANALYSE DE QUALITÉ DU CODE BACKEND"
 
 cd "$PROJECT_ROOT"
 print_subsection "Checklist d'analyse statique"
@@ -279,22 +279,22 @@ run_optional_check() {
 }
 
 # Test isort
-run_optional_check "isort" "📦 Organisation des imports (isort)" \
+run_optional_check "isort" " Organisation des imports (isort)" \
     "\"$PYTHON\" -m isort --check-only --diff backend/" \
     "$REPORTS_DIR/isort.log"
 
 # Test pylint
-run_optional_check "pylint" "🔍 Analyse statique (pylint)" \
+run_optional_check "pylint" " Analyse statique (pylint)" \
     "\"$PYTHON\" -m pylint backend/ --output-format=text" \
     "$REPORTS_DIR/pylint.log"
 
 # Test flake8
-run_optional_check "flake8" "✨ Style du code (flake8)" \
+run_optional_check "flake8" " Style du code (flake8)" \
     "\"$PYTHON\" -m flake8 backend/" \
     "$REPORTS_DIR/flake8.log"
 
 # Test mypy
-run_optional_check "mypy" "🔤 Vérification des types (mypy)" \
+run_optional_check "mypy" " Vérification des types (mypy)" \
     "\"$PYTHON\" -m mypy backend/" \
     "$REPORTS_DIR/mypy.log"
 
@@ -304,7 +304,7 @@ print_divider
 # 3. TESTS UNITAIRES ET D'INTÉGRATION BACKEND
 ###############################################################################
 
-print_section "3️⃣  TESTS BACKEND (unitaires + intégration)"
+print_section "3)  TESTS BACKEND (unitaires + intégration)"
 print_subsection "Exécution avec couverture de code"
 
 print_step "Préparation de l'environnement Python..."
@@ -323,9 +323,9 @@ if "$PYTEST" test/backend/ \
     --junit-xml="$REPORTS_DIR/junit-backend.xml" \
     --log-file="$REPORTS_DIR/pytest-backend.log" \
     --log-file-level=INFO 2>&1 | tee "$REPORTS_DIR/pytest-backend-output.log"; then
-    print_success "Tests backend: ✅ TOUS PASSÉS"
+    print_success "Tests backend:  TOUS PASSÉS"
 else
-    print_error "Tests backend: ⚠️  CERTAINS TESTS ONT ÉCHOUÉ"
+    print_error "Tests backend:   CERTAINS TESTS ONT ÉCHOUÉ"
     echo "Voir les détails dans $REPORTS_DIR/pytest-backend.log"
 fi
 print_divider
@@ -334,7 +334,7 @@ print_divider
 # 3.5 LANCEMENT DU SERVEUR WEBSOCKET POUR LES TESTS
 ###############################################################################
 
-print_section "3️⃣.5️⃣  SERVEUR WEBSOCKET"
+print_section "3.5)  SERVEUR WEBSOCKET"
 
 # Vérifier que Node.js est disponible
 if ! command -v node >/dev/null 2>&1; then
@@ -417,7 +417,7 @@ print_divider
 # 4. TESTS SCÉNARIOS FRONTEND (via pytest)
 ###############################################################################
 
-print_section "4️⃣  TESTS FRONTEND (scénarios + WebSocket)"
+print_section "4)  TESTS FRONTEND (scénarios + WebSocket)"
 print_subsection "Simulations de flux utilisateurs"
 
 cd "$PROJECT_ROOT"
@@ -432,9 +432,9 @@ if "$PYTEST" test/frontend/ \
     --junit-xml="$REPORTS_DIR/junit-frontend.xml" \
     --log-file="$REPORTS_DIR/pytest-frontend.log" \
     --log-file-level=INFO 2>&1 | tee "$REPORTS_DIR/pytest-frontend-output.log"; then
-    print_success "Tests frontend: ✅ TOUS PASSÉS"
+    print_success "Tests frontend:  TOUS PASSÉS"
 else
-    print_error "Tests frontend: ⚠️  CERTAINS TESTS ONT ÉCHOUÉ"
+    print_error "Tests frontend:   CERTAINS TESTS ONT ÉCHOUÉ"
     echo "Voir les détails dans $REPORTS_DIR/pytest-frontend.log"
 fi
 
@@ -445,7 +445,7 @@ print_divider
 # 5. COUVERTURE COMBINÉE (backend + frontend)
 ###############################################################################
 
-print_section "5️⃣  COUVERTURE COMBINÉE (tous les tests)"
+print_section "5)  COUVERTURE COMBINÉE (tous les tests)"
 print_subsection "Analyse globale + calcul de couverture"
 
 cd "$PROJECT_ROOT"
@@ -460,9 +460,9 @@ if "$PYTEST" test/backend/ test/frontend/ \
     --junit-xml="$REPORTS_DIR/junit.xml" \
     --log-file="$REPORTS_DIR/pytest.log" \
     --log-file-level=INFO 2>&1 | tee "$REPORTS_DIR/pytest-output.log"; then
-    print_success "Tests combinés: ✅ TOUS PASSÉS"
+    print_success "Tests combinés:  TOUS PASSÉS"
 else
-    print_error "Tests combinés: ⚠️  CERTAINS TESTS ONT ÉCHOUÉ"
+    print_error "Tests combinés:   CERTAINS TESTS ONT ÉCHOUÉ"
     echo "Voir les détails dans $REPORTS_DIR/pytest.log"
 fi
 print_divider
@@ -471,7 +471,7 @@ print_divider
 # 6. TESTS FRONTEND QUALITÉ (ESLint)
 ###############################################################################
 
-print_section "6️⃣  QUALITÉ DU CODE FRONTEND (ESLint)"
+print_section "6)  QUALITÉ DU CODE FRONTEND (ESLint)"
 
 if [ -d "$FRONTEND_DIR" ]; then
     cd "$FRONTEND_DIR"
@@ -489,9 +489,9 @@ if [ -d "$FRONTEND_DIR" ]; then
     print_step "Analyse ESLint en cours..."
     if command -v npm >/dev/null 2>&1 && [ -d "node_modules" ]; then
         if npm run lint > "$REPORTS_DIR/eslint.log" 2>&1; then
-            print_success "ESLint: ✅ OK (pas de problèmes)"
+            print_success "ESLint:  OK (pas de problèmes)"
         else
-            print_warning "ESLint: ⚠️  Problèmes détectés (voir logs)"
+            print_warning "ESLint:   Problèmes détectés (voir logs)"
         fi
     else
         print_warning "ESLint: Outil non disponible"
@@ -506,7 +506,7 @@ print_divider
 # 7. GÉNÉRATION DU RAPPORT FINAL
 ###############################################################################
 
-print_section "7️⃣  RAPPORT FINAL"
+print_section "7)  RAPPORT FINAL"
 print_subsection "Génération de la documentation"
 
 cd "$PROJECT_ROOT"
@@ -518,7 +518,7 @@ cat > "$REPORTS_DIR/RESUME.txt" << EOF
 ║                    $(date '+%Y-%m-%d %H:%M:%S')                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 
-📁 FICHIERS GÉNÉRÉS:
+ FICHIERS GÉNÉRÉS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   LOGS DES TESTS:
@@ -549,10 +549,10 @@ cat > "$REPORTS_DIR/RESUME.txt" << EOF
   SERVEUR:
   ✓ websocket-server.log     - Logs du serveur WebSocket
 
-📂 LOCALISATION:
+LOCALISATION:
 $REPORTS_DIR
 
-🔗 ACCÈS AUX RAPPORTS:
+ACCÈS AUX RAPPORTS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Rapport HTML de couverture:
@@ -580,7 +580,7 @@ echo -e "${BRIGHT_GREEN}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
-║                   ✅  TESTS COMPLETS TERMINÉS  ✅                ║
+║                      TESTS COMPLETS TERMINÉS                      ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 EOF

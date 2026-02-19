@@ -3,6 +3,7 @@ import { useState } from 'react';
 export function useCart() {
   const [cart, setCart] = useState([]);
 
+  // Ajouter un produit au panier
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
@@ -15,10 +16,12 @@ export function useCart() {
     });
   };
 
+  // Supprimer un produit du panier
   const removeFromCart = (productId) => {
     setCart(prevCart => prevCart.filter(item => item.id !== productId));
   };
 
+  // Mettre à jour la quantité d'un produit dans le panier
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
@@ -31,6 +34,7 @@ export function useCart() {
     );
   };
 
+  // Calculer le total du panier
   const getTotal = () => {
     return cart.reduce((sum, item) => {
       const price = Number.parseFloat(item.price.replace('€', '').replace(',', '.'));

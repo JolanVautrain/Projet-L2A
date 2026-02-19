@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 
+// Hook pour gérer le multiplicateur de prix qui augmente de 1% toutes les 30 secondes, jusqu'à un maximum de 2x
 export function usePriceMultiplier() {
   const [priceMultiplier, setPriceMultiplier] = useState(1);
 

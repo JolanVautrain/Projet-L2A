@@ -92,13 +92,11 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
         >
           ×
         </button>
-
         {success && (
           <div className="modal-success-message">
             {t("resetUsername.resetSuccess")}
           </div>
         )}
-
         {!success && (
           <form className="modal-form" onSubmit={handleSubmit}>
             <div className="modal-field">
@@ -116,7 +114,6 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
                 placeholder={t("resetUsername.newUsernamePlaceholder")}
               />
             </div>
-
             <div className="modal-field">
               <label htmlFor="password">
                 {t("forgotPassword.newPassword")}
@@ -132,15 +129,12 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
                 placeholder={t("forgotPassword.newPassword")}
               />
             </div>
-
             {error && <div className="modal-error">{error}</div>}
-
             <button type="submit" className="modal-button" disabled={loading}>
               {loading ? t("common.loading") : t("resetUsername.resetUsername")}
             </button>
           </form>
         )}
-
         <div className="modal-footer">
           <button className="modal-link" onClick={onBackToLogin}>
             {t("forgotPassword.backToLogin")}
