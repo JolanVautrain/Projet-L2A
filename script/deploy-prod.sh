@@ -19,30 +19,56 @@ NC='\033[0m' # Pas de couleur
 cd "$(dirname "$0")/.."
 PROJECT_ROOT=$(pwd)
 
+# Emplacement du fichier .env.production
+ENV_PROD_FILE="$PROJECT_ROOT/docker/.env.production"
+
 echo ""
 echo "========================================="
 echo "Étape 0 : Configuration Raspberry Pi"
 echo "========================================="
 
-# Demander l'IP du Raspberry Pi
-read -p "Entrez l'adresse IP de votre Raspberry Pi (ex: 192.168.1.100) : " RASPBERRY_IP
 
-# Valider le format IP
-if ! [[ $RASPBERRY_IP =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    echo -e "${RED}Erreur : Format IP invalide : $RASPBERRY_IP${NC}"
-    exit 1
+# Si le fichier .env.production existe déjà, on n'interroge pas l'utilisateur
+if [ -f "$ENV_PROD_FILE" ]; then
+    echo -e "${GREEN}Fichier $ENV_PROD_FILE trouvé — utilisation existante (pas de demande d'adresse IP).${NC}"
+    # Tenter d'extraire l'IP depuis les variables VITE_BACKEND_URL ou VITE_WS_URL
+    RASPBERRY_IP=$(grep -E '^VITE_BACKEND_URL=' "$ENV_PROD_FILE" 2>/dev/null || true)
+    if [ -n "$RASPBERRY_IP" ]; then
+        RASPBERRY_IP=$(echo "$RASPBERRY_IP" | sed -E 's|VITE_BACKEND_URL=http://([^/:]+).*$|\1|')
+    else
+        RASPBERRY_IP=$(grep -E '^VITE_WS_URL=' "$ENV_PROD_FILE" 2>/dev/null || true)
+        if [ -n "$RASPBERRY_IP" ]; then
+            RASPBERRY_IP=$(echo "$RASPBERRY_IP" | sed -E 's|VITE_WS_URL=ws://([^/:]+).*$|\1|')
+        fi
+    fi
+    if [ -n "$RASPBERRY_IP" ]; then
+        echo -e "${GREEN}IP extraite depuis .env.production : $RASPBERRY_IP${NC}"
+    else
+        echo -e "${YELLOW}Impossible d'extraire l'adresse IP depuis $ENV_PROD_FILE. Certaines étapes n'utiliseront pas d'IP.${NC}"
+    fi
+    echo ""
+    echo "Test de connectivité en cours..."
+else
+    # Demander l'IP du Raspberry Pi
+    read -p "Entrez l'adresse IP de votre Raspberry Pi (ex: 192.168.1.100) : " RASPBERRY_IP
+
+    # Valider le format IP
+    if ! [[ $RASPBERRY_IP =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo -e "${RED}Erreur : Format IP invalide : $RASPBERRY_IP${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}Format IP validé : $RASPBERRY_IP${NC}"
+    echo ""
+    echo "Test de connectivité en cours..."
 fi
-
-echo -e "${GREEN}Format IP validé : $RASPBERRY_IP${NC}"
-echo ""
-echo "Test de connectivité en cours..."
 
 # Test 1 : Ping
 echo -n "  • Ping du Raspberry Pi... "
 if ping -c 1 -W 2 "$RASPBERRY_IP" > /dev/null 2>&1; then
     echo -e "${GREEN}${NC}"
 else
-    echo -e "${YELLOW${NC}"
+    echo -e "${YELLOW}${NC}"
     echo -e "${YELLOW}Attention : Le Raspberry Pi ne répond pas au ping${NC}"
 fi
 
