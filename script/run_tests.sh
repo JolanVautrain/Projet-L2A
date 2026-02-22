@@ -4,6 +4,9 @@
 
 set -e  # Arrêt en cas d'erreur
 
+# Variables globales
+DOCKER_DEV_WAS_RUNNING=false
+
 # Couleurs pour les messages
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -136,6 +139,17 @@ cleanup() {
         print_success "Dossier sail_weather_backend.egg-info supprimé"
     fi
     
+    # Redémarrer Docker dev s'il était en cours d'exécution avant les tests
+    if [ "$DOCKER_DEV_WAS_RUNNING" = true ]; then
+        print_step "Redémarrage de Docker dev..."
+        cd "$PROJECT_ROOT"
+        docker compose -f docker/docker-compose.dev.yml up -d > /dev/null 2>&1 || {
+            print_warning "Redémarrage de Docker dev échoué"
+        }
+        print_success "Docker dev redémarré"
+        sleep 3
+    fi
+    
     print_success "Nettoyage terminé"
 }
 
@@ -159,11 +173,41 @@ cat << 'EOF'
 ╚═══════════════════════════════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
+echo ""
+echo -e "${CYAN}Utilisation : ./run_tests.sh [options]${NC}"
+echo "  --stop-docker-dev    Arrête automatiquement Docker dev s'il est en cours"
+echo ""
 
 print_step "Initialisation du projet..."
 print_divider
 
-# Création des dossiers de test et de rapports
+# Vérifier si Docker dev est en cours d'exécution
+check_docker_dev_running() {
+    if docker compose -f docker/docker-compose.dev.yml ps --format "table {{.State}}" 2>/dev/null | grep -q "running"; then
+        return 0  # Docker dev est running
+    fi
+    return 1  # Docker dev n'est pas running
+}
+
+# Vérifier et gérer Docker dev
+if check_docker_dev_running; then
+    print_warning "Docker dev détecté en cours d'exécution"
+    DOCKER_DEV_WAS_RUNNING=true
+    
+    print_step "Arrêt de Docker dev pour les tests..."
+    cd "$PROJECT_ROOT"
+    docker compose -f docker/docker-compose.dev.yml down -v > /dev/null 2>&1
+    print_success "Docker dev arrêté (sera relancé après les tests)"
+    sleep 2
+    echo ""
+else
+    print_success "Docker dev n'est pas en cours d'exécution"
+fi
+
+# Libérer le port 3001 en cas de besoin
+release_port 3001
+
+print_divider
 print_step "Création des dossiers de test et de rapports..."
 mkdir -p "$REPORTS_DIR"
 mkdir -p "$TEST_DIR/backend"
