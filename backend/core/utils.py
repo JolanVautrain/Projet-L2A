@@ -26,9 +26,9 @@ def make_response(data: Any, status: int = 200) -> Response:
     return resp
 
 
-def handle_db_errors(f: Callable[..., Response]) -> Callable[..., Response]:
+def handle_db_errors(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args: Any, **kwargs: Any) -> Response:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             if request.method != "OPTIONS":
                 touch_session_from_headers()
@@ -42,9 +42,9 @@ def handle_db_errors(f: Callable[..., Response]) -> Callable[..., Response]:
     return wrapper
 
 
-def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
+def require_admin(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args: Any, **kwargs: Any) -> Response:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         if request.method == "OPTIONS":
             return f(*args, **kwargs)
 

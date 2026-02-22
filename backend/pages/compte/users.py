@@ -1,7 +1,6 @@
 """User-centric endpoints (profiles, sessions, XP)."""
 
 from typing import List
-
 from core import db
 from core import utils
 from flask import Blueprint
@@ -17,7 +16,8 @@ bp = Blueprint("users", __name__)
 def get_user_sessions(username: str):
     username = username.strip()
     rows = db.query_fetchall(
-        "SELECT id, score, stage, timer, state, playedAt FROM game_sessions WHERE "
+        "SELECT id, score, stage, timer, state, playedAt "
+        "FROM game_sessions WHERE "
         "username = %s ORDER BY score DESC",
         (username,),
     )
@@ -294,13 +294,21 @@ def reset_password():
             400,
         )
 
-    # Check if user exists and password is valid
     row = db.query_fetchone(
         """SELECT username, password FROM users WHERE username = %s""",
         (username,)
     )
 
-    if not check_password_hash(row[1],password):
+    if not row:
+        return utils.make_response(
+            {
+                "error": "invalid_user",
+                "message": "User not found",
+            },
+            400,
+        )
+
+    if not check_password_hash(row[1], password):
         return utils.make_response(
             {
                 "error": "invalid_password",
@@ -309,7 +317,6 @@ def reset_password():
             400,
         )
 
-    # Update password
     hashed_pw = generate_password_hash(new_password)
     db.exec_commit(
         "UPDATE users SET password = %s WHERE username = %s",
@@ -319,6 +326,7 @@ def reset_password():
     return utils.make_response(
         {"ok": True, "message": "Password reset successfully"}
     )
+
 
 @bp.route("/api/user/resetUsername", methods=["POST"])
 @utils.handle_db_errors
@@ -341,13 +349,21 @@ def reset_username():
             400,
         )
 
-    # Check if user exists and password is valid
     row = db.query_fetchone(
         """SELECT username, password FROM users WHERE username = %s""",
         (username,)
     )
 
-    if not check_password_hash(row[1],password):
+    if not row:
+        return utils.make_response(
+            {
+                "error": "invalid_user",
+                "message": "User not found",
+            },
+            400,
+        )
+
+    if not check_password_hash(row[1], password):
         return utils.make_response(
             {
                 "error": "invalid_password",

@@ -1,6 +1,7 @@
 from core import db
 from core import utils
 from flask import Blueprint
+from typing import List, Dict
 from flask import request
 
 bp = Blueprint("report", __name__)
@@ -40,7 +41,7 @@ def get_reports():
         cur.execute("SELECT username, issue FROM issue_reports")
         rows = cur.fetchall()
 
-    reports = []
+    reports: List[Dict[str, str]] = []
     for row in rows:
         reports.append({
             "username": row[0],

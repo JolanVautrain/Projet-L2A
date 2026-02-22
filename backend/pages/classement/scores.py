@@ -23,7 +23,8 @@ def _insert_game_session(
     state: str | None,
 ) -> None:
     cur.execute(
-        "INSERT INTO game_sessions (username, score, stage, timer, state, playedAt) "
+        "INSERT INTO game_sessions "
+        "(username, score, stage, timer, state, playedAt) "
         "VALUES (%s, %s, %s, %s, %s,%s)",
         (
             username,
@@ -76,7 +77,8 @@ def _update_highscore_if_better(
 
     if stage is not None or timer is not None or state is not None:
         cur.execute(
-            "UPDATE highscores SET high_score = %s, stage = %s, timer = %s, state = %s "
+            "UPDATE highscores "
+            "SET high_score = %s, stage = %s, timer = %s, state = %s "
             "WHERE username = %s",
             (
                 score,
@@ -180,7 +182,8 @@ def get_high_score(username: str) -> Response:
 @utils.handle_db_errors
 def list_high_scores() -> Response:
     rows = db.query_fetchall(
-        "SELECT username, high_score, stage, timer, state FROM highscores ORDER BY "
+        "SELECT username, high_score, stage, timer, state "
+        "FROM highscores ORDER BY "
         "high_score DESC"
     )
 
