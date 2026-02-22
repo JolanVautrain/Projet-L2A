@@ -3,11 +3,9 @@
 import os
 from typing import Any, cast
 
-from flask import Blueprint
-from flask import request
+from flask import Blueprint, request
 
-from . import db
-from . import utils
+from . import db, utils
 
 bp = Blueprint("admin", __name__)
 

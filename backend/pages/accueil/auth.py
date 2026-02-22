@@ -3,14 +3,12 @@
 import hashlib
 import secrets
 from datetime import datetime
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
+
 import psycopg2
-from core import db
-from core import utils
-from flask import Blueprint
-from flask import request
-from werkzeug.security import check_password_hash
-from werkzeug.security import generate_password_hash
+from core import db, utils
+from flask import Blueprint, request
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 bp = Blueprint("auth", __name__)
@@ -35,7 +33,7 @@ def check_login():
 
     with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
         cur.execute(
-            "SELECT username, password, banned_until, ban_reason FROM users"
+            "SELECT username, password, banned_until, ban_reason FROM users "
             "WHERE username = %s",
             (username,),
         )
@@ -125,13 +123,13 @@ def _handle_ban(
 
 def _create_or_replace_session(conn: Any, cur: Any, username: str) -> str:
     cur.execute(
-        "SELECT session_token, last_seen FROM user_sessions"
+        "SELECT session_token, last_seen FROM user_sessions "
         "WHERE username = %s",
         (username,),
     )
     session_row = cur.fetchone()
     if session_row and utils.is_session_active(session_row[1]):
-        cur.execute("DELETE FROM user_sessions"
+        cur.execute("DELETE FROM user_sessions "
                     "WHERE username = %s", (username,))
         conn.commit()
         session_row = None
@@ -145,7 +143,7 @@ def _create_or_replace_session(conn: Any, cur: Any, username: str) -> str:
         )
     else:
         cur.execute(
-            "INSERT INTO user_sessions (username, session_token)"
+            "INSERT INTO user_sessions (username, session_token) "
             "VALUES (%s, %s)",
             (username, session_token),
         )

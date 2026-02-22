@@ -3,6 +3,8 @@ import { useLanguage } from "../../autres/Language.jsx";
 
 // Composant de badge d'économies pour les produits en promotion
 export function SavingsBadge({ originalPrice, originalOldPrice }) {
+  const { t } = useLanguage();
+
   if (!originalOldPrice || !originalPrice) return null;
 
   const oldVal = Number.parseFloat(
@@ -12,7 +14,6 @@ export function SavingsBadge({ originalPrice, originalOldPrice }) {
     originalPrice.replace("€", "").replace(",", "."),
   );
   const savings = Math.round(((oldVal - newVal) / oldVal) * 100);
-  const { t } = useLanguage();
 
   if (savings <= 0) return null;
 

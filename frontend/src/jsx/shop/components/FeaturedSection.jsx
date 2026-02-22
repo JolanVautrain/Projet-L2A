@@ -6,7 +6,6 @@ export function FeaturedSection({
   trendingProducts,
   onAddToCart,
   viewerCounts,
-  reviewCounts,
   userPurchasedProducts = [],
 }) {
   const { t } = useLanguage();

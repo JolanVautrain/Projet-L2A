@@ -4,20 +4,30 @@ const PURCHASED_SKINS_KEY = 'purchasedSkins';
 const ACTIVE_SKIN_KEY = 'activeSkin';
 
 export function useSkins(username) {
-    const [activeSkin, setActiveSkinState] = useState(null);
-    const [purchasedSkins, setPurchasedSkinsState] = useState([]);
+    const [activeSkin, setActiveSkinState] = useState(() => {
+        if (!username) return null;
+        const active = localStorage.getItem(`${ACTIVE_SKIN_KEY}:${username}`);
+        if (active) applyNeonSkinToDOM(active);
+        return active;
+    });
 
-    // Initialiser au montage du composant
+    const [purchasedSkins, setPurchasedSkinsState] = useState(() => {
+        if (!username) return [];
+        const stored = localStorage.getItem(`${PURCHASED_SKINS_KEY}:${username}`);
+        return stored ? JSON.parse(stored) : [];
+    });
+
+    // Synchroniser quand username change
     useEffect(() => {
         if (username) {
             const stored = localStorage.getItem(`${PURCHASED_SKINS_KEY}:${username}`);
             const skins = stored ? JSON.parse(stored) : [];
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPurchasedSkinsState(skins);
 
             const active = localStorage.getItem(`${ACTIVE_SKIN_KEY}:${username}`);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setActiveSkinState(active);
-
-            // Appliquer le skin actif
             applyNeonSkinToDOM(active);
         }
     }, [username]);

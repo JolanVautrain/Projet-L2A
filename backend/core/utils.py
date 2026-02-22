@@ -2,16 +2,12 @@
 
 import logging
 import os
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
-from typing import Any
-from typing import Callable
+from typing import Any, Callable
 
 import psycopg2
-from flask import Response
-from flask import jsonify
-from flask import request
+from flask import Response, jsonify, request
 from psycopg2 import OperationalError
 
 BAD_REQUEST = "Bad Request"

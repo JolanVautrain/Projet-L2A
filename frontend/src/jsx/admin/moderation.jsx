@@ -25,24 +25,6 @@ function Moderation({ user }) {
   const apiBase = getApiBaseUrl();
 
   const [isAdmin, setIsAdmin] = useState(false);
-  // Charger la liste des utilisateurs si admin
-  useEffect(() => {
-    console.log("Checking admin for:", user);
-    if (!user) return;
-
-    if (user === "admin") {
-      setIsAdmin(true); // déclenche le rendu du composant
-      loadAdminUsers(user);
-      loadReports();
-    }
-  }, [user, loadAdminUsers, loadReports]);
-
-  // Charger l'historique d'achat quand l'utilisateur sélectionné change
-  useEffect(() => {
-    if (selectedUser) {
-      loadUserPurchases(selectedUser);
-    }
-  }, [selectedUser, loadUserPurchases]);
 
   // Fonction pour charger et enrichir les utilisateurs
   const loadAdminUsers = useCallback(
@@ -121,6 +103,18 @@ function Moderation({ user }) {
     }
   }, []);
 
+  // Charger la liste des utilisateurs si admin
+  useEffect(() => {
+    console.log("Checking admin for:", user);
+    if (!user) return;
+
+    if (user === "admin") {
+      setIsAdmin(true);
+      loadAdminUsers(user);
+      loadReports();
+    }
+  }, [user, loadAdminUsers, loadReports]);
+
   const loadUserPurchases = useCallback(
     async (username) => {
       if (!username) {
@@ -139,6 +133,12 @@ function Moderation({ user }) {
     },
     [apiBase],
   );
+  // Charger l'historique d'achat quand l'utilisateur sélectionné change
+  useEffect(() => {
+    if (selectedUser) {
+      loadUserPurchases(selectedUser);
+    }
+  }, [selectedUser, loadUserPurchases]);
 
   // Helper: désactive l'effet cosmétique localement si nécessaire
   const deactivateCosmetic = (productId, username) => {

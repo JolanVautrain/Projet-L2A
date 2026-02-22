@@ -44,11 +44,7 @@ import {
   setupCollisions,
   getOpponent,
 } from "./utils/GamePhysics.js";
-import {
-  initControls,
-  getCursors,
-  isJumpRequested,
-} from "./utils/GameControls.js";
+import { initControls, isJumpRequested } from "./utils/GameControls.js";
 import { getWebSocketUrl } from "../utils/wsClient.js";
 import { getApiBaseUrl } from "../utils/apiClient.js";
 import { calculateXPReward, getLevelFromXP } from "./utils/GameGamification.js";
@@ -99,7 +95,7 @@ export function sendGameInput(type) {
   if (!player) return;
 
   // Créer une fonction locale pour appliquer l'action
-  const applyActionLocally = (inputType, playerState) => {
+  const applyActionLocally = (inputType) => {
     if (inputType === "JUMP") {
       handleJump(); // Applique le saut localement TOUT DE SUITE
     }
@@ -371,30 +367,6 @@ function handleAdminInvincible() {
 }
 
 /**
- * Réinitialise le jeu
- */
-function resetGameState() {
-  processingDeath = false;
-  score = 0;
-
-  resetPhysicsState();
-  resetObstacles();
-  resetDayNight();
-
-  // Respawner les obstacles
-  try {
-    for (let i = 0; i < 3; i++) {
-      spawnObstacle(gameScene);
-    }
-  } catch (e) {
-    console.warn("Error spawning obstacles during reset", e);
-  }
-
-  gameOver = false;
-  sessionPosted = false;
-}
-
-/**
  * Composant React Game
  */
 function Game() {
@@ -406,8 +378,14 @@ function Game() {
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showGameWonModal, setShowGameWonModal] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
-  const [opponentUsername, setOpponentUsername] = useState(null);
-  const [isMultiplayer, setIsMultiplayer] = useState(false);
+  const [opponentUsername, setOpponentUsername] = useState(() => {
+    const storedOpponent = sessionStorage.getItem("opponentUsername");
+    return storedOpponent || null;
+  });
+  const [isMultiplayer, setIsMultiplayer] = useState(() => {
+    const storedMatchId = sessionStorage.getItem("activeMatchId");
+    return Boolean(storedMatchId);
+  });
   const [confirmedLeavingGame, setConfirmedLeavingGame] = useState(false);
   const [playerLevel, setPlayerLevel] = useState(1);
   const [opponentLevel, setOpponentLevel] = useState(1);
@@ -440,15 +418,12 @@ function Game() {
     }
     const storedMatchId = sessionStorage.getItem("activeMatchId");
     const storedOffset = sessionStorage.getItem("serverTimeOffsetMs");
-    const storedOpponent = sessionStorage.getItem("opponentUsername");
+
+    // Update module-level variables
     activeMatchId = storedMatchId;
     serverTimeOffsetMs = storedOffset ? Number(storedOffset) : 0;
     multiplayerEnabled = Boolean(storedMatchId);
-    setIsMultiplayer(multiplayerEnabled);
-    if (storedOpponent) {
-      setOpponentUsername(storedOpponent);
-    }
-    setMultiplayerMode(multiplayerEnabled);
+
     console.log("[Game.jsx useEffect] Initialized:", {
       activeMatchId,
       serverTimeOffsetMs,
@@ -458,7 +433,6 @@ function Game() {
 
   useEffect(() => {
     const username = getActiveUser();
-    const matchId = sessionStorage.getItem("activeMatchId");
 
     // Réutiliser le WebSocket existant du lobby si disponible
     let ws = globalThis.gameWebSocket;
@@ -759,12 +733,12 @@ function Game() {
           }
           try {
             gameScene?.scene?.pause();
-          } catch (e) {
-            console.warn("Failed to pause scene", e);
+          } catch (_e) {
+            // Scene pause failed, continue anyway
           }
           setShowGameWonModal(true);
         }
-      } catch (err) {
+      } catch (_err) {
         console.error("Invalid WS message", event.data);
       }
     };

@@ -1,12 +1,10 @@
 """User-centric endpoints (profiles, sessions, XP)."""
 
 from typing import List
-from core import db
-from core import utils
-from flask import Blueprint
-from flask import request
-from werkzeug.security import check_password_hash
-from werkzeug.security import generate_password_hash
+
+from core import db, utils
+from flask import Blueprint, request
+from werkzeug.security import check_password_hash, generate_password_hash
 
 bp = Blueprint("users", __name__)
 

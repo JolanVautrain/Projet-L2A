@@ -2,13 +2,12 @@
 
 import logging
 import re
-import urllib.parse
 import sys
+import urllib.parse
 from pathlib import Path
-from typing import Optional, Union, List
-from flask import Flask
-from flask import request
-from flask import Response
+from typing import List, Optional, Union
+
+from flask import Flask, Response, request
 from werkzeug.exceptions import HTTPException
 
 # ajout du backend au path pour que les imports relatifs fonctionnent

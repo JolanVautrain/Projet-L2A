@@ -1,10 +1,9 @@
 """Shop API pour le management des achats"""
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from core import db
-from flask import Blueprint
-from flask import jsonify
-from flask import request
+from flask import Blueprint, jsonify, request
 
 bp = Blueprint("shop", __name__, url_prefix="/api/shop")
 

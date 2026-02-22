@@ -78,7 +78,10 @@ export function usePriceWarning() {
 }
 
 export function useViewerCount() {
-  const [viewerCount, setViewerCount] = useState(Math.floor(Math.random() * 20) + 15);
+  const [viewerCount, setViewerCount] = useState(() => {
+    // Calculate initial value in lazy initializer to satisfy pure function rules
+    return Math.floor(Math.random() * 20) + 15;
+  });
 
   useEffect(() => {
     const interval = setInterval(() => {

@@ -1,10 +1,9 @@
 """leaderboard related endpoints."""
 
 from typing import List
-from core import db
-from core import utils
-from flask import Blueprint
-from flask import Response
+
+from core import db, utils
+from flask import Blueprint, Response
 
 bp = Blueprint("leaderboard", __name__, url_prefix="/api/leaderboard")
 

@@ -335,7 +335,7 @@ def _add_missing_columns_if_needed(conn: _Connection, cur: _Cursor) -> None:
     )
     if not cur.fetchone():
         logger.info("Adding is_admin column to users table")
-        cur.execute("ALTER TABLE users ADD COLUMN is_admin boolean"
+        cur.execute("ALTER TABLE users ADD COLUMN is_admin boolean "
                     "DEFAULT false")
         conn.commit()
 

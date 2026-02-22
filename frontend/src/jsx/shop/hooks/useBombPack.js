@@ -4,22 +4,40 @@ const PURCHASED_ITEMS_KEY = 'purchasedItems';
 const ACTIVE_ITEMS_KEY = 'activeItems';
 
 export function useBombPack(username) {
-    const [hasActiveBombPack, setHasActiveBombPack] = useState(false);
-    const [purchasedItems, setPurchasedItemsState] = useState([]);
-    const [activeItems, setActiveItems] = useState([]);
+    const [hasActiveBombPack, setHasActiveBombPack] = useState(() => {
+        if (!username) return false;
+        const activeItems = localStorage.getItem(`${ACTIVE_ITEMS_KEY}:${username}`);
+        const active = activeItems ? JSON.parse(activeItems) : [];
+        return active.includes('bomb-icon');
+    });
 
-    // Initialiser au montage du composant
+    const [purchasedItems, setPurchasedItemsState] = useState(() => {
+        if (!username) return [];
+        const stored = localStorage.getItem(`${PURCHASED_ITEMS_KEY}:${username}`);
+        return stored ? JSON.parse(stored) : [];
+    });
+
+    const [activeItems, setActiveItems] = useState(() => {
+        if (!username) return [];
+        const activeStorageItems = localStorage.getItem(`${ACTIVE_ITEMS_KEY}:${username}`);
+        return activeStorageItems ? JSON.parse(activeStorageItems) : [];
+    });
+
+    // Synchroniser quand username change
     useEffect(() => {
-        if (username) {
-            const stored = localStorage.getItem(`${PURCHASED_ITEMS_KEY}:${username}`);
-            const items = stored ? JSON.parse(stored) : [];
-            setPurchasedItemsState(items);
+        if (!username) return;
 
-            const activeItems = localStorage.getItem(`${ACTIVE_ITEMS_KEY}:${username}`);
-            const active = activeItems ? JSON.parse(activeItems) : [];
-            setActiveItems(active);
-            setHasActiveBombPack(active.includes('bomb-icon'));
-        }
+        const stored = localStorage.getItem(`${PURCHASED_ITEMS_KEY}:${username}`);
+        const items = stored ? JSON.parse(stored) : [];
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPurchasedItemsState(items);
+
+        const activeItemsStorageValue = localStorage.getItem(`${ACTIVE_ITEMS_KEY}:${username}`);
+        const active = activeItemsStorageValue ? JSON.parse(activeItemsStorageValue) : [];
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActiveItems(active);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setHasActiveBombPack(active.includes('bomb-icon'));
     }, [username]);
 
     // Écouter les changements du localStorage (depuis d'autres onglets/contextes)

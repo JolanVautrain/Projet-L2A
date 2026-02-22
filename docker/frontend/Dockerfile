@@ -1,24 +1,27 @@
-# ---- Build stage ----
-FROM node:20-alpine AS build
+FROM node:20-slim AS build
 
 WORKDIR /app
-
-# Build argument to control whether we run the production build
 ARG BUILD_ENV=production
 
-# Install dependencies first (better layer caching)
-COPY package.json package-lock.json ./
-RUN npm ci
+# mise à jour et nettoyage pour réduire la taille de l'image
+RUN apt-get update && apt-get upgrade -y \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy source
+COPY package.json package-lock.json ./
+RUN if [ "$BUILD_ENV" = "production" ]; then \
+      npm ci --omit=dev; \
+    else \
+      npm ci; \
+    fi
+
 COPY . .
 
-# Only run the production build when BUILD_ENV=production
+# Build l'application seulement en production pour réduire le temps de build en dev
 RUN if [ "$BUILD_ENV" = "production" ]; then \
-			npm run build; \
-		else \
-			echo "Skipping production build (BUILD_ENV=$BUILD_ENV)"; \
-		fi
+      npm run build; \
+    else \
+      echo "Skipping production build (BUILD_ENV=$BUILD_ENV)"; \
+    fi
 
-# Default command starts dev server (dev compose overrides command)
 CMD [ "npm", "run", "dev" ]

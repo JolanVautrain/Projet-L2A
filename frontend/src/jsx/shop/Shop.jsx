@@ -1,7 +1,6 @@
 import { useLanguage } from "../autres/Language.jsx";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { getActiveUser, setActiveUser } from "../utils/userSession.js";
 import shopProductsData from "./shopProducts.json";
 import { useCart } from "./hooks/useCart.js";
 import { useLootbox } from "./hooks/useLootbox.js";
@@ -51,7 +50,6 @@ function Shop({ user, setUser }) {
     lootPrize,
     lootWaiting,
     lootCountdown,
-    openLootbox,
     openLootboxBatch,
     closeLootbox,
   } = useLootbox();

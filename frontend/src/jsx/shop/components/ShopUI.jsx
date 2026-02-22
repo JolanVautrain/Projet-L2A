@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { useState } from "react";
 import { useLanguage } from "../../autres/Language.jsx";
 
 // Composants d'interface utilisateur pour la boutique
@@ -58,26 +59,29 @@ Notification.propTypes = {
 
 // Composant de confettis pour célébrer les achats réussis
 export function Confetti() {
+  // Generate confetti data once on mount
+  const [confettiPieces] = useState(() => {
+    return Array.from({ length: 36 }).map((_, i) => ({
+      id: i,
+      left: Math.round(Math.random() * 100),
+      delay: (Math.random() * 1.2).toFixed(2),
+      bg: ["#ff6b6b", "#ffd166", "#8bd3dd", "#7c3aed", "#60d394"][i % 5],
+    }));
+  });
+
   return (
     <div className="confetti-root" aria-hidden>
-      {Array.from({ length: 36 }).map((_, i) => {
-        const left = Math.round(Math.random() * 100);
-        const delay = (Math.random() * 1.2).toFixed(2);
-        const bg = ["#ff6b6b", "#ffd166", "#8bd3dd", "#7c3aed", "#60d394"][
-          i % 5
-        ];
-        return (
-          <span
-            key={i}
-            className="confetti-piece"
-            style={{
-              left: `${left}%`,
-              background: bg,
-              animationDelay: `${delay}s`,
-            }}
-          />
-        );
-      })}
+      {confettiPieces.map((piece) => (
+        <span
+          key={piece.id}
+          className="confetti-piece"
+          style={{
+            left: `${piece.left}%`,
+            background: piece.bg,
+            animationDelay: `${piece.delay}s`,
+          }}
+        />
+      ))}
     </div>
   );
 }
