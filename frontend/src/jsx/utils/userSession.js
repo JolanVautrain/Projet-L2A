@@ -1,5 +1,5 @@
 export function getActiveUser() {
-  if (typeof window === "undefined") return null;
+  if (typeof globalThis === "undefined") return null;
 
   const sessionUser = sessionStorage.getItem("user");
   if (sessionUser) return sessionUser;
@@ -15,12 +15,12 @@ export function getActiveUser() {
 }
 
 export function getActiveSessionToken() {
-  if (typeof window === "undefined") return null;
+  if (typeof globalThis === "undefined") return null;
   return sessionStorage.getItem("sessionToken");
 }
 
 export function setActiveUser(value) {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis === "undefined") return;
 
   if (value) {
     sessionStorage.setItem("user", value);
@@ -33,7 +33,7 @@ export function setActiveUser(value) {
 }
 
 export function setActiveSessionToken(value) {
-  if (typeof window === "undefined") return;
+  if (typeof globalThis === "undefined") return;
 
   if (value) {
     sessionStorage.setItem("sessionToken", value);

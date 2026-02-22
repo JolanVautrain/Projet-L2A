@@ -1,7 +1,7 @@
+from typing import List, Dict
 from core import db
 from core import utils
 from flask import Blueprint
-from typing import List, Dict
 from flask import request
 
 bp = Blueprint("report", __name__)

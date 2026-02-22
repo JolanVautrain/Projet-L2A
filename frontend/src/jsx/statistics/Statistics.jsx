@@ -7,14 +7,6 @@ import { useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
 import SortableTable from "../utils/SortableTable.jsx";
 
-// Small helpers to build scale functions used by charts
-const makeXFor = (xMin, xMax, width, margin) => {
-  const innerW = width - margin.left - margin.right;
-  const denom = xMax - xMin || 1;
-  return (ts) => margin.left + ((ts - xMin) / denom) * innerW;
-};
-
-// Convert monotone cubic points to a smooth Bezier path (shared helper)
 const monotoneToBezier = (pts) => {
   if (!pts || pts.length === 0) return "";
   const n = pts.length;
@@ -41,7 +33,6 @@ const monotoneToBezier = (pts) => {
       m[i] = (slope[i - 1] + slope[i]) / 2;
     }
   }
-  // Fritsch-Carlson adjustment to avoid overshoot
   for (let i = 0; i < n - 1; i++) {
     if (slope[i] === 0) {
       m[i] = 0;
@@ -57,7 +48,6 @@ const monotoneToBezier = (pts) => {
       m[i + 1] = t * b * slope[i];
     }
   }
-  // Build cubic Bezier path
   let d = `M ${x[0]},${y[0]}`;
   for (let i = 0; i < n - 1; i++) {
     const dxSeg = x[i + 1] - x[i];
@@ -71,7 +61,6 @@ const monotoneToBezier = (pts) => {
 };
 
 function Statistics({ user, setUser }) {
-  // Runtime API base: uses VITE_BACKEND_URL or constructs dynamically from window.location
   const apiBase = getApiBaseUrl();
   const [scores, setScores] = useState([]);
   const [userSessions, setUserSessions] = useState([]);
@@ -81,7 +70,7 @@ function Statistics({ user, setUser }) {
   const [level, setLevel] = useState(1);
   const [xpHistory, setXpHistory] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const openLogin = () => setIsOpen(true);
   const closeLogin = () => setIsOpen(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -170,9 +159,7 @@ function Statistics({ user, setUser }) {
           isOpen={isOpen}
           onClose={closeLogin}
           action={setUser || (() => {})}
-          afterLogin={() => {
-            /* no-op: setUser already updates leaderboard */
-          }}
+          afterLogin={() => {}}
           openRegister={openRegister}
         />
         <RegisterModal
@@ -204,20 +191,6 @@ function Statistics({ user, setUser }) {
           timer: 0,
         })
       : null;
-  // Fonction pour formater la date selon la langue
-  const formatDate = (dateStr) => {
-    const locale = language === "en" ? "en-US" : "fr-FR";
-    return new Date(dateStr).toLocaleString(locale, {
-      timeZone: "Europe/Paris",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-  // Trier les sessions par date (les plus récentes en premier)
   const sortedUserSessions =
     userSessions && userSessions.length > 0
       ? [...userSessions].sort(

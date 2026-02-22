@@ -59,8 +59,8 @@ def delete_user_xp_history_options(username: str):
 def delete_user_xp_history(username: str):
     username = username.strip()
     db.exec_commit(
-        "DELETE FROM user_xp_history"
-        "WHERE username = %s", (username,)
+        "DELETE FROM user_xp_history WHERE username = %s",
+        (username,)
     )
     return utils.make_response({"ok": True})
 
@@ -70,8 +70,8 @@ def delete_user_xp_history(username: str):
 @utils.require_admin
 def list_all_users():
     rows = db.query_fetchall(
-        "SELECT username, is_admin, banned_until, ban_reason"
-        "FROM users ORDER BY username"
+        "SELECT username, is_admin, banned_until, ban_reason FROM users "
+        "ORDER BY username"
     )
     return utils.make_response(
         [

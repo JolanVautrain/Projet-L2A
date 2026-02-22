@@ -1,11 +1,11 @@
 """Game-centric api call"""
 
+from typing import List, Optional, Dict, Any
 from core import db
 from core import utils
 from flask import Blueprint
 from flask import jsonify
 from flask import request
-from typing import List, Optional, Dict, Any
 
 bp = Blueprint("game", __name__)
 

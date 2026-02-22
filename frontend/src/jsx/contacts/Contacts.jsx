@@ -28,14 +28,20 @@ function ContactCard({ person, t }) {
       className="contact-card"
       onClick={() => setOpen((s) => !s)}
       aria-expanded={open}
-      aria-label={open ? `${t("contacts.hideAnecdote")} ${person.name}` : `${t("contacts.showAnecdote")} ${person.name}`}
+      aria-label={
+        open
+          ? `${t("contacts.hideAnecdote")} ${person.name}`
+          : `${t("contacts.showAnecdote")} ${person.name}`
+      }
     >
       <img className="avatar" src={person.img} alt={person.name} />
       <div className="card-body">
         <h3>{person.name}</h3>
         <p className="role">{person.role}</p>
         <p className="email">{person.email}</p>
-        <p className="desc">{open ? person.egg : <em>{t("contacts.clickForAnecdote")}</em>}</p>
+        <p className="desc">
+          {open ? person.egg : <em>{t("contacts.clickForAnecdote")}</em>}
+        </p>
       </div>
     </button>
   );

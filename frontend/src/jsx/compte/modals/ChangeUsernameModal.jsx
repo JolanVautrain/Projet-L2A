@@ -2,11 +2,18 @@ import { createPortal } from "react-dom";
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
+
 /**
  * Composant ChangeUsernameModal
  * Modal pour réinitialiser le mot de passe avec un recovery code
  */
-function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) {
+function ChangeUsernameModal({
+  isOpen,
+  onClose,
+  onBackToLogin,
+  user,
+  setUser,
+}) {
   const [password, setPassword] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,7 +52,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
           setError(
             t(`forgotPassword.error_${data.error}`) ||
               data.message ||
-              t("forgotPassword.resetFailed")
+              t("forgotPassword.resetFailed"),
           );
         } else if (data.ok) {
           setSuccess(true);
@@ -67,7 +74,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
             }),
           }).catch(() => {});
 
-          setUser(newUsername)
+          setUser(newUsername);
         }
       })
       .catch((err) => {
@@ -106,7 +113,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
               <input
                 id="new-username"
                 type="password"
-                autoComplete="new-username"
+                autoComplete="username"
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
                 required
@@ -142,7 +149,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -150,6 +157,8 @@ ChangeUsernameModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onBackToLogin: PropTypes.func.isRequired,
+  user: PropTypes.string.isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
 export default ChangeUsernameModal;

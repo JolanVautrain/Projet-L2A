@@ -4,6 +4,22 @@ import shopProductsData from "../shop/shopProducts.json";
 import { useSkins } from "../shop/hooks/useSkins.js";
 import { useBombPack } from "../shop/hooks/useBombPack.js";
 
+// Helpers extracted to reduce nesting depth
+const findProductById = (id) =>
+  shopProductsData.products.find((p) => p.id === id);
+
+const enrichPurchase = (purchase, t) => {
+  const productData = findProductById(purchase.product_id);
+  return {
+    ...purchase,
+    img: productData?.img || "/assets/shop/default.png",
+    category: productData?.category || "items",
+    title: productData?.titleKey
+      ? t(productData.titleKey)
+      : purchase.product_name,
+  };
+};
+
 export function UserInventory({ user, t }) {
   const [purchases, setPurchases] = useState([]);
   const [inventory, setInventory] = useState([]);
@@ -29,28 +45,16 @@ export function UserInventory({ user, t }) {
         const data = await res.json();
 
         // Enrichir les données d'achat avec les informations du produit
-        const enrichedPurchases = data.purchases.map((purchase) => {
-          const productData = shopProductsData.products.find(
-            (p) => p.id === purchase.product_id,
-          );
-          return {
-            ...purchase,
-            img: productData?.img || "/assets/shop/default.png",
-            category: productData?.category || "items",
-            title: productData?.titleKey
-              ? t(productData.titleKey)
-              : purchase.product_name,
-          };
-        });
+        const enrichedPurchases = data.purchases.map((purchase) =>
+          enrichPurchase(purchase, t),
+        );
 
         setPurchases(enrichedPurchases);
 
         // Créer l'inventaire : articles uniques (cosmétiques) + articles boosters
         const uniqueProducts = {};
         enrichedPurchases.forEach((purchase) => {
-          const product = shopProductsData.products.find(
-            (p) => p.id === purchase.product_id,
-          );
+          const product = findProductById(purchase.product_id);
           const isCosmetic =
             product?.category === "skins" ||
             product?.category === "items" ||
@@ -58,11 +62,11 @@ export function UserInventory({ user, t }) {
           const isBooster = product?.category === "boosters";
 
           // Pour les cosmétiques (uniques), garder seulement la première mise à jour
-          if (isCosmetic && !uniqueProducts[purchase.product_id]) {
-            uniqueProducts[purchase.product_id] = purchase;
-          }
           // Pour les boosters, garder le plus récent (on affiche l'effet immédiat)
-          else if (isBooster) {
+          if (
+            (isCosmetic && !uniqueProducts[purchase.product_id]) ||
+            isBooster
+          ) {
             uniqueProducts[purchase.product_id] = purchase;
           }
         });
@@ -161,9 +165,7 @@ export function UserInventory({ user, t }) {
           {inventory.length > 0 ? (
             <div className="inventory-grid">
               {inventory.map((item) => {
-                const product = shopProductsData.products.find(
-                  (p) => p.id === item.product_id,
-                );
+                const product = findProductById(item.product_id);
                 const isCosmetic =
                   product?.category === "skins" ||
                   product?.category === "items" ||

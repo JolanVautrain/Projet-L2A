@@ -5,9 +5,9 @@ import { useLanguage } from "../../autres/Language.jsx";
 import ForgotPasswordModal from "./ForgotPasswordModal.jsx";
 import { apiUrl } from "../../utils/apiClient.js";
 
-/** 
+/**
  * Composant LoginModal
- * 
+ *
  * Permet de se connecter via une modal.
  */
 function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
@@ -20,7 +20,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
 
   /**
    * Gère la soumission du formulaire de connexion.
-   * 
+   *
    * @param {Event} e
    */
   const processBanMessage = (data) => {
@@ -108,7 +108,13 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
         <header className="modal-header">
           <h2>{t("loginModal.title")}</h2>
         </header>
-        <button className="modal-close" onClick={onClose} title={t("common.close")}>×</button>
+        <button
+          className="modal-close"
+          onClick={onClose}
+          title={t("common.close")}
+        >
+          ×
+        </button>
         <form className="modal-form" onSubmit={handleSubmit}>
           <div className="modal-field">
             <label htmlFor="username">{t("loginModal.username")}</label>
@@ -145,22 +151,22 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
               type="button"
               className="btn ghost register-btn"
               onClick={() => {
-                if (typeof openRegister === 'function') {
+                if (typeof openRegister === "function") {
                   openRegister();
                 }
-                if (typeof onClose === 'function') {
+                if (typeof onClose === "function") {
                   onClose();
                 }
               }}
             >
-              {t('loginModal.noAccount')}
+              {t("loginModal.noAccount")}
             </button>
             <button
               type="button"
               className="btn ghost forgot-password-btn"
               onClick={() => setShowForgotPassword(true)}
             >
-              {t('loginModal.forgotPassword')}
+              {t("loginModal.forgotPassword")}
             </button>
           </div>
         </form>
@@ -172,7 +178,7 @@ function LoginModal({ isOpen, onClose, action, afterLogin, openRegister }) {
         onBackToLogin={() => setShowForgotPassword(false)}
       />
     </div>,
-    document.body
+    document.body,
   );
 }
 

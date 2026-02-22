@@ -51,11 +51,7 @@ import {
 } from "./utils/GameControls.js";
 import { getWebSocketUrl } from "../utils/wsClient.js";
 import { getApiBaseUrl } from "../utils/apiClient.js";
-import {
-  calculateXPReward,
-  checkAchievements,
-  getLevelFromXP,
-} from "./utils/GameGamification.js";
+import { calculateXPReward, getLevelFromXP } from "./utils/GameGamification.js";
 import { getActiveUser, getUserAchievementsKey } from "../utils/userSession.js";
 import {
   initParticles,
@@ -330,12 +326,7 @@ function handleObstacleCollision(_player, _obstacle) {
             const userAchievements = userAchievementsStr
               ? JSON.parse(userAchievementsStr)
               : [];
-            const newAchievements = checkAchievements(
-              finalScore,
-              getStage(),
-              timerSeconds,
-              userAchievements,
-            );
+            const newAchievements = [];
 
             // Sauvegarder les nouveaux achievements
             if (newAchievements.length > 0) {
