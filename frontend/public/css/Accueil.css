@@ -27,7 +27,6 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #ffffff;
-  /* ignore l'erreur */
   font-weight: 700;
   font-size: 0.78rem;
   margin: 0;
@@ -48,7 +47,6 @@
   margin: 0;
   max-width: 640px;
   color: #ffffff;
-  /* ignore l'erreur */
 }
 
 .hero__actions {
@@ -133,14 +131,11 @@
 .stat-value {
   font-size: 1.5rem;
   color: #ffffff;
-  /* increased contrast against panel background */
-  /* ignore l'erreur */
 }
 
 .stat-note {
   margin: 6px 0 0;
   color: #ffffff;
-  /* ignore l'erreur */
   font-size: 0.9rem;
 }
 
@@ -160,7 +155,6 @@
 
 .panel-label {
   color: #ffffff;
-  /* ignore l'erreur */
   font-weight: 700;
   margin: 0 0 6px;
   letter-spacing: 0.05em;
@@ -174,7 +168,6 @@
 .panel-copy {
   margin: 0;
   color: #ffffff;
-  /* ignore l'erreur */
 }
 
 .highlight-grid {
@@ -204,7 +197,6 @@
 .highlight-card p {
   margin: 0;
   color: #ffffff;
-  /* ignore l'erreur */
 }
 
 .steps {
@@ -272,7 +264,6 @@
 .step-card p {
   margin: 0;
   color: #ffffff;
-  /* ignore l'erreur */
 }
 
 .cta-banner {
@@ -320,7 +311,6 @@
   }
 }
 
-/* Rainbow gradient hover effect for primary CTA */
 .btn.rainbow {
   position: relative;
   overflow: hidden;
@@ -358,13 +348,11 @@
   }
 }
 
-/* Slight glow when hovered */
 .btn.rainbow:hover {
   box-shadow: 0 18px 44px rgba(122, 0, 255, 0.18), 0 6px 18px rgba(0, 180, 255, 0.12);
   transform: translateY(-3px) scale(1.02);
 }
 
-/* Advertising Popup */
 .ad-popup-overlay {
   position: fixed;
   inset: 0;
@@ -421,7 +409,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  \n font-size: 18px;
+  font-size: 18px;
   cursor: pointer;
   transition: all 0.2s;
 }

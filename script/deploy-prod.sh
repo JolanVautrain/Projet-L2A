@@ -21,21 +21,119 @@ PROJECT_ROOT=$(pwd)
 
 echo ""
 echo "========================================="
+echo "Étape 0 : Configuration Raspberry Pi"
+echo "========================================="
+
+# Demander l'IP du Raspberry Pi
+read -p "Entrez l'adresse IP de votre Raspberry Pi (ex: 192.168.1.100) : " RASPBERRY_IP
+
+# Valider le format IP
+if ! [[ $RASPBERRY_IP =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+    echo -e "${RED}Erreur : Format IP invalide : $RASPBERRY_IP${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}Format IP validé : $RASPBERRY_IP${NC}"
+echo ""
+echo "Test de connectivité en cours..."
+
+# Test 1 : Ping
+echo -n "  • Ping du Raspberry Pi... "
+if ping -c 1 -W 2 "$RASPBERRY_IP" > /dev/null 2>&1; then
+    echo -e "${GREEN}${NC}"
+else
+    echo -e "${YELLOW${NC}"
+    echo -e "${YELLOW}Attention : Le Raspberry Pi ne répond pas au ping${NC}"
+fi
+
+# Test 2 : Vérifier si SSH est accessible (port 22)
+echo -n "  • Vérification port SSH (22)... "
+if timeout 2 bash -c "echo >/dev/tcp/$RASPBERRY_IP/22" > /dev/null 2>&1; then
+    echo -e "${GREEN}${NC}"
+else
+    echo -e "${YELLOW}${NC}"
+    echo -e "${YELLOW}Attention : Le port SSH (22) n'est pas accessible${NC}"
+fi
+
+# Test 3 : Vérifier la validité des chiffres de l'IP
+IFS='.' read -ra OCTETS <<< "$RASPBERRY_IP"
+IP_VALID=true
+for OCTET in "${OCTETS[@]}"; do
+    if (( OCTET > 255 )); then
+        IP_VALID=false
+        break
+    fi
+done
+
+if [ "$IP_VALID" = false ]; then
+    echo -e "${RED}Erreur : Octet IP invalide (doit être <= 255)${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}Validation complète de l'IP : $RASPBERRY_IP${NC}"
+
+# Créer le fichier .env.production si n'existe pas
+ENV_PROD_FILE="$PROJECT_ROOT/docker/.env.production"
+if [ ! -f "$ENV_PROD_FILE" ]; then
+    echo ""
+    echo -e "${YELLOW}Création du fichier .env.production...${NC}"
+    
+    if [ -f "$PROJECT_ROOT/docker/.env.production.example" ]; then
+        cp "$PROJECT_ROOT/docker/.env.production.example" "$ENV_PROD_FILE"
+    else
+        # Créer le fichier par défaut s'il n'existe pas
+        cat > "$ENV_PROD_FILE" <<EOF
+# ==========================================
+# CONFIGURATION DE PRODUCTION
+# ==========================================
+
+# Base de données PostgreSQL
+POSTGRES_USER=l2a_user
+POSTGRES_PASSWORD=ChangeMeToASecureRandomPassword123!
+POSTGRES_DB=l2a_production
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+# Flask
+FLASK_ENV=production
+FLASK_DEBUG=0
+SECRET_KEY=ChangeMeToAVeryLongRandomSecretKey123456789!
+
+# Port d'accès externe (Raspberry Pi)
+APP_PORT=15256
+
+# URLs WebSocket et Backend
+VITE_BACKEND_URL=http://$RASPBERRY_IP:15256/api
+VITE_WS_URL=ws://$RASPBERRY_IP:15256/ws
+EOF
+    fi
+fi
+
+# Remplacer les URLs dans le fichier .env.production avec l'IP fournie
+sed -i "s|VITE_BACKEND_URL=.*|VITE_BACKEND_URL=http://$RASPBERRY_IP:15256/api|g" "$ENV_PROD_FILE"
+sed -i "s|VITE_WS_URL=.*|VITE_WS_URL=ws://$RASPBERRY_IP:15256/ws|g" "$ENV_PROD_FILE"
+
+echo -e "${GREEN}Fichier .env.production créé/modifié avec succès${NC}"
+echo ""
+
+echo ""
+echo "========================================="
 echo "Étape 1 : Build Frontend"
 echo "========================================="
 
 # Vérifier si .env.production existe
 if [ ! -f "$PROJECT_ROOT/frontend/.env.production" ]; then
-    echo -e "${YELLOW} Fichier .env.production non trouvé.${NC}"
+    echo -e "${YELLOW}Fichier .env.production non trouvé.${NC}"
     echo "Copie de .env.production.example..."
     if [ -f "$PROJECT_ROOT/frontend/.env.production.example" ]; then
         cp "$PROJECT_ROOT/frontend/.env.production.example" "$PROJECT_ROOT/frontend/.env.production"
     fi
-    echo ""
-    echo -e "${RED} IMPORTANT : Modifiez .env.production avec l'IP de votre Raspberry Pi !${NC}"
-    echo "Exemple : VITE_WS_URL=ws://192.168.1.100:15256/ws"
-    echo ""
-    read -p "Appuyez sur Entrée pour continuer après avoir modifié le fichier..."
+    
+    # Remplacer les URLs dans .env.production avec l'IP fournie
+    sed -i "s|VITE_BACKEND_URL=.*|VITE_BACKEND_URL=http://$RASPBERRY_IP:15256/api|g" "$PROJECT_ROOT/frontend/.env.production"
+    sed -i "s|VITE_WS_URL=.*|VITE_WS_URL=ws://$RASPBERRY_IP:15256/ws|g" "$PROJECT_ROOT/frontend/.env.production"
+    
+    echo -e "${GREEN}Fichier .env.production configuré${NC}"
 fi
 
 echo ""
@@ -57,45 +155,45 @@ echo "========================================="
 
 cd "$PROJECT_ROOT/docker"
 
-# Vérifier si .env existe
-if [ ! -f ".env" ]; then
-    echo -e "${YELLOW} Fichier .env non trouvé. Copie de .env.prod.example...${NC}"
-    if [ -f ".env.prod.example" ]; then
-        cp .env.prod.example .env
-    fi
-    echo -e "${RED} IMPORTANT : Modifiez le fichier .env avec vos valeurs sécurisées !${NC}"
-    echo -e "${YELLOW} Arrêt du script. Relancez après avoir configuré .env${NC}"
+echo ""
+echo "2)  Vérification de la configuration produc..."
+
+# Le fichier .env.production a déjà été créé à l'étape 0
+if [ ! -f ".env.production" ]; then
+    echo -e "${RED}Erreur : Fichier .env.production non trouvé${NC}"
     exit 1
 fi
 
-# Charger les variables d'environnement
+# Charger les variables d'environnement depuis .env.production
 set -a
-source .env
+source .env.production
 set +a
 
-echo ""
-echo "2)  Arrêt des conteneurs existants..."
-docker compose -f docker-compose.prod.yml down
+echo -e "${GREEN}Configuration produc chargée${NC}"
 
 echo ""
-echo "3)  Construction des images..."
-docker compose -f docker-compose.prod.yml build --no-cache
+echo "3)  Arrêt des conteneurs existants..."
+docker compose -f docker-compose.prod.yml --env-file .env.production down
 
 echo ""
-echo "4)  Démarrage des services..."
-docker compose -f docker-compose.prod.yml up -d
+echo "4)  Construction des images..."
+docker compose -f docker-compose.prod.yml --env-file .env.production build --no-cache
 
 echo ""
-echo "5)  Attente du démarrage de la base de données..."
+echo "5)  Démarrage des services..."
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+
+echo ""
+echo "6)  Attente du démarrage de la base de données..."
 sleep 10
 
 echo ""
-echo "6)  Initialisation de la base de données..."
-docker compose -f docker-compose.prod.yml exec -T backend python init_db/db_init.py
+echo "7)  Initialisation de la base de données..."
+docker compose -f docker-compose.prod.yml --env-file .env.production exec -T backend python init_db/db_init.py
 
 echo ""
-echo "7)  Vérification du statut des services..."
-docker compose -f docker-compose.prod.yml ps
+echo "8)  Vérification du statut des services..."
+docker compose -f docker-compose.prod.yml --env-file .env.production ps
 
 echo ""
 echo -e "${GREEN}=========================================="
@@ -103,10 +201,12 @@ echo "Déploiement terminé avec succès !"
 echo "==========================================${NC}"
 echo ""
 echo "L'application est accessible sur :"
-echo -e "  ${GREEN}http://$(hostname -I | awk '{print $1}'):${APP_PORT:-15256}${NC}"
+echo -e "  ${GREEN}http://$RASPBERRY_IP:${APP_PORT:-15256}${NC}"
 echo ""
 echo "Commandes utiles :"
 echo "  - Voir les logs : cd docker && docker compose -f docker-compose.prod.yml logs -f"
 echo "  - Arrêter : cd docker && docker compose -f docker-compose.prod.yml down"
 echo "  - Redémarrer : cd docker && docker compose -f docker-compose.prod.yml restart"
+echo ""
+echo "Configuration sauvegardée dans : $ENV_PROD_FILE"
 echo ""

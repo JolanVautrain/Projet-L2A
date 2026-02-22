@@ -240,18 +240,13 @@ body {
 .sea .bubble:after {
   position: absolute;
   content: "";
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background-color: #6bafca;
   opacity: 0.9;
-}
-
-.sea .bubble:after {
-  top: -20;
+  top: -20px;
   left: 100px;
-  width: 9px;
-  height: 9px;
 }
 
 .sea .circle-wrapper {
@@ -284,7 +279,7 @@ body {
   left: 25px;
   background-color: #D93A54;
   border-radius: 40px;
-  background: linear-gradient(#D93A54, #bc243d);
+  background-image: linear-gradient(#D93A54, #bc243d);
 }
 
 .sea .submarine-wrapper .submarine-body .light {
@@ -377,7 +372,7 @@ body {
   left: 0;
   background-color: #D93A54;
   border-radius: 7px;
-  background: linear-gradient(#D93A54, #bc243d);
+  background-image: linear-gradient(#D93A54, #bc243d);
 }
 
 .sea .submarine-wrapper .helix:after {
@@ -390,7 +385,7 @@ body {
   border-radius: 3px;
   background-color: transparent;
   opacity: 0.8;
-  background: linear-gradient(to bottom, #D93A54, #D93A54 50%, #e57a8c 50%, #e57a8c);
+  background-image: linear-gradient(to bottom, #D93A54, #D93A54 50%, #e57a8c 50%, #e57a8c);
   background-size: 100% 20px;
   -webkit-animation: helix-movement 110ms linear infinite;
   animation: helix-movement 110ms linear infinite;
@@ -404,7 +399,7 @@ body {
   left: 70px;
   background-color: #D93A54;
   border-radius: 10px 10px 0 0;
-  background: linear-gradient(#D93A54, #d72d49);
+  background-image: linear-gradient(#D93A54, #d72d49);
 }
 
 .sea .submarine-wrapper .hat .periscope {
@@ -435,7 +430,7 @@ body {
   left: 7px;
   background-color: #D93A54;
   border-radius: 10px;
-  background: linear-gradient(#b3233a, #a21f35);
+  background-image: linear-gradient(#b3233a, #a21f35);
 }
 
 .sea .submarine-wrapper .hat .leds-wrapper .leds {

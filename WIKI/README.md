@@ -1,10 +1,8 @@
 # Documentation - Jeu en Ligne L2A
 
-Bienvenue dans la documentation du projet L2A, une plateforme de jeu en ligne moderne et complète.
-
 ## Vue d'ensemble
 
-Le **Projet T Rex Game Evolve** est une **plateforme de jeu multijoueur en temps réel** construite avec une architecture moderne et scalable. Elle combine un backend Flask robuste, un frontend React dynamique, et un système WebSocket pour la communication en temps réel.
+Le **Projet T Rex Game Evolve** est une **plateforme de jeu multijoueur en temps réel** construite avec une architecture moderne et scalable. Elle combine un backend Flask, un frontend React, et un système WebSocket pour la communication en temps réel.
 
 ### Caractéristiques principales
 
@@ -14,7 +12,7 @@ Le **Projet T Rex Game Evolve** est une **plateforme de jeu multijoueur en temps
 - **Système de boutique** pour les achats in-game
 - **Système d'administration** complet
 - **Interface responsive** pour tous les appareils
-- **Infrastructure de déploiement** optimisée pour Raspberry Pi
+- **Script de déploiement**
 
 ## Documentation
 

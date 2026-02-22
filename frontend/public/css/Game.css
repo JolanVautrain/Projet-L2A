@@ -22,7 +22,6 @@
   image-rendering: crisp-edges;
 }
 
-/* phaser container dimensions and appearance - pixel style */
 .phaser-container {
   width: 800px;
   height: 600px;
@@ -169,7 +168,6 @@
   }
 }
 
-/* Affichage des avatars en mode multijoueur */
 .multiplayer-avatars {
   display: flex;
   align-items: center;
