@@ -5,20 +5,19 @@ import logging
 import os
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
-from typing import Iterator
-from typing import List
+from typing import Any, Iterator, List, Optional
 
 import psycopg2  # type: ignore
 from psycopg2 import OperationalError  # type: ignore
+from psycopg2.extensions import connection as _Connection, cursor as _Cursor  # type: ignore
 from werkzeug.security import generate_password_hash
 
 logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def get_db_connection() -> Iterator[Any]:
-    conn = None
+def get_db_connection() -> Iterator[_Connection]:
+    conn: _Connection | None = None
     try:
         conn = connect_to_database()
         yield conn
@@ -28,8 +27,8 @@ def get_db_connection() -> Iterator[Any]:
 
 
 @contextmanager
-def get_db_cursor(conn: Any) -> Iterator[Any]:
-    cur = conn.cursor()
+def get_db_cursor(conn: _Connection) -> Iterator[_Cursor]:
+    cur: _Cursor = conn.cursor()
     try:
         yield cur
     finally:
@@ -104,7 +103,7 @@ def connect_to_database() -> Any:
         raise
 
 
-def initialize_database(init_conn=None, init_cur=None) -> None:
+def initialize_database(init_conn: Optional[_Connection] = None, init_cur: Optional[_Cursor] = None) -> None:
     try:
         if not init_conn or not init_cur:
             init_conn = connect_to_database()

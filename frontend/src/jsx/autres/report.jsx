@@ -1,14 +1,14 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { useLanguage } from "../../autres/Language.jsx";
-import { apiUrl } from "../../utils/apiClient.js";
+import { useLanguage } from "./Language.jsx";
+import { apiUrl } from "../utils/apiClient.js";
 
-/** 
+/**
  * Composant report
- * 
+ *
  * Permet de signaler un utilisateur via une modal.
  */
-function report({ isOpen, onClose }) {
+function Report({ isOpen, onClose }) {
   const [username, setUsername] = useState("");
   const [accusation, setAccusation] = useState("");
   const [error, setError] = useState("");
@@ -44,8 +44,8 @@ function report({ isOpen, onClose }) {
     })
       .then(async (response) => {
         if (!response.ok) {
-            const text = await response.text();
-            throw new Error("Erreur HTTP: " + response.status + " - " + text);
+          const text = await response.text();
+          throw new Error("Erreur HTTP: " + response.status + " - " + text);
         }
         return response.json();
       })
@@ -102,9 +102,9 @@ function report({ isOpen, onClose }) {
   );
 }
 
-export default report;
+export default Report;
 
-report.propTypes = {
+Report.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
 };

@@ -646,17 +646,6 @@ print_stat "Tests frontend (logs):"
 echo -e "   ${CYAN}→ $REPORTS_DIR/pytest-frontend.log${NC}"
 echo ""
 
-# Résumé rapide
-echo ""
-print_subsection "FICHIERS CLÉS"
-echo ""
-echo -e "  ${GREEN}✓${NC} Code backend analysé et testé"
-echo -e "  ${GREEN}✓${NC} Scénarios frontend validés"
-echo -e "  ${GREEN}✓${NC} WebSocket multiplayer fonctionnel"
-echo -e "  ${GREEN}✓${NC} Couverture de code: 87%"
-echo -e "  ${GREEN}✓${NC} Rapports HTML générés"
-echo ""
-
 print_divider
 
 # Le cleanup sera automatiquement appelé grâce au trap

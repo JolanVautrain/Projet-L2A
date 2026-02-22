@@ -7,7 +7,7 @@ const backendTarget = _metaEnv.BACKEND_PROXY || _metaEnv.VITE_BACKEND_PROXY || p
 export default defineConfig({
 	plugins: [react()],
 	server: {
-		host: '0.0.0.0', // CRUCIAL : écouter sur toutes les interfaces
+		host: '0.0.0.0', // écouter sur toutes les interfaces
 		port: 5173,
 		watch: {
 			usePolling: true // Pour que le HMR marche sur volumes Docker

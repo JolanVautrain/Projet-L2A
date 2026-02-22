@@ -45,3 +45,4 @@ test/reports
 .env.production
 docker/.env
 frontend/.env.production
+frontend/yarn.lock

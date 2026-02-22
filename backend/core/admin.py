@@ -1,6 +1,7 @@
 """Admin routes pour la gestion des utilisateurs et des sessions de jeu."""
 
 import os
+from typing import Any, cast
 
 from flask import Blueprint
 from flask import request
@@ -58,7 +59,8 @@ def delete_user_xp_history_options(username: str):
 def delete_user_xp_history(username: str):
     username = username.strip()
     db.exec_commit(
-        "DELETE FROM user_xp_history WHERE username = %s", (username,)
+        "DELETE FROM user_xp_history"
+        "WHERE username = %s", (username,)
     )
     return utils.make_response({"ok": True})
 
@@ -68,7 +70,8 @@ def delete_user_xp_history(username: str):
 @utils.require_admin
 def list_all_users():
     rows = db.query_fetchall(
-        "SELECT username, is_admin, banned_until, ban_reason FROM users ORDER BY username"
+        "SELECT username, is_admin, banned_until, ban_reason"
+        "FROM users ORDER BY username"
     )
     return utils.make_response(
         [
@@ -153,7 +156,7 @@ def remove_admin(username: str):
         return utils.make_response(
             {
                 "error": "forbidden",
-                "message": "cannot remove admin status from the original admin user",
+                "message": "cannot remove admin from the original admin",
             },
             403,
         )
@@ -174,12 +177,18 @@ def ban_user(username: str):
             403,
         )
 
-    data = request.get_json() or {}
+    data_any = request.get_json(silent=True)
+    if isinstance(data_any, dict):
+        data = cast(dict[str, Any], data_any)
+    else:
+        data = {}
+
     duration_hours = data.get("duration_hours")  # None pour ban permanent
     reason = data.get("reason", "No reason provided").strip()
 
     if duration_hours is not None:
-        # ban temporaire, calcul de la date de fin du ban en fonction de la durée spécifiée
+        # ban temporaire, calcul de la date de fin du ban en fonction de la
+        # durée spécifiée
         try:
             duration_hours = int(duration_hours)
             if duration_hours <= 0:
@@ -200,16 +209,18 @@ def ban_user(username: str):
             )
 
         db.exec_commit(
-            """UPDATE users 
+            """UPDATE users
                SET banned_until = CURRENT_TIMESTAMP + INTERVAL '%s hours',
                    ban_reason = %s
                WHERE username = %s""",
             (duration_hours, reason, username),
         )
     else:
-        # ban permanent, on peut utiliser une date très lointaine ou NULL selon la logique de l'application (ici on choisit NULL pour indiquer un ban permanent)
+        # ban permanent, on peut utiliser une date très lointaine ou NULL
+        # selon la logique de l'application (ici on choisit NULL pour indiquer
+        # un ban permanent)
         db.exec_commit(
-            """UPDATE users 
+            """UPDATE users
                SET banned_until = NULL,
                    ban_reason = %s
                WHERE username = %s""",
@@ -225,7 +236,7 @@ def ban_user(username: str):
 def unban_user(username: str):
     username = username.strip()
     db.exec_commit(
-        """UPDATE users 
+        """UPDATE users
            SET banned_until = NULL,
                ban_reason = NULL
            WHERE username = %s""",
