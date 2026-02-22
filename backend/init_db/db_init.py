@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import psycopg2
 from core.db import initialize_database
@@ -10,7 +11,7 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 if __name__ == "__main__":
-    DB_CONFIG = {
+    DB_CONFIG: dict[str, Optional[str]] = {
         "host": os.getenv("POSTGRES_HOST", "127.0.0.1"),
         "port": os.getenv("POSTGRES_PORT"),
         "user": os.getenv("POSTGRES_USER"),

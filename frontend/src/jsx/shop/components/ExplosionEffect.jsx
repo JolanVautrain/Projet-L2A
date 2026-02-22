@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import "./ExplosionEffect.css";
 
+// Composant d'effet d'explosion pour le bomb pack lors des clics
 export function ExplosionEffect({ x, y, id }) {
   const [isActive, setIsActive] = useState(true);
 

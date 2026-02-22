@@ -1,21 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../autres/Language.jsx";
-import { getApiBaseUrl } from "../utils/apiClient.js";
-import { getActiveUser } from "../utils/userSession.js";
-import PageNotFound from "../autres/PageNotFound.jsx";
-import { apiUrl } from "../utils/apiClient.js";
+import { getApiBaseUrl, apiUrl } from "../utils/apiClient.js";
 
 /**
  * Composant Moderation
  * Gère la modération des utilisateurs (XP, bans, admin, suppression de données)
  */
 function Moderation({ user }) {
-  const [resetSessionsLoading, setResetSessionsLoading] = useState(false);
   const [awardXpLoading, setAwardXpLoading] = useState(false);
-  const [deleteHistoryLoading, setDeleteHistoryLoading] = useState(false);
-  const [adminLoading, setAdminLoading] = useState(false);
-  const [removeAdminLoading, setRemoveAdminLoading] = useState(false);
   const [banUserLoading, setBanUserLoading] = useState(false);
   const [unbanUserLoading, setUnbanUserLoading] = useState(false);
 
@@ -32,49 +25,32 @@ function Moderation({ user }) {
   const apiBase = getApiBaseUrl();
 
   const [isAdmin, setIsAdmin] = useState(false);
-  // Charger la liste des utilisateurs si admin
-  useEffect(() => {
-    console.log("Checking admin for:", user);
-    if (!user) return;
-
-    if (user === "admin") {
-      setIsAdmin(true); // déclenche le rendu du composant
-      loadAdminUsers(user);
-      loadReports();
-    }
-  }, [user]);
-
-  // Charger l'historique d'achat quand l'utilisateur sélectionné change
-  useEffect(() => {
-    if (selectedUser) {
-      loadUserPurchases(selectedUser);
-    }
-  }, [selectedUser]);
 
   // Fonction pour charger et enrichir les utilisateurs
-  const loadAdminUsers = async (currentUser) => {
-    try {
-      const res = await fetch(`${apiBase}/admin/users`, {
-        headers: { "X-Admin-User": currentUser },
-      });
-      // Silently ignore 401 (user not admin)
-      if (res.status === 401) {
-        return;
-      }
-      if (res.ok) {
-        const data = await res.json();
-        // Enrichir chaque utilisateur avec XP et stats (parallèle)
-        const enriched = await Promise.all(
-          data.map(async (u) => {
-            try {
-              const [xpRes, statsRes] = await Promise.all([
-                fetch(`${apiBase}/user/xp/${u.username}`),
-                fetch(`${apiBase}/user/stats/${u.username}`),
-              ]);
-              const xpJson =
-                xpRes && xpRes.ok ? await xpRes.json() : { xp: 0, level: 1 };
-              const statsJson =
-                statsRes && statsRes.ok
+  const loadAdminUsers = useCallback(
+    async (currentUser) => {
+      try {
+        const res = await fetch(`${apiBase}/admin/users`, {
+          headers: { "X-Admin-User": currentUser },
+        });
+        // Silently ignore 401 (user not admin)
+        if (res.status === 401) {
+          return;
+        }
+        if (res.ok) {
+          const data = await res.json();
+          // Enrichir chaque utilisateur avec XP et stats (parallèle)
+          const enriched = await Promise.all(
+            data.map(async (u) => {
+              try {
+                const [xpRes, statsRes] = await Promise.all([
+                  fetch(`${apiBase}/user/xp/${u.username}`),
+                  fetch(`${apiBase}/user/stats/${u.username}`),
+                ]);
+                const xpJson = xpRes?.ok
+                  ? await xpRes.json()
+                  : { xp: 0, level: 1 };
+                const statsJson = statsRes?.ok
                   ? await statsRes.json()
                   : {
                       totalGames: 0,
@@ -82,39 +58,41 @@ function Moderation({ user }) {
                       bestScore: 0,
                       averageScore: 0,
                     };
-              return {
-                ...u,
-                xp: xpJson.xp || 0,
-                level: xpJson.level || 1,
-                totalGames: statsJson.totalGames || 0,
-                totalScore: statsJson.totalScore || 0,
-                bestScore: statsJson.bestScore || 0,
-                averageScore: statsJson.averageScore || 0,
-              };
-            } catch {
-              return {
-                ...u,
-                xp: 0,
-                level: 1,
-                totalGames: 0,
-                totalScore: 0,
-                bestScore: 0,
-                averageScore: 0,
-              };
-            }
-          }),
-        );
-        setAllUsers(enriched);
-        if (enriched.length > 0 && !selectedUser)
-          setSelectedUser(enriched[0].username);
-        return enriched;
+                return {
+                  ...u,
+                  xp: xpJson.xp || 0,
+                  level: xpJson.level || 1,
+                  totalGames: statsJson.totalGames || 0,
+                  totalScore: statsJson.totalScore || 0,
+                  bestScore: statsJson.bestScore || 0,
+                  averageScore: statsJson.averageScore || 0,
+                };
+              } catch {
+                return {
+                  ...u,
+                  xp: 0,
+                  level: 1,
+                  totalGames: 0,
+                  totalScore: 0,
+                  bestScore: 0,
+                  averageScore: 0,
+                };
+              }
+            }),
+          );
+          setAllUsers(enriched);
+          if (enriched.length > 0 && !selectedUser)
+            setSelectedUser(enriched[0].username);
+          return enriched;
+        }
+      } catch (err) {
+        console.warn("Failed to load users", err);
       }
-    } catch (err) {
-      console.warn("Failed to load users", err);
-    }
-  };
+    },
+    [apiBase, selectedUser],
+  );
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     try {
       const res = await fetch(apiUrl("report"));
       if (!res.ok) throw new Error("Erreur chargement reports");
@@ -123,21 +101,60 @@ function Moderation({ user }) {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
-  const loadUserPurchases = async (username) => {
-    if (!username) {
-      setSelectedUserPurchases([]);
-      return;
+  // Charger la liste des utilisateurs si admin
+  useEffect(() => {
+    console.log("Checking admin for:", user);
+    if (!user) return;
+
+    if (user === "admin") {
+      setIsAdmin(true);
+      loadAdminUsers(user);
+      loadReports();
     }
+  }, [user, loadAdminUsers, loadReports]);
+
+  const loadUserPurchases = useCallback(
+    async (username) => {
+      if (!username) {
+        setSelectedUserPurchases([]);
+        return;
+      }
+      try {
+        const res = await fetch(`${apiBase}/shop/purchases/${username}`);
+        if (!res.ok) throw new Error("Erreur chargement purchases utilisateur");
+        const data = await res.json();
+        setSelectedUserPurchases(data.purchases);
+      } catch (err) {
+        console.error(err);
+        setSelectedUserPurchases([]);
+      }
+    },
+    [apiBase],
+  );
+  // Charger l'historique d'achat quand l'utilisateur sélectionné change
+  useEffect(() => {
+    if (selectedUser) {
+      loadUserPurchases(selectedUser);
+    }
+  }, [selectedUser, loadUserPurchases]);
+
+  // Helper: désactive l'effet cosmétique localement si nécessaire
+  const deactivateCosmetic = (productId, username) => {
+    if (!username) return;
+    if (productId !== "skin-neo" && productId !== "bomb-icon") return;
+
+    const activeItemsKey = `activeItems:${username}`;
+    const activeItems = localStorage.getItem(activeItemsKey);
+    if (!activeItems) return;
+
     try {
-      const res = await fetch(`${apiBase}/shop/purchases/${username}`);
-      if (!res.ok) throw new Error("Erreur chargement purchases utilisateur");
-      const data = await res.json();
-      setSelectedUserPurchases(data.purchases);
-    } catch (err) {
-      console.error(err);
-      setSelectedUserPurchases([]);
+      const items = JSON.parse(activeItems);
+      const updated = items.filter((id) => id !== productId);
+      localStorage.setItem(activeItemsKey, JSON.stringify(updated));
+    } catch (e) {
+      console.error("Erreur désactivation effet cosmétique:", e);
     }
   };
 
@@ -154,22 +171,7 @@ function Moderation({ user }) {
       if (!res.ok) throw new Error("Erreur annulation achat");
 
       // Désactiver les effets cosmétiques associés si c'est un item cosmétique
-      if (
-        selectedUser &&
-        (productId === "skin-neo" || productId === "bomb-icon")
-      ) {
-        const activeItemsKey = `activeItems:${selectedUser}`;
-        const activeItems = localStorage.getItem(activeItemsKey);
-        if (activeItems) {
-          try {
-            const items = JSON.parse(activeItems);
-            const updated = items.filter((id) => id !== productId);
-            localStorage.setItem(activeItemsKey, JSON.stringify(updated));
-          } catch (e) {
-            console.error("Erreur désactivation effet cosmétique:", e);
-          }
-        }
-      }
+      deactivateCosmetic(productId, selectedUser);
 
       alert("Achat annulé avec succès");
       loadUserPurchases(selectedUser); // Recharger la liste de l'utilisateur
@@ -200,7 +202,7 @@ function Moderation({ user }) {
       let errorCount = 0;
 
       // Supprimer chaque achat individuellement
-      for (const purchase of selectedUserPurchases) {
+      const cancelOne = async (purchase) => {
         try {
           const res = await fetch(
             `${apiBase}/shop/admin/purchase/${purchase.id}`,
@@ -214,37 +216,27 @@ function Moderation({ user }) {
             throw new Error("Erreur annulation achat");
           }
 
-          // Désactiver les effets cosmétiques associés
-          if (
-            purchase.product_id === "skin-neo" ||
-            purchase.product_id === "bomb-icon"
-          ) {
-            const activeItemsKey = `activeItems:${selectedUser}`;
-            const activeItems = localStorage.getItem(activeItemsKey);
-            if (activeItems) {
-              try {
-                const items = JSON.parse(activeItems);
-                const updated = items.filter(
-                  (id) => id !== purchase.product_id,
-                );
-                localStorage.setItem(activeItemsKey, JSON.stringify(updated));
-              } catch (e) {
-                console.error("Erreur désactivation effet cosmétique:", e);
-              }
-            }
-          }
-
-          successCount++;
+          deactivateCosmetic(purchase.product_id, selectedUser);
+          return true;
         } catch (err) {
-          errorCount++;
           console.error(`Erreur suppression achat ${purchase.id}:`, err);
+          return false;
         }
+      };
+
+      for (const purchase of selectedUserPurchases) {
+        const ok = await cancelOne(purchase);
+        if (ok) successCount++;
+        else errorCount++;
       }
 
       // Recharger la liste
       await loadUserPurchases(selectedUser);
 
-      const message = `${successCount} achat(s) annulé(s) avec succès${errorCount > 0 ? ` (${errorCount} erreur(s))` : ""}`;
+      let message = `${successCount} achat(s) annulé(s) avec succès`;
+      if (errorCount > 0) {
+        message += ` (${errorCount} erreur(s))`;
+      }
       alert(message);
     } catch (err) {
       alert("Erreur: " + err.message);
@@ -257,7 +249,7 @@ function Moderation({ user }) {
     event.preventDefault();
 
     const data = new FormData(event.target);
-    let xp = parseInt(data.get("number"), 10);
+    let xp = Number.parseInt(data.get("number"), 10);
 
     if (data.get("sub_xp")) {
       xp = -xp;
@@ -305,21 +297,31 @@ function Moderation({ user }) {
   // Composants internes
   const xp_form = (
     <form id="xp-form" onSubmit={handleSubmit}>
-      <label htmlFor="input-xp">
-        Ajoute l'XP à l'utilisateur
+      <label htmlFor="input-xp">Ajoute l'XP à l'utilisateur</label>
+
+      <div style={{ marginBottom: 8 }}>
         <input
+          id="input-xp"
           type="text"
           name="number"
           placeholder="50"
           inputMode="numeric"
           pattern="[0-9]{0,}"
           required
+          style={{ display: "block" }}
         />
-      </label>
-      <label htmlFor="sub-xp">
-        soustrait l'xp si cocher
-        <input type="checkbox" name="sub_xp" />
-      </label>
+      </div>
+
+      <div style={{ marginBottom: 8 }}>
+        <label
+          htmlFor="sub-xp"
+          style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+        >
+          <input id="sub-xp" type="checkbox" name="sub_xp" />
+          <span>soustrait l'xp si cocher</span>
+        </label>
+      </div>
+
       <button type="submit" className="btn primary" disabled={awardXpLoading}>
         {awardXpLoading ? t("common.saving") : t("account.awardXp")}
       </button>
@@ -330,15 +332,18 @@ function Moderation({ user }) {
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
         <h4 style={{ textAlign: "center" }}>{t("account.manageUsers")}</h4>
-        <input
-          type="search"
-          placeholder={
-            t("account.searchPlaceholder") || "Rechercher un joueur..."
-          }
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="admin-users-search"
-        />
+        <div style={{ marginBottom: 12 }}>
+          <input
+            name="search"
+            type="search"
+            placeholder={
+              t("account.searchPlaceholder") || "Rechercher un joueur..."
+            }
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="admin-users-search"
+          />
+        </div>
         <table className="admin-users-table">
           <thead>
             <tr>
@@ -387,15 +392,18 @@ function Moderation({ user }) {
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
         <h4 style={{ textAlign: "center" }}>{t("account.manageReports")}</h4>
-        <input
-          type="search"
-          placeholder={
-            t("account.searchPlaceholder") || "Rechercher un joueur..."
-          }
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="admin-users-search"
-        />
+        <div style={{ marginBottom: 12 }}>
+          <input
+            name="search"
+            type="search"
+            placeholder={
+              t("account.searchPlaceholder") || "Rechercher un joueur..."
+            }
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="admin-users-search"
+          />
+        </div>
         <table className="admin-users-table">
           <thead>
             <tr>
@@ -437,15 +445,18 @@ function Moderation({ user }) {
   const bannedList = (
     <div style={{ width: "100%" }}>
       <div className="admin-tools__center">
-        <input
-          type="search"
-          placeholder={
-            t("account.searchPlaceholder") || "Rechercher un joueur..."
-          }
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="admin-users-search"
-        />
+        <div style={{ marginBottom: 12 }}>
+          <input
+            name="search"
+            type="search"
+            placeholder={
+              t("account.searchPlaceholder") || "Rechercher un joueur..."
+            }
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="admin-users-search"
+          />
+        </div>
         <h4 style={{ textAlign: "center" }}>Utilisateurs Bannis</h4>
         <table className="admin-users-table">
           <thead>
@@ -582,6 +593,8 @@ function Moderation({ user }) {
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <input
+            id="ban-duration"
+            name="banDuration"
             type="number"
             placeholder={
               t("account.banDurationPlaceholder") ||
@@ -602,6 +615,8 @@ function Moderation({ user }) {
           />
 
           <input
+            id="ban-reason"
+            name="banReason"
             type="text"
             placeholder={
               t("account.banReasonPlaceholder") || "Raison du bannissement..."
@@ -636,7 +651,7 @@ function Moderation({ user }) {
                 }
 
                 const durationHours = banDuration
-                  ? parseInt(banDuration)
+                  ? Number.parseInt(banDuration)
                   : null;
 
                 if (durationHours !== null && durationHours <= 0) {
@@ -800,7 +815,6 @@ function Moderation({ user }) {
 
 Moderation.propTypes = {
   user: PropTypes.string,
-  isAdmin: PropTypes.bool,
 };
 
 export default Moderation;

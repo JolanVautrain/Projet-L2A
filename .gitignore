@@ -30,7 +30,7 @@ dist-ssr
 
 # Ignorer les fichiers compilés Python
 *.pyc
-backend/__pycache__/
+*__pycache__/
 
 # Ignorer les données de la base de données PostgreSQL
 backend/db_data/
@@ -45,3 +45,4 @@ test/reports
 .env.production
 docker/.env
 frontend/.env.production
+frontend/yarn.lock

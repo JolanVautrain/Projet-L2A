@@ -13,15 +13,15 @@
     "play": "Play",
     "score": "Score",
     "stage": "Stage",
-    "timer": "Time",
+    "timer": "Timer",
     "gameOver": "Game Over",
-    "replay": "Replay",
-    "returnHome": "Return Home",
+    "replay": "Play Again",
+    "returnHome": "Back to Home",
     "loading": "Loading...",
-    "saving": "Saving...",
     "error": "Error",
+    "saving": "Saving...",
     "failedPrefix": "Failed: ",
-    "noData": "No data available",
+    "noData": "No data available. Please contact support.",
     "close": "Close",
     "confirm": "Confirm",
     "cancel": "Cancel",
@@ -29,7 +29,7 @@
     "date": "Date"
   },
   "nav": {
-    "hello": "Hello",
+    "hello": "Hello, master",
     "profile": "Profile"
   },
   "game": {
@@ -37,11 +37,15 @@
     "youReachedScore": "You reached a score of",
     "atStage": "at stage",
     "time": "Time",
-    "confirmLeaveMatch": "Are you sure you want to leave the match?",
-    "opponentDisconnected": "Opponent disconnected"
+    "confirmLeaveMatch": "Are you sure you want to leave the game?",
+    "opponentDisconnected": "Opponent disconnected",
+    "wonTitle": "Victory!",
+    "wonMessage": "You reached a score of",
+    "wonMessageSuite": "at the stage."
   },
   "leaderboard": {
-    "title": "Player Leaderboard",
+    "username": "Username",
+    "title": "Player Rankings",
     "yourBestScore": "Your Best Score",
     "yourOtherGames": "Your Other Games",
     "globalRanking": "Global Ranking",
@@ -49,17 +53,17 @@
     "player": "Player",
     "noScoresRecorded": "No scores recorded.",
     "date": "Date/Time",
-    "top10Games": "Top 10 Best Games",
-    "top10Users": "Top 10 Best Players",
+    "top10Games": "Top 10 Games",
+    "top10Users": "Top 10 Players",
     "chart": {
       "xLabel": "Date/Time",
       "yLabel": "Score",
-      "title": "Score over time"
+      "title": "Score Evolution"
     },
     "xpChart": {
       "xLabel": "Date/Time",
       "yLabel": "XP",
-      "title": "XP Progress",
+      "title": "XP Progression",
       "legend": "XP"
     },
     "xpLabel": "XP",
@@ -68,24 +72,27 @@
     "fetchFailed": "Failed to load leaderboard.",
     "progress": "Progress",
     "level": "Level",
-    "loginRequired": "You must be logged in to view the leaderboard.",
-    "openLogin": "Sign in"
+    "loginRequired": "You must be logged in to view your ranking.",
+    "openLogin": "Login"
   },
   "account": {
     "title": "Account",
     "hello": "Hello",
     "yourAccountPage": "here is your account page",
-    "adminTools": "Administrator Tools",
-    "resetYourRanking": "Reset Your Ranking",
+    "chooseAvatar": "Choose your avatar",
+    "adminTools": "Admin Tools",
+    "resetYourRanking": "Reset your ranking",
     "reset": "Reset",
-    "resetting": "Resetting…",
-    "resetOtherGames": "Reset Your Other Games",
+    "resetting": "Resetting...",
+    "resetOtherGames": "Reset your other games",
     "manageUsers": "Reset another player's ranking",
     "manageReports": "Manage user reports",
     "selectUser": "Select a user",
+    "searchPlaceholder": "Search for a player...",
+    "select": "Select",
     "resetUserScores": "Reset",
-    "resetUserSessions": "Reset another player's other games",
-    "resetSelfSessions": "Reset your game history",
+    "resetUserSessions": "Reset a player's other games",
+    "resetSelfSessions": "Reset your games",
     "language": "Language",
     "confirmResetSelfScore": "Reset your own ranking?",
     "confirmResetSelfSessions": "Reset your other games?",
@@ -93,45 +100,57 @@
     "confirmResetUserSessions": "Reset other games for",
     "confirmResetUserSessionsFull": "Reset other games for {username}?",
     "resetUserSessionsSuccess": "Other games for {username} have been reset.",
+    "resetSessionsDesc": "Deletes game sessions and scores for the selected user.",
     "confirmDeleteUser": "Delete account of",
-    "confirmDeleteUserFull": "Delete account of {username}?\nDeleting this account is irreversible.",
-    "deleteUser": "Delete user",
+    "confirmDeleteUserFull": "Delete account of {username}? This action is irreversible.",
+    "deleteUser": "Delete User",
     "deleteSelf": "Delete your account",
     "deleteUserSuccess": "User {username} deleted.",
-    "award50xp": "Modify XP",
-    "awardXpDesc": "Modify the XP of the selected user",
+    "awardXp": "Modify XP",
+    "awardXpDesc": "Modifies the XP of the selected user",
     "confirmAwardXp": "Add {xp} XP to {username}?",
     "awardXpSuccess": "{xp} XP added to {username}.",
     "loginRequired": "You must be logged in to access your account.",
-    "openLogin": "Sign in",
-    "deleteXpHistory": "Delete XP history",
+    "openLogin": "Login",
+    "deleteXpHistory": "Delete XP History",
     "confirmDeleteXpHistory": "Delete XP history for {username}?",
     "deleteXpHistorySuccess": "XP history deleted for {username}.",
-    "deleteUserDesc": "Delete the user and all associated data (irreversible).",
-    "setAdmin": "Grant administrator rights",
-    "removeAdmin": "Remove administrator rights",
-    "confirmSetAdmin": "Grant administrator rights to {username}?",
-    "confirmRemoveAdmin": "Remove administrator rights from {username}?",
-    "setAdminSuccess": "{username} is now an administrator.",
-    "removeAdminSuccess": "{username} is no longer an administrator.",
-    "adminManagementDesc": "Manage administrator rights for this user.",
-    "banUser": "Ban user",
-    "unbanUser": "Unban user",
+    "deleteXpHistoryDesc": "Deletes all XP history entries for the selected user.",
+    "deleteUserDesc": "Deletes the user and all associated data (irreversible).",
+    "setAdmin": "Grant Admin Rights",
+    "removeAdmin": "Revoke Admin Rights",
+    "confirmSetAdmin": "Grant admin rights to {username}?",
+    "confirmRemoveAdmin": "Revoke admin rights from {username}?",
+    "setAdminSuccess": "{username} is now an admin.",
+    "removeAdminSuccess": "{username} is no longer an admin.",
+    "adminManagementDesc": "Manage admin rights for this user.",
+    "banUser": "Ban User",
+    "unbanUser": "Unban User",
     "confirmBanUser": "Ban {username} for {duration}?",
     "confirmUnbanUser": "Unban {username}?",
     "banUserSuccess": "{username} has been banned.",
     "unbanUserSuccess": "{username} has been unbanned.",
     "banManagementDesc": "Temporarily or permanently ban this user.",
     "banDurationPlaceholder": "Duration in hours (empty = permanent)",
-    "banReasonPlaceholder": "Ban reason...",
+    "banReasonPlaceholder": "Reason for ban...",
     "banReasonRequired": "Ban reason is required",
     "invalidDuration": "Duration must be positive",
     "changeUsername": "Change Username",
     "changePassword": "Change Password",
-    "purchaseHistory": "Purchase History"
+    "purchaseHistory": "Purchase History",
+    "inventory": "Inventory",
+    "noPurchases": "No items purchased. Visit the shop to buy your first items!",
+    "purchaseDate": "Purchase Date",
+    "alreadyOwned": "You already own this item",
+    "avatarRequired": "Avatar required — purchase in the shop",
+    "adminAvatar": "Admin Avatar",
+    "unmodifiableAvatar": "Unique and unmodifiable avatar",
+    "generateCode": "Generate new code",
+    "generatingCode": "Generating...",
+    "newCode": "Your new recovery code (keep it in a safe place)"
   },
   "resetUsername": {
-    "title": "Change Your Username",
+    "title": "Change your username",
     "new-username": "New Username",
     "newUsernamePlaceholder": "Enter your new username",
     "resetUsername": "Change Username",
@@ -142,79 +161,87 @@
     "oldPasswordPlaceholder": "Enter your old password"
   },
   "statistics": {
+    "username": "Username",
     "title": "Your Statistics",
-    "totalGames": "Total Games",
+    "totalGames": "Number of Games",
     "totalPlayTime": "Total Play Time",
     "totalScore": "Total Score",
     "averageScore": "Average Score",
     "bestScore": "Best Score",
     "averageStage": "Average Stage",
     "highestStage": "Highest Stage",
-    "averagePlayTime": "Average Play Time",
-    "loginToViewStats": "Login to view your statistics",
+    "averagePlayTime": "Average Duration per Game",
+    "loginToViewStats": "Log in to view your statistics",
     "fetchFailed": "Failed to load statistics."
   },
   "accueil": {
     "readyToPlay": "Ready to play?",
-    "tagline": "Align, anticipate,",
+    "tagline": "Run, dodge,",
     "taglineHighlight": "win",
-    "welcomeText": "Welcome to the ultimate alignment game where every move counts.",
-    "startGame": "Start a game",
-    "seeRules": "See the rules",
-    "connectButton": "Sign in",
-    "gamesInProgress": "Games in progress",
+    "welcomeText": "Welcome to the best PVP runner game in France.",
+    "startGame": "Multiplayer Game",
+    "startGameSolo": "Solo Game",
+    "seeRules": "See Rules",
+    "connectButton": "Connect",
+    "gamesInProgress": "Games in Progress",
     "stableServers": "Stable and synchronized servers",
-    "averageTime": "Average time",
+    "averageTime": "Average Time",
     "fastGames": "Fast and intense games",
-    "activePlayers": "Active players",
-    "communityReady": "Community ready to play",
-    "atmosphere": "Atmosphere",
-    "animatedInterface": "Animated interface",
-    "atmosphereDesc": "Dynamic gradients, floating cards, and a guided journey so that each visit to the home page is an invitation to start a game.",
-    "instantGames": "Instant games",
-    "instantGamesDesc": "Start a game in seconds and pick up where you left off.",
-    "breathtakingVision": "Breathtaking vision",
-    "breathtakingVisionDesc": "Smooth animations and readable grid to follow each move effortlessly.",
-    "extraordinaryChallenge": "An extraordinary challenge",
-    "extraordinaryChallengeDesc": "A tension with bombs ready to explode at the slightest touch.",
-    "howItWorks": "How it works",
-    "clearPath": "A clear path, animated step by step",
-    "clearPathDesc": "Each block appears with a slight movement to keep the rhythm and naturally lead you to the \"Play\" button.",
-    "chooseYourSide": "Choose your side",
-    "chooseYourSideDesc": "Select your role and check the configuration at a glance.",
-    "observeTerrain": "Observe the terrain",
-    "observeTerrainDesc": "The oversized grid and colored markers guide you in real time.",
-    "alignAndWin": "Align and win",
-    "alignAndWinDesc": "Chain moves with feedback animations, then share the victory.",
-    "joinTheGame": "Join the game",
-    "connectToSave": "Sign in to save your moves",
-    "oneClickConnect": "One click is enough to open the modal and pick up where you left off.",
-    "openLogin": "Open login",
+    "activePlayers": "Active Players",
+    "communityReady": "An active community within the game",
+    "atmosphere": "Our game reviewed by top journals",
+    "animatedInterface": "10/10 GamesVideoFR.com",
+    "atmosphereDesc": "An animated interface. Dynamic gradients, floating cards, and a guided path so every visit to the home page is an invitation to start a game.",
+    "instantGames": "20/20 GeekJournalFr.com",
+    "instantGamesDesc": "Instant games that change everything. Start a game in seconds and pick up right where you left off.",
+    "breathtakingVision": "5/5 WestFranceGaming.com",
+    "breathtakingVisionDesc": "A breathtaking vision. Fluid animations and a clear grid to follow every move effortlessly.",
+    "extraordinaryChallenge": "10/10 FnacGaming.fr",
+    "extraordinaryChallengeDesc": "An extraordinary challenge. Tension with bombs ready to explode at the slightest touch.",
+    "howItWorks": "How does it work?",
+    "clearPath": "Here is Father Castor's tutorial.",
+    "clearPathDesc": "Science is made of so many things that seem obvious after being explained.",
+    "chooseYourSide": "Connect to your account",
+    "chooseYourSideDesc": "Join your account and click play in a heartbeat.",
+    "observeTerrain": "Wait in the lobby",
+    "observeTerrainDesc": "We connect you with players from around the world in real-time.",
+    "alignAndWin": "Dodge the bombs",
+    "alignAndWinDesc": "Chain moves to dodge bombs and win the fight.",
+    "joinTheGame": "Join the warriors' game",
+    "connectToSave": "Log in to play and save your progress during your climb.",
+    "oneClickConnect": "3 clicks are enough to create an account and 10 clicks to delete your account after a sworn statement sent to support by registered mail.",
+    "openLogin": "1 account created = 1 tree planted",
     "alreadyConnected": "You are already connected! Your progress is automatically saved.",
-    "alreadyConnectedButton": "Already connected"
+    "alreadyConnectedButton": "Already Connected",
+    "adPopupBadge": "EXCLUSIVE OFFER",
+    "adPopupTitle": "-70% on all items!",
+    "adPopupDesc": "Enjoy our mystery lootboxes and exclusive packs. Limited offer!",
+    "adPopupTimer": "Only a few hours left!",
+    "adPopupShopBtn": "VIEW SHOP",
+    "adPopupLaterBtn": "Later"
   },
   "languageNames": {
-    "fr": "Français",
+    "fr": "French",
     "en": "English"
   },
   "contacts": {
-    "title": "Team — Contacts",
-    "intro": "Our brave developers — faithful companions of long nights, coffees, and heroic commits.",
-    "clickForAnecdote": "Click for an anecdote...",
-    "hideAnecdote": "Hide anecdote for",
-    "showAnecdote": "Show anecdote for",
-    "footer": "Work is beautiful",
+    "title": "The Elite Team — Contacts",
+    "intro": "Our brave developers — faithful companions of long nights, coffee, and heroic commits.",
+    "clickForAnecdote": "Click to see an anecdote...",
+    "hideAnecdote": "Hide anecdote from",
+    "showAnecdote": "Show anecdote from",
+    "footer": "Work sets you free",
     "jolan": {
-      "role": "Project setup lead",
-      "egg": "Secret mastery of project setup (docker)."
+      "role": "God of Project Setup and Multiplayer",
+      "egg": "Secret mastery of project setup and WebSockets."
     },
     "gabriel": {
-      "role": "Efficient work buddy",
+      "role": "Efficient comrade-in-arms at work",
       "egg": "Holds a personal record: 42 pull requests in one day."
     },
     "ethan": {
-      "role": "The disgruntled worker",
-      "egg": "Complains but delivers; specialist in 11 PM fixes."
+      "role": "The productive worker in his bed",
+      "egg": "Found a great name for the project: Group 34; to find out what 34 means, ask Ethan."
     },
     "lalo": {
       "role": "Happy in life",
@@ -225,31 +252,31 @@
     "title": "Login",
     "username": "Username",
     "password": "Password",
-    "login": "Sign in",
+    "login": "Login",
     "close": "Close",
     "connecting": "Connecting...",
-    "usernamePlaceholder": "Your username",
+    "usernamePlaceholder": "Your nickname",
     "passwordPlaceholder": "••••••••",
     "usernamePasswordRequired": "Username and password required.",
     "incorrectUsername": "Incorrect username.",
     "incorrectPassword": "Incorrect password.",
-    "alreadyLoggedIn": "This account is already signed in on another device.",
-    "connectionError": "Connection error. Please try again.",
-    "noAccount": "No account? Register",
+    "connectionError": "Connection error. Try again.",
+    "alreadyLoggedIn": "This account is already logged in on another device.",
+    "noAccount": "No account? Sign up",
     "accountBanned": "Your account has been banned for {duration}.",
     "banReason": "Reason",
-    "forgotPassword": "Forgot password"
+    "forgotPassword": "Forgot Password"
   },
   "forgotPassword": {
     "title": "Reset your password",
     "username": "Username",
-    "recoveryCode": "Recovery code",
-    "newPassword": "New password",
-    "confirmPassword": "Confirm password",
+    "recoveryCode": "Recovery Code",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
     "resetPassword": "Reset",
     "resetting": "Resetting...",
-    "backToLogin": "Back to login",
-    "usernamePlaceholder": "Your username",
+    "backToLogin": "Back to Login",
+    "usernamePlaceholder": "Your nickname",
     "recoveryCodePlaceholder": "Enter your code",
     "passwordMismatch": "Passwords do not match.",
     "passwordTooShort": "Password must be at least 4 characters long.",
@@ -264,30 +291,191 @@
     "downloadNotice": "Download this file and keep it in a safe place."
   },
   "registerModal": {
-    "title": "Create an account",
-    "submit": "Register",
+    "title": "Create an Account",
+    "submit": "Sign Up",
     "passwordMismatch": "Passwords do not match.",
-    "error": "Registration failed.",
-    "confirmPassword": "Confirm password"
+    "error": "Error during registration.",
+    "confirmPassword": "Confirm Password"
   },
   "pageNotFound": {
-    "title": "404 — Page not found",
-    "subtitle": "Oops — this page took a shortcut to the unknown. Let's go back to known territory.",
-    "returnHome": "Return home",
-    "seeHome": "See home",
+    "title": "404 — Page Not Found",
+    "subtitle": "Oops — this page took a shortcut to the unknown. Let's return to familiar lands.",
+    "returnHome": "Back to Home",
+    "seeHome": "View Home",
     "hint": "Tip: try checking the URL or go back.",
     "interactiveCharacter": "Interactive character — press to hear a message",
     "secondaryFigure": "Secondary figure — press to hear a message",
-    "speechMain": "Halt, who goes there",
+    "speechMain": "Halt, who goes there?",
     "speechOne": "Who goes there? Show yourself!",
-    "speechTwo": "Warning — restricted access!",
+    "speechTwo": "Watch out — restricted access!",
     "speechThree": "State your identity immediately!"
   },
+  "shop": {
+    "title": "Shop",
+    "subtitle": "Cosmetic items and useful packs",
+    "intro": "Treat yourself to some visual or utility upgrades to personalize your gaming experience.",
+    "buy": "Buy",
+    "open": "Open",
+    "salePrefix": "Flash offer ends in",
+    "saleEnded": "Offer ended",
+    "soldOut": "Unavailable",
+    "outOfStock": "Out of stock",
+    "addToCart": "+ Add to cart",
+    "trendingThisWeek": "Trending this week",
+    "alertPrice":"ALERTE PRIX !",
+    "economies": "Savings",
+    "onlyRemaining": "Only",
+    "remaining": "remaining",
+    "reviews": "reviews",
+    "viewersViewing": "people are looking at this item",
+    "trending": "🔥 TRENDING",
+    "popularArticles":"The most popular articles",
+    "priceAlert": "Prices will increase in",
+    "priceAlertBuy": "! Buy now!",
+    "product": "Product",
+    "price": "Price",
+    "categories": {
+      "avatars": "Avatars",
+      "hot": "Trending",
+      "mystery": "Mysteries",
+      "boosts": "Boosts",
+      "seeAll": "See All",
+      "skins": "Skins"
+    },
+    "cart": "Cart",
+    "modal": {
+      "title": "Confirm Purchase",
+      "notice": "WARNING: This offer expires in a few seconds! Stocks are limited.",
+      "extrasTitle": "Recommended options (pre-selected for your convenience)",
+      "delivery": "Standard delivery (MANDATORY)",
+      "express": "24h Express delivery (HIGHLY RECOMMENDED)",
+      "giftWrap": "Premium gift wrap",
+      "support": "24/7 Priority customer support",
+      "warranty": "Extended 2-year warranty (maximum protection)",
+      "insurance": "Theft/Damage insurance",
+      "subtotal": "Total",
+      "savingsText": "Save up to 50% with these bundled options!",
+      "addon": "Add premium insurance (+€2.99) — RECOMMENDED to protect your purchase",
+      "confirm": "YES, I WANT TO BUY NOW",
+      "cancel": "No thanks, I'd rather miss this exceptional offer",
+      "exitWarning": "WARNING! Are you CERTAIN you want to abandon this EXCLUSIVE offer? This promotion will never be available at this price again! You will LOSE this UNIQUE opportunity!"
+    },
+    "loot": {
+      "revealing": "Opening...",
+      "loading": "Revealing your reward...",
+      "close": "Claim my reward",
+      "coinPack": "100 Coins Pack",
+      "nothing": "Nothing (try again!)"
+    },
+    "products": {
+      "neoSkin": {
+        "title": "Neon Skin",
+        "desc": "A glowing skin for your in-game avatar."
+      },
+      "bombPack": {
+        "title": "Bomb Pack (aesthetic)",
+        "desc": "Exclusive bomb icons and effects (visual only)."
+      },
+      "avatarSamourai": {
+        "title": "Samurai Avatar",
+        "desc": "Samurai Avatar for your profile."
+      },
+      "avatarBusinessman1": {
+        "title": "Businessman Avatar",
+        "desc": "Businessman Avatar for your profile."
+      },
+      "avatarFireman": {
+        "title": "Firefighter Avatar",
+        "desc": "Firefighter Avatar for your profile."
+      },
+      "avatarFiremanTemu": {
+        "title": "Temu Firefighter Avatar",
+        "desc": "Temu Firefighter Avatar for your profile."
+      },
+      "avatarFiremanWoman": {
+        "title": "Female Firefighter Avatar",
+        "desc": "Female Firefighter Avatar for your profile."
+      },
+      "avatarGangster": {
+        "title": "Gangster Avatar",
+        "desc": "Gangster Avatar for your profile."
+      },
+      "avatarGangsterTemu": {
+        "title": "Temu Gangster Avatar",
+        "desc": "Temu Gangster Avatar for your profile."
+      },
+      "avatarPoliceman": {
+        "title": "Policeman Avatar",
+        "desc": "Policeman Avatar for your profile."
+      },
+      "avatarPolicewomen": {
+        "title": "Policewoman Avatar",
+        "desc": "Policewoman Avatar for your profile."
+      },
+      "avatarPoliticianMen": {
+        "title": "Politician Avatar",
+        "desc": "Male Politician Avatar for your profile."
+      },
+      "avatarPoliticianWoman": {
+        "title": "Female Politician Avatar",
+        "desc": "Female Politician Avatar for your profile."
+      },
+      "avatarRescue": {
+        "title": "Rescuer Avatar",
+        "desc": "Rescuer Avatar for your profile."
+      },
+      "avatarWorker": {
+        "title": "Worker Avatar",
+        "desc": "Worker Avatar for your profile."
+      },
+      "lootboxBasic": {
+        "title": "Mystery Box",
+        "desc": "A box containing random rewards."
+      },
+      "lootboxRare": {
+        "title": "Rare Box",
+        "desc": "Box with better chances for rare items."
+      },
+      "lootboxPrecieux": {
+        "title": "Precious Box",
+        "desc": "Box with maximum chances for rare and epic items."
+      },
+      "xpPack": {
+        "title": "+100 XP Pack",
+        "desc": "Instantly add 100 experience points to your account."
+      },
+      "xpPack250": {
+        "title": "+250 XP Pack",
+        "desc": "Instantly add 250 experience points to your account."
+      },
+      "xpPack500": {
+        "title": "+500 XP Pack",
+        "desc": "Instantly add 500 experience points to your account."
+      },
+      "xpPack1000": {
+        "title": "+1000 XP Pack",
+        "desc": "Instantly add 1000 experience points to your account."
+      },
+      "levelUpPack": {
+        "title": "Level Up Pack",
+        "desc": "Instantly gain an additional level!"
+      },
+      "levelUpPack2": {
+        "title": "Level Up x2 Pack",
+        "desc": "Gain an XP boost equivalent to two levels."
+      },
+      "levelUpPack5": {
+        "title": "Level Up x5 Pack",
+        "desc": "Gain an XP boost equivalent to five levels."
+      }
+    }
+  },
   "rules": {
-    "title": "Game Rules",
+    "title": "Rules",
+    "intro": "The 10 Commandments of Conduct",
     "rule1": {
       "name": "Rule 1",
-      "content": "be respectful to other players and avoid toxic behavior."
+      "content": "Be respectful to other players and avoid toxic behavior."
     },
     "rule2": {
       "name": "Rule 2",
@@ -295,11 +483,11 @@
     },
     "rule3": {
       "name": "Rule 3",
-      "content": "Inappropriate behavior will result in penalties."
+      "content": "Inappropriate behavior will result in sanctions."
     },
     "rule4": {
       "name": "Rule 4",
-      "content": "Harrassment of other players is strictly prohibited."
+      "content": "Harassment of other players is strictly forbidden."
     },
     "rule5": {
       "name": "Rule 5",
@@ -322,148 +510,78 @@
       "content": "Users must use appropriate language at all times."
     }
   },
-  "shop": {
-    "title": "Shop",
-    "subtitle": "Cosmetic items and useful packs",
-    "intro": "Treat yourself to some visual or utility enhancements to personalize your gaming experience.",
-    "buy": "Buy",
-    "open": "Open",
-    "salePrefix": "Flash sale ends in",
-    "saleEnded": "Sale ended",
-    "soldOut": "Out of stock",
-    "outOfStock": "Out of Stock",
-    "addToCart": "➕ Add to Cart",
-    "onlyRemaining": "Only",
-    "remaining": "left",
-    "reviews": "reviews",
-    "viewersViewing": "people viewing this item",
-    "trending": "🔥 TRENDING",
-    "priceAlert": "Prices will increase in",
-    "priceAlertBuy": "s! Buy now!",
-    "product": "Product",
-    "price": "Price",
-    "modal": {
-      "title": "Confirm Purchase",
-      "notice": "WARNING: This offer expires in a few seconds! Stocks are limited.",
-      "extrasTitle": "Recommended options (pre-selected for your convenience)",
-      "delivery": "Standard delivery (REQUIRED)",
-      "express": "24h express delivery (HIGHLY RECOMMENDED)",
-      "giftWrap": "Premium gift wrap",
-      "support": "24/7 priority customer support",
-      "warranty": "2-year extended warranty (maximum protection)",
-      "insurance": "Breakage/theft insurance",
-      "subtotal": "Total",
-      "savingsText": "You save up to 50% with these bundled options!",
-      "addon": "Add premium insurance (+2.99€) — RECOMMENDED to protect your purchase",
-      "confirm": "YES, I WANT TO BUY NOW",
-      "cancel": "No thanks, I'd rather miss this exceptional offer",
-      "exitWarning": "WARNING! Are you CERTAIN you want to abandon this EXCLUSIVE offer? This promotion will NEVER be available at this price again! You will LOSE this UNIQUE opportunity!"
-    },
-    "loot": {
-      "revealing": "Opening...",
-      "loading": "Revealing your reward...",
-      "close": "Claim my reward",
-      "coinPack": "100 Coins Pack",
-      "nothing": "Nothing (try again!)"
-    },
-    "products": {
-      "neoSkin": {
-        "title": "Neon Skin",
-        "desc": "A luminous skin for your in-game avatar."
-      },
-      "bombPack": {
-        "title": "Bomb Pack (aesthetic)",
-        "desc": "Exclusive bomb icons and effects (visual only)."
-      },
-      "avatarPack": {
-        "title": "Avatar Pack",
-        "desc": "Premium avatars for your profile."
-      },
-      "lootboxBasic": {
-        "title": "Mystery Box",
-        "desc": "A box containing random rewards."
-      },
-      "lootboxRare": {
-        "title": "Rare Box",
-        "desc": "Box with better chances of rare items."
-      },
-      "lootboxPrecieux": {
-        "title": "Precious Box",
-        "desc": "Box with maximum chances of rare and epic items."
-      },
-      "xpPack": {
-        "title": "XP Pack +100",
-        "desc": "Instantly add 100 experience points to your account."
-      },
-      "levelUpPack": {
-        "title": "Level Up Pack",
-        "desc": "Instantly gain an extra level!"
-      }
-    }
-  },
   "report": {
+    "button": "Report a User",
     "title": "Report",
-    "desc": "Reporting form.",
-    "text": "Describe the issue you encountered..."
+    "desc": "Report form.",
+    "text": "Describe the problem you encountered...",
+    "reportSubmitted": "Report sent",
+    "incorrectUsername": "Incorrect username.",
+    "usernameAccusationRequired": "A username is required.",
+    "username": "Username to report",
+    "accusation": "Reason for report",
+    "sending": "Sending...",
+    "send": "Send Report",
+    "cancel": "Cancel"
   },
   "lobby": {
     "title": "Searching for players...",
-    "description": "Please wait... The submarine is searching the depths of the ocean... for players",
+    "description": "Please wait... The Submarine is searching the ocean floor for players",
     "players": "Players connected in the lobby",
     "tip1": "Tip: bombs appear faster after stage 5.",
-    "tip2": "Tip: chain jumps to avoid low bombs.",
-    "tip3": "Remember to activate cosmetics from your inventory.",
-    "tip4": "Rare lootboxes have higher chances for epic items.",
-    "tip5": "Earn XP to level up faster.",
-    "tip6": "Tip: keep moving to read trajectories.",
-    "tip7": "Tip: timing matters more than speed.",
-    "tip8": "Try XP packs before a tournament.",
+    "tip2": "Advice: chain jumps to avoid low bombs.",
+    "tip3": "Remember to activate your cosmetics from your inventory.",
+    "tip4": "Rare lootboxes offer better chances for epic items.",
+    "tip5": "Gain XP to level up faster.",
+    "tip6": "Tip: stay in motion to read trajectories.",
+    "tip7": "Advice: jump timing is more important than speed.",
+    "tip8": "Consider testing XP packs before a tournament.",
     "tip9": "Epic avatars are rarer in lootboxes.",
     "tip10": "Cosmetic effects do not change gameplay.",
-    "tip11": "Watch the stage number to anticipate difficulty.",
-    "tip12": "After a loss, play another round to stay sharp.",
-    "tip13": "Precious lootboxes have the best epic rates.",
-    "tip14": "Switch avatars to refresh your style.",
-    "tip15": "Low bombs are dodged with short jumps.",
-    "tip16": "High bombs are dodged by staying grounded.",
-    "tip17": "Precision beats panic.",
-    "tip18": "Train in solo to master the rhythm.",
-    "tip19": "Multiplayer gets intense after stage 10.",
-    "tip20": "A good streak boosts confidence, not hitboxes.",
-    "quote1": "The dune coder knows each bug is a grain of sand.",
-    "quote2": "In the keyboard wind, logic carves a path.",
-    "quote3": "The desert forgets nothing, logs do not either.",
-    "quote4": "An algorithm is a caravan: move, adjust, move.",
-    "quote5": "One clear function beats a thousand dusty lines.",
+    "tip11": "Check the stage to anticipate difficulty.",
+    "tip12": "After a defeat, play again to stay warmed up.",
+    "tip13": "Precious lootboxes offer the best epic rates.",
+    "tip14": "Change your avatar to vary your style.",
+    "tip15": "Low bombs are dodged with a short jump.",
+    "tip16": "High bombs are dodged by staying on the ground.",
+    "tip17": "Precision is better than panic.",
+    "tip18": "Practice solo to master the rhythm.",
+    "tip19": "Multiplayer mode gets more intense after stage 10.",
+    "tip20": "A good streak increases your confidence, not your hitbox.",
+    "quote1": "The dune coder knows that every bug is a grain of sand.",
+    "quote2": "In the wind of the keyboard, logic carves its path.",
+    "quote3": "The desert forgets nothing, and neither do the logs.",
+    "quote4": "The algorithm is a caravan: move forward, adjust, move forward.",
+    "quote5": "A clear function is worth a thousand lines of dust.",
     "quote6": "The dune coder tests before the storm.",
-    "quote7": "Rarity lives in patience, not in chance.",
+    "quote7": "Rarity is found in patience, not in chance.",
     "quote8": "Every refactor is a temporary oasis.",
-    "quote9": "Desert silence sounds like a green build.",
+    "quote9": "The silence of the desert feels like a successful build.",
     "quote10": "Errors pass, good practices remain.",
-    "quote11": "Dunes shift, architecture holds.",
+    "quote11": "The dunes change, the architecture holds.",
     "quote12": "The debugger is a compass.",
-    "quote13": "A good commit leaves a clean trace in the sand.",
-    "quote14": "The dune coder masters dependencies.",
+    "quote13": "A good commit is a clear track in the sand.",
+    "quote14": "The dune coder masters their dependencies.",
     "quote15": "Simplicity is the rarest weapon.",
-    "quote16": "In the dunes, every merge leaves a footprint.",
+    "quote16": "In the dunes, every merge leaves an imprint.",
     "quote17": "The dune coder respects the main branch.",
-    "quote18": "The wind shifts, production demands strong tests.",
-    "quote19": "A clean diff is a journey without storms.",
-    "quote20": "Sand moves, API contracts remain.",
+    "quote18": "The wind shifts, production demands solid tests.",
+    "quote19": "A clean diff is worth a storm-free journey.",
+    "quote20": "The sand shifts, but API contracts remain.",
     "quote21": "Technical debt is a worm that grows in the shadows.",
-    "quote22": "Broken promises shatter like glass in the desert.",
+    "quote22": "Unkept promises break like glass in the desert.",
     "quote23": "The CI pipeline is the caravan: follow it.",
     "quote24": "The dune coder logs before judging.",
-    "quote25": "A fast rollback is an honorable retreat.",
-    "quote26": "Production does not forget, like the dunes.",
-    "quote27": "Git is a timeline, not a dumpster.",
-    "quote28": "Review is a shelter against the heat of bugs.",
-    "quote29": "A mismanaged cache is a deceptive mirage.",
+    "quote25": "A quick rollback is an honorable retreat.",
+    "quote26": "Production does not forget, much like the dunes.",
+    "quote27": "Git is a chronology, not a trash can.",
+    "quote28": "Review is a shelter from the heat of bugs.",
+    "quote29": "A poorly managed cache is a deceptive mirage.",
     "quote30": "Clean code guides the caravan of features.",
-    "quote31": "Secrets must stay buried in the sand.",
+    "quote31": "Secrets must remain buried in the sand.",
     "quote32": "Monitoring is the sentinel of cold nights.",
-    "quote33": "The dune coder ships small, but ships often.",
-    "quote34": "Simplicity crosses production storms.",
+    "quote33": "The dune coder delivers small, but delivers often.",
+    "quote34": "Simplicity survives the storms of production.",
     "quote35": "Refactoring is a journey, not a destination."
   }
 }

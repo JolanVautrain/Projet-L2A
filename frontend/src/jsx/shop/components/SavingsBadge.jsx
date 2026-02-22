@@ -1,11 +1,18 @@
-import PropTypes from 'prop-types';
-import './SavingsBadge.css';
+import PropTypes from "prop-types";
+import { useLanguage } from "../../autres/Language.jsx";
 
+// Composant de badge d'économies pour les produits en promotion
 export function SavingsBadge({ originalPrice, originalOldPrice }) {
+  const { t } = useLanguage();
+
   if (!originalOldPrice || !originalPrice) return null;
 
-  const oldVal = Number.parseFloat(originalOldPrice.replace('€', '').replace(',', '.'));
-  const newVal = Number.parseFloat(originalPrice.replace('€', '').replace(',', '.'));
+  const oldVal = Number.parseFloat(
+    originalOldPrice.replace("€", "").replace(",", "."),
+  );
+  const newVal = Number.parseFloat(
+    originalPrice.replace("€", "").replace(",", "."),
+  );
   const savings = Math.round(((oldVal - newVal) / oldVal) * 100);
 
   if (savings <= 0) return null;
@@ -13,7 +20,7 @@ export function SavingsBadge({ originalPrice, originalOldPrice }) {
   return (
     <div className="savings-badge">
       <span className="savings-percent">-{savings}%</span>
-      <span className="savings-text">Économies</span>
+      <span className="savings-text">{t("shop.economies")}</span>
     </div>
   );
 }

@@ -2,17 +2,13 @@
 
 import logging
 import os
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
-from typing import Any
-from typing import Callable
+from typing import Any, Callable
 
-import psycopg2  # type: ignore
-from flask import Response
-from flask import jsonify
-from flask import request
-from psycopg2 import OperationalError  # type: ignore
+import psycopg2
+from flask import Response, jsonify, request
+from psycopg2 import OperationalError
 
 BAD_REQUEST = "Bad Request"
 DATABASE_ERROR = "Database error"
@@ -26,9 +22,9 @@ def make_response(data: Any, status: int = 200) -> Response:
     return resp
 
 
-def handle_db_errors(f: Callable[..., Response]) -> Callable[..., Response]:
+def handle_db_errors(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args: Any, **kwargs: Any) -> Response:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             if request.method != "OPTIONS":
                 touch_session_from_headers()
@@ -42,9 +38,9 @@ def handle_db_errors(f: Callable[..., Response]) -> Callable[..., Response]:
     return wrapper
 
 
-def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
+def require_admin(f: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(f)
-    def wrapper(*args: Any, **kwargs: Any) -> Response:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         if request.method == "OPTIONS":
             return f(*args, **kwargs)
 
@@ -61,7 +57,8 @@ def require_admin(f: Callable[..., Response]) -> Callable[..., Response]:
             from . import db
 
             row = db.query_fetchone(
-                "SELECT is_admin FROM users WHERE username = %s", (user,)
+                "SELECT is_admin FROM users WHERE username = %s",
+                (user,)
             )
             if row and row[0]:  # User exists and has is_admin = true
                 return f(*args, **kwargs)
@@ -79,7 +76,7 @@ def is_session_active(last_seen: datetime | str | None) -> bool:
     if isinstance(last_seen, str):
         last_seen = datetime.fromisoformat(last_seen)
 
-    if isinstance(last_seen, datetime) and last_seen.tzinfo:
+    if last_seen.tzinfo:
         now = datetime.now(last_seen.tzinfo)
     else:
         now = datetime.now()
@@ -98,7 +95,8 @@ def touch_session_from_headers() -> None:
 
         with db.get_db_connection() as conn, db.get_db_cursor(conn) as cur:
             cur.execute(
-                "SELECT last_seen FROM user_sessions WHERE username = %s AND session_token = %s",
+                "SELECT last_seen FROM user_sessions "
+                "WHERE username = %s AND session_token = %s",
                 (user, token),
             )
             row = cur.fetchone()
@@ -107,12 +105,14 @@ def touch_session_from_headers() -> None:
 
             if not is_session_active(row[0]):
                 cur.execute(
-                    "DELETE FROM user_sessions WHERE username = %s AND session_token = %s",
+                    "DELETE FROM user_sessions "
+                    "WHERE username = %s AND session_token = %s",
                     (user, token),
                 )
             else:
                 cur.execute(
-                    "UPDATE user_sessions SET last_seen = CURRENT_TIMESTAMP WHERE username = %s",
+                    "UPDATE user_sessions SET last_seen = "
+                    "CURRENT_TIMESTAMP WHERE username = %s",
                     (user,),
                 )
             conn.commit()

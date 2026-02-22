@@ -3,7 +3,22 @@ import PropTypes from "prop-types";
 import shopProductsData from "../shop/shopProducts.json";
 import { useSkins } from "../shop/hooks/useSkins.js";
 import { useBombPack } from "../shop/hooks/useBombPack.js";
-import "./UserInventory.css";
+
+// Helpers extracted to reduce nesting depth
+const findProductById = (id) =>
+  shopProductsData.products.find((p) => p.id === id);
+
+const enrichPurchase = (purchase, t) => {
+  const productData = findProductById(purchase.product_id);
+  return {
+    ...purchase,
+    img: productData?.img || "/assets/shop/default.png",
+    category: productData?.category || "items",
+    title: productData?.titleKey
+      ? t(productData.titleKey)
+      : purchase.product_name,
+  };
+};
 
 export function UserInventory({ user, t }) {
   const [purchases, setPurchases] = useState([]);
@@ -30,28 +45,16 @@ export function UserInventory({ user, t }) {
         const data = await res.json();
 
         // Enrichir les données d'achat avec les informations du produit
-        const enrichedPurchases = data.purchases.map((purchase) => {
-          const productData = shopProductsData.products.find(
-            (p) => p.id === purchase.product_id,
-          );
-          return {
-            ...purchase,
-            img: productData?.img || "/assets/shop/default.png",
-            category: productData?.category || "items",
-            title: productData?.titleKey
-              ? t(productData.titleKey)
-              : purchase.product_name,
-          };
-        });
+        const enrichedPurchases = data.purchases.map((purchase) =>
+          enrichPurchase(purchase, t),
+        );
 
         setPurchases(enrichedPurchases);
 
         // Créer l'inventaire : articles uniques (cosmétiques) + articles boosters
         const uniqueProducts = {};
         enrichedPurchases.forEach((purchase) => {
-          const product = shopProductsData.products.find(
-            (p) => p.id === purchase.product_id,
-          );
+          const product = findProductById(purchase.product_id);
           const isCosmetic =
             product?.category === "skins" ||
             product?.category === "items" ||
@@ -59,11 +62,11 @@ export function UserInventory({ user, t }) {
           const isBooster = product?.category === "boosters";
 
           // Pour les cosmétiques (uniques), garder seulement la première mise à jour
-          if (isCosmetic && !uniqueProducts[purchase.product_id]) {
-            uniqueProducts[purchase.product_id] = purchase;
-          }
           // Pour les boosters, garder le plus récent (on affiche l'effet immédiat)
-          else if (isBooster) {
+          if (
+            (isCosmetic && !uniqueProducts[purchase.product_id]) ||
+            isBooster
+          ) {
             uniqueProducts[purchase.product_id] = purchase;
           }
         });
@@ -80,6 +83,7 @@ export function UserInventory({ user, t }) {
     fetchPurchases();
   }, [user, t]);
 
+  // Charger l'avatar actif depuis le localStorage
   useEffect(() => {
     if (!user) return;
     const savedAvatar = localStorage.getItem(`avatar_${user}`) || "";
@@ -119,6 +123,7 @@ export function UserInventory({ user, t }) {
     }
   };
 
+  // Vérifie si un article cosmétique est actif pour l'utilisateur
   const getCosmeticStatus = (itemId, product) => {
     if (itemId === "skin-neo") {
       return activeSkin === itemId;
@@ -130,15 +135,14 @@ export function UserInventory({ user, t }) {
     }
     return false;
   };
-
+  // Lors du changement d'utilisateur, afficher un message de chargement le temps de récupérer les données
   if (loading) {
     return <div className="user-inventory">{t("common.loading")}</div>;
   }
-
+  // Si aucun utilisateur n'est connecté, afficher un message d'invite à se connecter
   if (!user) {
     return <div className="user-inventory">{t("account.loginRequired")}</div>;
   }
-
   return (
     <div className="user-inventory">
       <div className="inventory-tabs">
@@ -155,23 +159,19 @@ export function UserInventory({ user, t }) {
           {t("account.purchaseHistory")}
         </button>
       </div>
-
       {activeTab === "inventory" && (
         <div className="inventory-content">
           <h3>{t("account.inventory")}</h3>
           {inventory.length > 0 ? (
             <div className="inventory-grid">
               {inventory.map((item) => {
-                const product = shopProductsData.products.find(
-                  (p) => p.id === item.product_id,
-                );
+                const product = findProductById(item.product_id);
                 const isCosmetic =
                   product?.category === "skins" ||
                   product?.category === "items" ||
                   product?.category === "avatars";
                 const isActivatable = product?.activatable === true;
                 const isActive = getCosmeticStatus(item.product_id, product);
-
                 return (
                   <div key={item.product_id} className="inventory-item">
                     <img
@@ -207,7 +207,6 @@ export function UserInventory({ user, t }) {
           )}
         </div>
       )}
-
       {activeTab === "history" && (
         <div className="inventory-content">
           <h3>{t("account.purchaseHistory")}</h3>
@@ -217,7 +216,7 @@ export function UserInventory({ user, t }) {
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>🖼️</th>
+                    <th>Image</th>
                     <th>Produit</th>
                     <th>Prix</th>
                     <th>{t("account.purchaseDate")}</th>

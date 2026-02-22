@@ -187,7 +187,7 @@ const GameWaitingRoom = () => {
           }
           break;
 
-        case "start_game":
+        case "start_game": {
           sessionStorage.removeItem("confirmedLeavingGame");
           const resolvedMatchId = msg.matchId || msg.match_id || msg.matchID;
           if (resolvedMatchId) {
@@ -210,6 +210,7 @@ const GameWaitingRoom = () => {
           shouldCloseSocket = false;
           navigate("/game");
           break;
+        }
 
         default:
           console.warn("Unknown message", msg);

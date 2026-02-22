@@ -22,7 +22,7 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
     setError("");
     const file = event.target?.files?.[0];
     if (!file) return;
-    if (!file.name.endsWith('.json')) {
+    if (!file.name.endsWith(".json")) {
       setError(t("forgotPassword.error_invalid_code") || "Invalid file format");
       return;
     }
@@ -34,10 +34,16 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
           if (obj.username) setUsername(String(obj.username));
           if (obj.recovery_code) setRecoveryCode(String(obj.recovery_code));
         } catch {
-          setError(t("forgotPassword.error_invalid_code") || "Invalid JSON file");
+          setError(
+            t("forgotPassword.error_invalid_code") || "Invalid JSON file",
+          );
         }
       })
-      .catch(() => setError(t("forgotPassword.error_invalid_code") || "Failed to read file"));
+      .catch(() =>
+        setError(
+          t("forgotPassword.error_invalid_code") || "Failed to read file",
+        ),
+      );
 
     // Reset de l'input pour permettre de réimporter le même fichier si besoin
     event.target.value = null;
@@ -84,7 +90,9 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
       .then((data) => {
         if (data.error) {
           setError(
-            t(`forgotPassword.error_${data.error}`) || data.message || t("forgotPassword.resetFailed")
+            t(`forgotPassword.error_${data.error}`) ||
+              data.message ||
+              t("forgotPassword.resetFailed"),
           );
         } else if (data.ok) {
           setSuccess(true);
@@ -113,7 +121,11 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
         <header className="modal-header">
           <h2>{t("forgotPassword.title")}</h2>
         </header>
-        <button className="modal-close" onClick={onClose} title={t("common.close")}>
+        <button
+          className="modal-close"
+          onClick={onClose}
+          title={t("common.close")}
+        >
           ×
         </button>
 
@@ -126,7 +138,9 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
         {!success && (
           <form className="modal-form" onSubmit={handleSubmit}>
             <div className="modal-field">
-              <label htmlFor="forgot-username">{t("forgotPassword.username")}</label>
+              <label htmlFor="forgot-username">
+                {t("forgotPassword.username")}
+              </label>
               <input
                 id="forgot-username"
                 type="text"
@@ -139,15 +153,34 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
               />
             </div>
 
-            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
-              <input id="import-json" type="file" accept=".json" style={{ display: "none" }} onChange={handleImportFile} />
-              <button type="button" className="modal-link" onClick={() => document.getElementById('import-json')?.click()}>
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                alignItems: "center",
+                marginBottom: "8px",
+              }}
+            >
+              <input
+                id="import-json"
+                type="file"
+                accept=".json"
+                style={{ display: "none" }}
+                onChange={handleImportFile}
+              />
+              <button
+                type="button"
+                className="modal-link"
+                onClick={() => document.getElementById("import-json")?.click()}
+              >
                 {t("forgotPassword.importJson") || "Importer un fichier JSON"}
               </button>
             </div>
 
             <div className="modal-field">
-              <label htmlFor="recovery-code">{t("forgotPassword.recoveryCode")}</label>
+              <label htmlFor="recovery-code">
+                {t("forgotPassword.recoveryCode")}
+              </label>
               <input
                 id="recovery-code"
                 type="text"
@@ -160,7 +193,9 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
             </div>
 
             <div className="modal-field">
-              <label htmlFor="new-password">{t("forgotPassword.newPassword")}</label>
+              <label htmlFor="new-password">
+                {t("forgotPassword.newPassword")}
+              </label>
               <input
                 id="new-password"
                 type="password"
@@ -174,7 +209,9 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
             </div>
 
             <div className="modal-field">
-              <label htmlFor="confirm-password">{t("forgotPassword.confirmPassword")}</label>
+              <label htmlFor="confirm-password">
+                {t("forgotPassword.confirmPassword")}
+              </label>
               <input
                 id="confirm-password"
                 type="password"
@@ -190,7 +227,9 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
             {error && <div className="modal-error">{error}</div>}
 
             <button type="submit" className="modal-button" disabled={loading}>
-              {loading ? t("common.loading") : t("forgotPassword.resetPassword")}
+              {loading
+                ? t("common.loading")
+                : t("forgotPassword.resetPassword")}
             </button>
           </form>
         )}
@@ -202,7 +241,7 @@ function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 

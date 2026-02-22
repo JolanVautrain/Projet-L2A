@@ -1,11 +1,10 @@
-
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "./Language.jsx";
 
 /**
  * Composant PageNotFound
- * 
+ *
  * Affiche une page 404 personnalisée avec animation interactive.
  */
 function PageNotFound() {
@@ -51,10 +50,10 @@ function PageNotFound() {
       const eyeEls = container.querySelectorAll(".eye");
       eyesDataRef.current = Array.from(eyeEls)
         .map((eyeEl) => {
-          const pupilEl = eyeEl.querySelector('.pupil');
+          const pupilEl = eyeEl.querySelector(".pupil");
           if (!pupilEl) return null;
           // assurer le centrage initial
-          pupilEl.style.transform = 'translate3d(-50%, -50%, 0)';
+          pupilEl.style.transform = "translate3d(-50%, -50%, 0)";
           return { eyeEl, pupilEl, center: { x: 0, y: 0 } };
         })
         .filter(Boolean);
@@ -62,7 +61,7 @@ function PageNotFound() {
 
     /**
      * Composant PageNotFound
-     * 
+     *
      * Met à jour les centres des yeux pour le calcul des mouvements des pupilles.
      */
     function updateEyeCenters() {
@@ -77,7 +76,7 @@ function PageNotFound() {
 
     /**
      * Composant PageNotFound
-     * 
+     *
      * Anime les pupilles pour qu'elles suivent la position cible.
      */
     function animate() {
@@ -108,7 +107,8 @@ function PageNotFound() {
     globalThis.addEventListener("scroll", updateEyeCenters, { passive: true });
     // démarrage de l'animation
     rafId = globalThis.requestAnimationFrame(animate);
-    return () => { // nettoyage des écouteurs et de l'animation
+    return () => {
+      // nettoyage des écouteurs et de l'animation
       globalThis.removeEventListener("mousemove", onMove);
       globalThis.removeEventListener("resize", updateEyeCenters);
       globalThis.removeEventListener("scroll", updateEyeCenters);
@@ -118,7 +118,7 @@ function PageNotFound() {
 
   /**
    * Composant PageNotFound
-   * 
+   *
    * Joue le fichier audio associé à l'ID donné.
    */
   function handleSpeak(id = "main") {
@@ -128,10 +128,10 @@ function PageNotFound() {
       console.error("Erreur lors de la lecture de l'audio:", error);
     });
   }
-  
+
   /**
    * Composant PageNotFound
-   * 
+   *
    * Gère le clic sur une figure géométrique pour déclencher la parole et l'animation.
    */
   function handleClickGeom(id = "main") {
@@ -144,9 +144,9 @@ function PageNotFound() {
 
   /**
    * Composant PageNotFound
-   * 
+   *
    * Gère la pression d'une touche sur une figure géométrique pour déclencher la parole et l'animation.
-   * 
+   *
    * @param {*} e  événement clavier
    * @param {*} id  ID de la figure géométrique
    */
@@ -168,10 +168,16 @@ function PageNotFound() {
             onClick={() => handleClickGeom("main")}
             onKeyDown={(e) => handleKeyGeom(e, "main")}
           >
-            <div className="eye left-eye"><span className="pupil" ref={leftPupil} /></div>
-            <div className="eye right-eye"><span className="pupil" ref={rightPupil} /></div>
+            <div className="eye left-eye">
+              <span className="pupil" ref={leftPupil} />
+            </div>
+            <div className="eye right-eye">
+              <span className="pupil" ref={rightPupil} />
+            </div>
             {speakingId === "main" && (
-              <div className="speech-bubble" aria-live="assertive">{speeches.main}</div>
+              <div className="speech-bubble" aria-live="assertive">
+                {speeches.main}
+              </div>
             )}
           </button>
           <button
@@ -182,10 +188,16 @@ function PageNotFound() {
             onClick={() => handleClickGeom("one")}
             onKeyDown={(e) => handleKeyGeom(e, "one")}
           >
-            <div className="eye"><span className="pupil" /></div>
-            <div className="eye"><span className="pupil" /></div>
+            <div className="eye">
+              <span className="pupil" />
+            </div>
+            <div className="eye">
+              <span className="pupil" />
+            </div>
             {speakingId === "one" && (
-              <div className="speech-bubble" aria-live="assertive">{speeches.one}</div>
+              <div className="speech-bubble" aria-live="assertive">
+                {speeches.one}
+              </div>
             )}
           </button>
           <button
@@ -196,10 +208,16 @@ function PageNotFound() {
             onClick={() => handleClickGeom("two")}
             onKeyDown={(e) => handleKeyGeom(e, "two")}
           >
-            <div className="eye"><span className="pupil" /></div>
-            <div className="eye"><span className="pupil" /></div>
+            <div className="eye">
+              <span className="pupil" />
+            </div>
+            <div className="eye">
+              <span className="pupil" />
+            </div>
             {speakingId === "two" && (
-              <div className="speech-bubble" aria-live="assertive">{speeches.two}</div>
+              <div className="speech-bubble" aria-live="assertive">
+                {speeches.two}
+              </div>
             )}
           </button>
           <button
@@ -210,19 +228,43 @@ function PageNotFound() {
             onClick={() => handleClickGeom("three")}
             onKeyDown={(e) => handleKeyGeom(e, "three")}
           >
-            <div className="eye"><span className="pupil" /></div>
-            <div className="eye"><span className="pupil" /></div>
+            <div className="eye">
+              <span className="pupil" />
+            </div>
+            <div className="eye">
+              <span className="pupil" />
+            </div>
             {speakingId === "three" && (
-              <div className="speech-bubble" aria-live="assertive">{speeches.three}</div>
+              <div className="speech-bubble" aria-live="assertive">
+                {speeches.three}
+              </div>
             )}
           </button>
         </div>
         <div className="pnf-illus" aria-hidden>
-          <svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="6" y="6" width="208" height="148" rx="12" fill="#071227" stroke="#18304a"/>
+          <svg
+            width="220"
+            height="160"
+            viewBox="0 0 220 160"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="6"
+              y="6"
+              width="208"
+              height="148"
+              rx="12"
+              fill="#071227"
+              stroke="#18304a"
+            />
             <g transform="translate(20,26)">
-              <circle cx="40" cy="40" r="28" fill="#0ea5e9" opacity="0.12"/>
-              <path d="M100 18c-10 0-18 8-18 18v20c0 10 8 18 18 18s18-8 18-18V36c0-10-8-18-18-18z" fill="#66e3b8" opacity="0.18"/>
+              <circle cx="40" cy="40" r="28" fill="#0ea5e9" opacity="0.12" />
+              <path
+                d="M100 18c-10 0-18 8-18 18v20c0 10 8 18 18 18s18-8 18-18V36c0-10-8-18-18-18z"
+                fill="#66e3b8"
+                opacity="0.18"
+              />
               <g transform="translate(0,80)" fill="#9fb2ff" opacity="0.9">
                 <rect x="0" y="0" width="160" height="8" rx="4" />
               </g>
@@ -233,7 +275,9 @@ function PageNotFound() {
           <h1 className="pnf-title">{t("pageNotFound.title")}</h1>
           <p className="pnf-sub">{t("pageNotFound.subtitle")}</p>
           <div className="pnf-actions">
-            <Link to="/" className="btn primary">{t("pageNotFound.returnHome")}</Link>
+            <Link to="/" className="btn primary">
+              {t("pageNotFound.returnHome")}
+            </Link>
           </div>
           <p className="pnf-hint">{t("pageNotFound.hint")}</p>
         </div>

@@ -42,10 +42,7 @@ import {
   setupCollisions,
 } from "./utils/GamePhysics.js";
 import { initControls, isJumpRequested } from "./utils/GameControls.js";
-import {
-  calculateXPReward,
-  checkAchievements,
-} from "./utils/GameGamification.js";
+import { calculateXPReward } from "./utils/GameGamification.js";
 import {
   initParticles,
   updateParticles,
@@ -245,12 +242,7 @@ function handleObstacleCollision(_player, _obstacle) {
             const userAchievements = userAchievementsStr
               ? JSON.parse(userAchievementsStr)
               : [];
-            const newAchievements = checkAchievements(
-              finalScore,
-              getStage(),
-              timerSeconds,
-              userAchievements,
-            );
+            const newAchievements = [];
 
             // Sauvegarder les nouveaux achievements
             if (newAchievements.length > 0) {

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import WebSocket, { WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({ port: 3001 });
@@ -257,6 +257,259 @@ function sendStateCorrection(ws, username, state) {
   }
 }
 
+// Helpers pour simplifier le gestionnaire de messages
+function _handleJoinLobby(ws, msg) {
+  const username = msg.username;
+  if (!username) return;
+  if (lobby.has(ws)) return;
+
+  lobby.set(ws, username);
+  connectionInfo.set(ws, { username, matchId: null, inLobby: true });
+  console.log(`[X] ${username} rejoint le lobby (total: ${lobby.size})`);
+
+  broadcastToLobby({ type: "player_count", count: lobby.size });
+
+  if (lobby.size >= MIN_PLAYERS) {
+    const entries = [];
+    for (const [socket, user] of lobby.entries()) {
+      if (entries.length >= MIN_PLAYERS) break;
+      lobby.delete(socket);
+      entries.push({ username: user, ws: socket });
+    }
+    if (entries.length === MIN_PLAYERS) {
+      createMatch(entries);
+    }
+    broadcastToLobby({ type: "player_count", count: lobby.size });
+  }
+}
+
+function _handleJoinGame(ws, msg) {
+  const username = msg.username;
+  const matchId = msg.matchId;
+  const assignedMatch = assignments.get(username);
+  console.log("[join_game] Received:", { username, matchId, assignedMatch });
+  if (!username || !matchId || assignedMatch !== matchId) {
+    console.warn("[join_game] Invalid:", {
+      noUsername: !username,
+      noMatchId: !matchId,
+      mismatchedMatch: assignedMatch !== matchId,
+      assignedMatch,
+      receivedMatchId: matchId,
+    });
+    ws.send(JSON.stringify({ type: "error", message: "invalid_match" }));
+    return;
+  }
+
+  const match = matches.get(matchId);
+  if (!match) {
+    ws.send(JSON.stringify({ type: "error", message: "match_not_found" }));
+    return;
+  }
+
+  match.players.set(username, ws);
+  match.playerStates.set(username, {
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    velocityY: 0,
+    lastSequence: -1,
+    lastJumpTime: 0,
+  });
+  connectionInfo.set(ws, { username, matchId, inLobby: false });
+
+  const playerNames = Array.from(match.players.keys());
+  const opponents = playerNames.filter((name) => name !== username);
+
+  console.log(`[join_game] ${username} joined match ${matchId}. Players: ${playerNames.join(", ")}`);
+
+  ws.send(JSON.stringify({
+    type: "join_ok",
+    matchId,
+    players: playerNames,
+    opponent: opponents.length > 0 ? opponents[0] : null,
+  }));
+
+  if (opponents.length > 0) {
+    match.players.forEach((playerWs, playerName) => {
+      if (playerName !== username && playerWs.readyState === WebSocket.OPEN) {
+        playerWs.send(
+          JSON.stringify({
+            type: "player_joined",
+            matchId,
+            username: username,
+            allPlayers: playerNames,
+          })
+        );
+      }
+    });
+  }
+}
+
+function _handleStageUpdate(msg, match) {
+  const newStage = Number(msg.stage || 1);
+  if (!Number.isNaN(newStage)) {
+    match.stage = Math.max(match.stage, newStage);
+  }
+}
+
+function _handleInput(ws, msg, match, matchId) {
+  const inputUsername = msg.username;
+  const sequence = msg.sequence || 0;
+
+  if (match) {
+    const validation = validateInput(match, inputUsername, {
+      input: msg.input,
+      sequence,
+    });
+
+    if (!validation.valid) {
+      console.warn(`[!] Input invalide de ${inputUsername}: ${validation.reason}`);
+      sendInputAck(ws, { sequence }, false);
+      return;
+    }
+
+    const updatedState = updatePlayerState(match, inputUsername, {
+      input: msg.input,
+      sequence,
+    });
+
+    sendInputAck(ws, { sequence }, true);
+
+    broadcastToMatch(matchId, {
+      type: "input",
+      matchId,
+      username: inputUsername,
+      input: msg.input,
+      sequence,
+      serverState: {
+        x: updatedState.x || 0,
+        y: updatedState.y || 0,
+        velocityX: updatedState.vx || 0,
+        velocityY: updatedState.velocityY || 0,
+      },
+    });
+  } else {
+    sendInputAck(ws, { sequence }, true);
+    broadcastToClients(wss.clients, {
+      type: "input",
+      username: inputUsername,
+      input: msg.input,
+      sequence,
+    });
+  }
+}
+
+function _handleGameOver(ws, msg, match, matchId) {
+  const gameOverUsername = msg.username;
+  console.log(`[X] ${gameOverUsername} game over`);
+
+  if (match) {
+    match.overPlayers.add(gameOverUsername);
+    broadcastToMatch(matchId, {
+      type: "gameOver",
+      matchId,
+      username: gameOverUsername,
+      timestamp: Date.now(),
+    });
+
+    if (match.overPlayers.size >= match.players.size) {
+      if (match.spawnTimer) {
+        clearTimeout(match.spawnTimer);
+      }
+      match.players.forEach((_, user) => assignments.delete(user));
+      matches.delete(matchId);
+    }
+  } else {
+    broadcastToClients(wss.clients, {
+      type: "gameOver",
+      username: gameOverUsername,
+      timestamp: Date.now(),
+    });
+  }
+}
+
+function _handleSyncState(ws, msg, match, info) {
+  const state = msg.state;
+  const receivedState = match.playerStates.get(info?.username);
+
+  const deltaX = Math.abs((state.x || 0) - (receivedState?.x || 0));
+  const deltaY = Math.abs((state.y || 0) - (receivedState?.y || 0));
+
+  if (deltaX > 100 || deltaY > 100) {
+    console.warn(`[!] Désynchronisation détectée pour ${info?.username}`);
+    sendStateCorrection(ws, info?.username, receivedState);
+  }
+}
+
+function _handlePlayerLeaving(msg) {
+  const username = msg.username;
+  const matchId = msg.matchId;
+  console.log(`[X] ${username} quitte le match ${matchId} (message received)`);
+
+  if (matchId) {
+    const match = matches.get(matchId);
+    if (match) {
+      console.log(`[X] Notifying other players in match ${matchId} about ${username} leaving`);
+      // Notifier l'autre joueur que son adversaire s'est déconnecté
+      broadcastToMatch(matchId, {
+        type: "opponent_disconnected",
+        matchId,
+        username,
+      });
+
+      match.players.delete(username);
+      match.playerStates.delete(username);
+      match.overPlayers.delete(username);
+      if (match.players.size === 0) {
+        if (match.spawnTimer) {
+          clearTimeout(match.spawnTimer);
+        }
+        matches.delete(matchId);
+      }
+    } else {
+      console.warn(`[!] Match ${matchId} not found for leaving player ${username}`);
+    }
+    if (username) {
+      assignments.delete(username);
+    }
+  }
+}
+
+function _handleClose(ws, info) {
+  if (info.inLobby && info.username) {
+    lobby.delete(ws);
+    broadcastToLobby({ type: "player_count", count: lobby.size });
+  }
+
+  const matchId = info.matchId || (info.username ? assignments.get(info.username) : null);
+  if (!matchId) return;
+
+  const match = matches.get(matchId);
+  if (match) {
+    broadcastToMatch(matchId, {
+      type: "opponent_disconnected",
+      matchId,
+      username: info.username,
+    });
+
+    match.players.delete(info.username);
+    match.playerStates.delete(info.username);
+    match.overPlayers.delete(info.username);
+    if (match.players.size === 0) {
+      if (match.spawnTimer) {
+        clearTimeout(match.spawnTimer);
+      }
+      matches.delete(matchId);
+    }
+  }
+
+  if (info.username) {
+    assignments.delete(info.username);
+  }
+}
+
+
 wss.on("connection", (ws) => {
   console.log(`[X] Client connecté. Total: ${wss.clients.size}`);
 
@@ -271,96 +524,12 @@ wss.on("connection", (ws) => {
       const msg = JSON.parse(raw.toString());
 
       if (msg.type === "join_lobby" || msg.type === "join") {
-        const username = msg.username;
-        if (!username) return;
-
-        if (lobby.has(ws)) return;
-
-        lobby.set(ws, username);
-        connectionInfo.set(ws, { username, matchId: null, inLobby: true });
-        console.log(`[X] ${username} rejoint le lobby (total: ${lobby.size})`);
-
-        broadcastToLobby({ type: "player_count", count: lobby.size });
-
-        if (lobby.size >= MIN_PLAYERS) {
-          const entries = [];
-          for (const [socket, user] of lobby.entries()) {
-            if (entries.length >= MIN_PLAYERS) break;
-            lobby.delete(socket);
-            entries.push({ username: user, ws: socket });
-          }
-          if (entries.length === MIN_PLAYERS) {
-            createMatch(entries);
-          }
-          broadcastToLobby({ type: "player_count", count: lobby.size });
-        }
+        _handleJoinLobby(ws, msg);
         return;
       }
 
       if (msg.type === "join_game") {
-        const username = msg.username;
-        const matchId = msg.matchId;
-        const assignedMatch = assignments.get(username);
-        console.log("[join_game] Received:", { username, matchId, assignedMatch });
-        if (!username || !matchId || assignedMatch !== matchId) {
-          console.warn("[join_game] Invalid:", {
-            noUsername: !username,
-            noMatchId: !matchId,
-            mismatchedMatch: assignedMatch !== matchId,
-            assignedMatch,
-            receivedMatchId: matchId,
-          });
-          ws.send(JSON.stringify({ type: "error", message: "invalid_match" }));
-          return;
-        }
-
-        const match = matches.get(matchId);
-        if (!match) {
-          ws.send(JSON.stringify({ type: "error", message: "match_not_found" }));
-          return;
-        }
-
-        match.players.set(username, ws);
-        match.playerStates.set(username, {
-          x: 0,
-          y: 0,
-          vx: 0,
-          vy: 0,
-          velocityY: 0,
-          lastSequence: -1,
-          lastJumpTime: 0,
-        });
-        connectionInfo.set(ws, { username, matchId, inLobby: false });
-
-        // Récupérer la liste de tous les joueurs du match
-        const playerNames = Array.from(match.players.keys());
-        // Trouver l'adversaire (tous les joueurs sauf l'utilisateur actuel)
-        const opponents = playerNames.filter(name => name !== username);
-
-        console.log(`[join_game] ${username} joined match ${matchId}. Players: ${playerNames.join(', ')}`);
-
-        // Envoyer join_ok au joueur qui vient de rejoindre
-        ws.send(JSON.stringify({
-          type: "join_ok",
-          matchId,
-          players: playerNames,
-          opponent: opponents.length > 0 ? opponents[0] : null
-        }));
-
-        // Notifier tous les AUTRES joueurs du match qu'un nouveau joueur a rejoint
-        if (opponents.length > 0) {
-          match.players.forEach((playerWs, playerName) => {
-            if (playerName !== username && playerWs.readyState === WebSocket.OPEN) {
-              playerWs.send(JSON.stringify({
-                type: "player_joined",
-                matchId,
-                username: username,
-                allPlayers: playerNames
-              }));
-            }
-          });
-        }
-
+        _handleJoinGame(ws, msg);
         return;
       }
 
@@ -369,137 +538,27 @@ wss.on("connection", (ws) => {
       const match = matchId ? matches.get(matchId) : null;
 
       if (msg.type === "stage_update" && match) {
-        const newStage = Number(msg.stage || 1);
-        if (!Number.isNaN(newStage)) {
-          match.stage = Math.max(match.stage, newStage);
-        }
+        _handleStageUpdate(msg, match);
         return;
       }
 
       if (msg.type === "input") {
-        const inputUsername = msg.username;
-        const sequence = msg.sequence || 0;
-
-        if (match) {
-          const validation = validateInput(match, inputUsername, {
-            input: msg.input,
-            sequence,
-          });
-
-          if (!validation.valid) {
-            console.warn(
-              `[!] Input invalide de ${inputUsername}: ${validation.reason}`
-            );
-            sendInputAck(ws, { sequence }, false);
-            return;
-          }
-
-          const updatedState = updatePlayerState(match, inputUsername, {
-            input: msg.input,
-            sequence,
-          });
-
-          sendInputAck(ws, { sequence }, true);
-
-          broadcastToMatch(matchId, {
-            type: "input",
-            matchId,
-            username: inputUsername,
-            input: msg.input,
-            sequence,
-            serverState: {
-              x: updatedState.x || 0,
-              y: updatedState.y || 0,
-              velocityX: updatedState.vx || 0,
-              velocityY: updatedState.velocityY || 0,
-            },
-          });
-        } else {
-          sendInputAck(ws, { sequence }, true);
-          broadcastToClients(wss.clients, {
-            type: "input",
-            username: inputUsername,
-            input: msg.input,
-            sequence,
-          });
-        }
+        _handleInput(ws, msg, match, matchId);
+        return;
       }
 
       if (msg.type === "gameOver") {
-        const gameOverUsername = msg.username;
-        console.log(`[X] ${gameOverUsername} game over`);
-
-        if (match) {
-          match.overPlayers.add(gameOverUsername);
-          broadcastToMatch(matchId, {
-            type: "gameOver",
-            matchId,
-            username: gameOverUsername,
-            timestamp: Date.now(),
-          });
-
-          if (match.overPlayers.size >= match.players.size) {
-            if (match.spawnTimer) {
-              clearTimeout(match.spawnTimer);
-            }
-            match.players.forEach((_, user) => assignments.delete(user));
-            matches.delete(matchId);
-          }
-        } else {
-          broadcastToClients(wss.clients, {
-            type: "gameOver",
-            username: gameOverUsername,
-            timestamp: Date.now(),
-          });
-        }
+        _handleGameOver(ws, msg, match, matchId);
+        return;
       }
 
       if (msg.type === "sync_state" && match) {
-        const state = msg.state;
-        const receivedState = match.playerStates.get(info?.username);
-
-        const deltaX = Math.abs((state.x || 0) - (receivedState?.x || 0));
-        const deltaY = Math.abs((state.y || 0) - (receivedState?.y || 0));
-
-        if (deltaX > 100 || deltaY > 100) {
-          console.warn(`[!] Désynchronisation détectée pour ${info?.username}`);
-          sendStateCorrection(ws, info?.username, receivedState);
-        }
+        _handleSyncState(ws, msg, match, info);
+        return;
       }
 
-      // ========== JOUEUR QUITTANT LE MATCH ==========
       if (msg.type === "player_leaving") {
-        const username = msg.username;
-        const matchId = msg.matchId;
-        console.log(`[X] ${username} quitte le match ${matchId} (message received)`);
-
-        if (matchId) {
-          const match = matches.get(matchId);
-          if (match) {
-            console.log(`[X] Notifying other players in match ${matchId} about ${username} leaving`);
-            // Notifier l'autre joueur que son adversaire s'est déconnecté
-            broadcastToMatch(matchId, {
-              type: "opponent_disconnected",
-              matchId,
-              username,
-            });
-
-            match.players.delete(username);
-            match.playerStates.delete(username);
-            match.overPlayers.delete(username);
-            if (match.players.size === 0) {
-              if (match.spawnTimer) {
-                clearTimeout(match.spawnTimer);
-              }
-              matches.delete(matchId);
-            }
-          } else {
-            console.warn(`[!] Match ${matchId} not found for leaving player ${username}`);
-          }
-          if (username) {
-            assignments.delete(username);
-          }
-        }
+        _handlePlayerLeaving(msg);
         return;
       }
     } catch (e) {
@@ -511,36 +570,7 @@ wss.on("connection", (ws) => {
     const info = connectionInfo.get(ws);
     if (!info) return;
 
-    if (info.inLobby && info.username) {
-      lobby.delete(ws);
-      broadcastToLobby({ type: "player_count", count: lobby.size });
-    }
-
-    const matchId = info.matchId || (info.username ? assignments.get(info.username) : null);
-    if (matchId) {
-      const match = matches.get(matchId);
-      if (match) {
-        // Notifier l'autre joueur que son adversaire s'est déconnecté
-        broadcastToMatch(matchId, {
-          type: "opponent_disconnected",
-          matchId,
-          username: info.username,
-        });
-
-        match.players.delete(info.username);
-        match.playerStates.delete(info.username);
-        match.overPlayers.delete(info.username);
-        if (match.players.size === 0) {
-          if (match.spawnTimer) {
-            clearTimeout(match.spawnTimer);
-          }
-          matches.delete(info.matchId);
-        }
-      }
-      if (info.username) {
-        assignments.delete(info.username);
-      }
-    }
+    _handleClose(ws, info);
 
     connectionInfo.delete(ws);
     console.log(`[!] ${info.username} déconnecté`);

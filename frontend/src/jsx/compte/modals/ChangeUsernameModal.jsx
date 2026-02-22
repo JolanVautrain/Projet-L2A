@@ -2,11 +2,18 @@ import { createPortal } from "react-dom";
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../../autres/Language.jsx";
+
 /**
  * Composant ChangeUsernameModal
  * Modal pour réinitialiser le mot de passe avec un recovery code
  */
-function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) {
+function ChangeUsernameModal({
+  isOpen,
+  onClose,
+  onBackToLogin,
+  user,
+  setUser,
+}) {
   const [password, setPassword] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,7 +52,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
           setError(
             t(`forgotPassword.error_${data.error}`) ||
               data.message ||
-              t("forgotPassword.resetFailed")
+              t("forgotPassword.resetFailed"),
           );
         } else if (data.ok) {
           setSuccess(true);
@@ -67,7 +74,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
             }),
           }).catch(() => {});
 
-          setUser(newUsername)
+          setUser(newUsername);
         }
       })
       .catch((err) => {
@@ -92,13 +99,11 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
         >
           ×
         </button>
-
         {success && (
           <div className="modal-success-message">
             {t("resetUsername.resetSuccess")}
           </div>
         )}
-
         {!success && (
           <form className="modal-form" onSubmit={handleSubmit}>
             <div className="modal-field">
@@ -108,7 +113,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
               <input
                 id="new-username"
                 type="password"
-                autoComplete="new-username"
+                autoComplete="username"
                 value={newUsername}
                 onChange={(e) => setNewUsername(e.target.value)}
                 required
@@ -116,7 +121,6 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
                 placeholder={t("resetUsername.newUsernamePlaceholder")}
               />
             </div>
-
             <div className="modal-field">
               <label htmlFor="password">
                 {t("forgotPassword.newPassword")}
@@ -132,15 +136,12 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
                 placeholder={t("forgotPassword.newPassword")}
               />
             </div>
-
             {error && <div className="modal-error">{error}</div>}
-
             <button type="submit" className="modal-button" disabled={loading}>
               {loading ? t("common.loading") : t("resetUsername.resetUsername")}
             </button>
           </form>
         )}
-
         <div className="modal-footer">
           <button className="modal-link" onClick={onBackToLogin}>
             {t("forgotPassword.backToLogin")}
@@ -148,7 +149,7 @@ function ChangeUsernameModal({ isOpen, onClose, onBackToLogin, user, setUser }) 
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -156,6 +157,8 @@ ChangeUsernameModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onBackToLogin: PropTypes.func.isRequired,
+  user: PropTypes.string.isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
 export default ChangeUsernameModal;

@@ -6,6 +6,7 @@ export function BombPackManager({ hasActiveBombPack }) {
   const [explosions, setExplosions] = useState([]);
   const [nextId, setNextId] = useState(0);
 
+  // Gérer les clics pour créer des explosions
   useEffect(() => {
     if (!hasActiveBombPack) return;
 

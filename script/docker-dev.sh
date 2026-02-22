@@ -21,7 +21,7 @@ PROJECT_ROOT=$(pwd)
 
 # Vérifier que docker est disponible
 if ! command -v docker-compose &> /dev/null; then
-    echo -e "${RED}❌ docker-compose n'est pas installé!${NC}"
+    echo -e "${RED} docker-compose n'est pas installé!${NC}"
     exit 1
 fi
 
@@ -31,7 +31,7 @@ MODE="${1:-restart}"
 # Fonction pour afficher l'aide
 show_help() {
     echo "=========================================="
-    echo "  Docker Dev - Gestionnaire des Containers"
+    echo "Docker Dev - Gestionnaire des Containers"
     echo "=========================================="
     echo ""
     echo "Utilisation: ./script/docker-dev.sh [commande]"
@@ -52,84 +52,84 @@ show_help() {
     echo ""
 }
 
-# Fonction pour redémarrer rapidement
+# Fonction pour redémarrer
 restart_containers() {
     echo "=========================================="
-    echo "  Redémarrage Rapide - Docker Dev"
+    echo "Redémarrage Rapide - Docker Dev"
     echo "=========================================="
     echo ""
     
     cd "$PROJECT_ROOT"
     
-    echo -e "${BLUE}🛑 Arrêt des containers...${NC}"
+    echo -e "${BLUE} Arrêt des containers...${NC}"
     docker-compose -f docker/docker-compose.dev.yml down
     
     echo ""
-    echo -e "${BLUE}🚀 Démarrage des containers...${NC}"
+    echo -e "${BLUE} Démarrage des containers...${NC}"
     docker-compose -f docker/docker-compose.dev.yml up -d
     
     echo ""
-    echo -e "${BLUE}⏳ Attente du démarrage (3 secondes)...${NC}"
+    echo -e "${BLUE} Attente du démarrage (3 secondes)...${NC}"
     sleep 3
     
     echo ""
     echo "========================================="
-    echo "📊 État des containers"
+    echo "État des containers"
     echo "========================================="
     docker-compose -f docker/docker-compose.dev.yml ps
     
     echo ""
-    echo -e "${GREEN}✅ Redémarrage complété!${NC}"
+    echo -e "${GREEN} Redémarrage complété!${NC}"
 }
 
 # Fonction pour mise à jour complète
 update_containers() {
     echo "=========================================="
-    echo "  Mise à jour Docker - Développement"
+    echo "Mise à jour Docker - Développement"
     echo "=========================================="
     echo ""
-    echo "📁 Répertoire du projet: $PROJECT_ROOT"
+    echo "Répertoire du projet: $PROJECT_ROOT"
     echo "========================================="
     
     cd "$PROJECT_ROOT"
     
     echo ""
-    echo -e "${BLUE}⏳ Reconstruction des images Docker...${NC}"
+    echo -e "${BLUE} Reconstruction des images Docker...${NC}"
     docker-compose -f docker/docker-compose.dev.yml build --no-cache
     
     echo ""
-    echo -e "${BLUE}🛑 Arrêt des containers...${NC}"
+    echo -e "${BLUE} Arrêt des containers...${NC}"
     docker-compose -f docker/docker-compose.dev.yml down
     
     echo ""
-    echo -e "${BLUE}🚀 Démarrage des containers...${NC}"
+    echo -e "${BLUE} Démarrage des containers...${NC}"
     docker-compose -f docker/docker-compose.dev.yml up -d
     
     echo ""
-    echo -e "${BLUE}⏳ Attente du démarrage (5 secondes)...${NC}"
+    echo -e "${BLUE} Attente du démarrage (5 secondes)...${NC}"
     sleep 5
     
     echo ""
     echo "========================================="
-    echo "📊 État des containers"
+    echo "État des containers"
     echo "========================================="
     docker-compose -f docker/docker-compose.dev.yml ps
     
     echo ""
     echo "========================================="
-    echo "📋 Logs du serveur WebSocket"
+    echo "Logs du serveur WebSocket"
     echo "========================================="
     docker-compose -f docker/docker-compose.dev.yml logs --tail 15 ws-server
     
     echo ""
-    echo -e "${GREEN}✅ Mise à jour complète!${NC}"
+    echo -e "${GREEN} Mise à jour complète!${NC}"
 }
 
 # Fonction pour afficher les logs
 show_logs() {
     cd "$PROJECT_ROOT"
     echo "=========================================="
-    echo "  Logs - Docker Dev (Ctrl+C pour quitter)"
+    echo "Logs - Docker Dev"
     echo "=========================================="
     echo ""
     docker-compose -f docker/docker-compose.dev.yml logs -f
@@ -139,7 +139,7 @@ show_logs() {
 show_ws_logs() {
     cd "$PROJECT_ROOT"
     echo "=========================================="
-    echo "  Logs WebSocket - Docker Dev (Ctrl+C pour quitter)"
+    echo "Logs WebSocket - Docker Dev"
     echo "=========================================="
     echo ""
     docker-compose -f docker/docker-compose.dev.yml logs -f ws-server
@@ -148,24 +148,24 @@ show_ws_logs() {
 # Fonction pour arrêter
 stop_containers() {
     echo "=========================================="
-    echo "  Arrêt des Containers"
+    echo "Arrêt des Containers"
     echo "=========================================="
     echo ""
     
     cd "$PROJECT_ROOT"
     
-    echo -e "${BLUE}🛑 Arrêt des containers...${NC}"
+    echo -e "${BLUE} Arrêt des containers...${NC}"
     docker-compose -f docker/docker-compose.dev.yml down
     
     echo ""
-    echo -e "${GREEN}✅ Containers arrêtés!${NC}"
+    echo -e "${GREEN} Containers arrêtés!${NC}"
 }
 
 # Fonction pour afficher le statut
 show_status() {
     cd "$PROJECT_ROOT"
     echo "=========================================="
-    echo "  État des Containers"
+    echo "État des Containers"
     echo "=========================================="
     echo ""
     docker-compose -f docker/docker-compose.dev.yml ps
@@ -195,7 +195,7 @@ case "$MODE" in
         show_help
         ;;
     *)
-        echo -e "${RED}❌ Commande inconnue: $MODE${NC}"
+        echo -e "${RED} Commande inconnue: $MODE${NC}"
         echo ""
         show_help
         exit 1

@@ -2,7 +2,11 @@
   padding: 32px 20px;
   min-height: 100vh;
   color: #eaf6ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   position: relative;
+  z-index: 1;
   overflow: hidden;
 }
 
@@ -16,14 +20,6 @@
   50% {
     transform: translate(30px, -30px);
   }
-}
-
-.shop-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  z-index: 1;
 }
 
 .hero {
@@ -101,7 +97,6 @@
   font-size: 1.1rem;
 }
 
-/* Dark pattern: Price increase warning banner */
 .price-warning-banner {
   background: linear-gradient(90deg, #dc2626, #ff6b6b);
   color: #fff;
@@ -410,7 +405,6 @@
   text-decoration: line-through
 }
 
-/* Dark pattern: Fake reviews */
 .product-reviews {
   display: flex;
   align-items: center;
@@ -430,7 +424,6 @@
   font-size: 12px;
 }
 
-/* Dark pattern: Fake viewer count */
 .viewer-count {
   margin-top: 6px;
   text-align: center;
@@ -458,7 +451,6 @@
   }
 }
 
-/* Dark pattern: Visual stock bar */
 .stock-bar {
   width: 100%;
   height: 6px;
@@ -521,7 +513,6 @@
   }
 }
 
-/* small screen adjustments */
 @media (max-width: 640px) {
   .shop-grid {
     grid-template-columns: 1fr;
@@ -536,7 +527,6 @@
   }
 }
 
-/* Modal (dark-pattern) */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -603,7 +593,6 @@
   font-weight: 800
 }
 
-/* Modal extras section */
 .modal-extras {
   background: rgba(255, 255, 255, 0.02);
   padding: 12px;
@@ -646,7 +635,6 @@
   margin-left: 4px;
 }
 
-/* Modal total section (dark pattern: emphasizes inflated total) */
 .modal-total {
   background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(255, 107, 107, 0.15));
   padding: 12px;
@@ -717,7 +705,6 @@
   padding: 8px 12px;
 }
 
-/* Confetti */
 .confetti-root {
   position: fixed;
   inset: 0;
@@ -754,7 +741,6 @@
   }
 }
 
-/* Lootbox reveal */
 .loot-reveal {
   display: flex;
   justify-content: center;
@@ -794,7 +780,6 @@
   color: #ffd8d8
 }
 
-/* Social proof notification */
 .shop-notification {
   position: fixed;
   bottom: 24px;
@@ -847,7 +832,6 @@
   font-size: 14px;
 }
 
-/* Cart Styles */
 .cart-button {
   position: relative;
   margin-top: 16px;

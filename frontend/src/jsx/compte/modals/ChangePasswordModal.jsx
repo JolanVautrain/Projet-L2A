@@ -56,7 +56,9 @@ function ChangePasswordModal({ isOpen, onClose, onBackToLogin, user }) {
       .then((data) => {
         if (data.error) {
           setError(
-            t(`forgotPassword.error_${data.error}`) || data.message || t("forgotPassword.resetFailed")
+            t(`forgotPassword.error_${data.error}`) ||
+              data.message ||
+              t("forgotPassword.resetFailed"),
           );
         } else if (data.ok) {
           setSuccess(true);
@@ -84,7 +86,11 @@ function ChangePasswordModal({ isOpen, onClose, onBackToLogin, user }) {
         <header className="modal-header">
           <h2>{t("forgotPassword.title")}</h2>
         </header>
-        <button className="modal-close" onClick={onClose} title={t("common.close")}>
+        <button
+          className="modal-close"
+          onClick={onClose}
+          title={t("common.close")}
+        >
           ×
         </button>
 
@@ -93,15 +99,16 @@ function ChangePasswordModal({ isOpen, onClose, onBackToLogin, user }) {
             {t("forgotPassword.resetSuccess")}
           </div>
         )}
-
         {!success && (
           <form className="modal-form" onSubmit={handleSubmit}>
             <div className="modal-field">
-              <label htmlFor="old-password">{t("resetPassword.old-password")}</label>
+              <label htmlFor="old-password">
+                {t("resetPassword.old-password")}
+              </label>
               <input
                 id="old-password"
                 type="password"
-                autoComplete="old-password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -109,9 +116,10 @@ function ChangePasswordModal({ isOpen, onClose, onBackToLogin, user }) {
                 placeholder={t("resetPassword.oldPasswordPlaceholder")}
               />
             </div>
-
             <div className="modal-field">
-              <label htmlFor="new-password">{t("forgotPassword.newPassword")}</label>
+              <label htmlFor="new-password">
+                {t("forgotPassword.newPassword")}
+              </label>
               <input
                 id="new-password"
                 type="password"
@@ -123,9 +131,10 @@ function ChangePasswordModal({ isOpen, onClose, onBackToLogin, user }) {
                 placeholder={t("forgotPassword.newPassword")}
               />
             </div>
-
             <div className="modal-field">
-              <label htmlFor="confirm-password">{t("forgotPassword.confirmPassword")}</label>
+              <label htmlFor="confirm-password">
+                {t("forgotPassword.confirmPassword")}
+              </label>
               <input
                 id="confirm-password"
                 type="password"
@@ -137,11 +146,11 @@ function ChangePasswordModal({ isOpen, onClose, onBackToLogin, user }) {
                 placeholder={t("forgotPassword.confirmPassword")}
               />
             </div>
-
             {error && <div className="modal-error">{error}</div>}
-
             <button type="submit" className="modal-button" disabled={loading}>
-              {loading ? t("common.loading") : t("forgotPassword.resetPassword")}
+              {loading
+                ? t("common.loading")
+                : t("forgotPassword.resetPassword")}
             </button>
           </form>
         )}
@@ -153,7 +162,7 @@ function ChangePasswordModal({ isOpen, onClose, onBackToLogin, user }) {
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -161,6 +170,7 @@ ChangePasswordModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onBackToLogin: PropTypes.func.isRequired,
+  user: PropTypes.string.isRequired,
 };
 
 export default ChangePasswordModal;

@@ -103,12 +103,6 @@ services:
       - backend
       - ws-server
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
     networks:
       - internal
 

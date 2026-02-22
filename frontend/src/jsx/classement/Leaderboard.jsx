@@ -6,6 +6,7 @@ import { useLanguage } from "../autres/Language.jsx";
 import { getApiBaseUrl } from "../utils/apiClient.js";
 import SortableTable from "../utils/SortableTable.jsx";
 
+// Composant de classement affichant les meilleurs scores et les sessions du joueur connecté
 function Leaderboard({ user, setUser }) {
   const apiBase = getApiBaseUrl();
   const [topUsers, setTopUsers] = useState([]);

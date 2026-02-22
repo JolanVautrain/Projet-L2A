@@ -142,8 +142,7 @@ function App() {
           new Blob([payload], { type: "application/json" }),
         );
       } catch (e) {
-        //eslint-disable-line
-        // Ignore unload failures
+        console.error("Erreur lors du beacon de déconnexion:", e);
       }
     };
 

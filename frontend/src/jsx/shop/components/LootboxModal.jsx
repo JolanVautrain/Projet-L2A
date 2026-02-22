@@ -14,12 +14,21 @@ export function LootboxModal({
   const prizeItems = prize?.items || (prize ? [prize] : []);
   const remainingCount = Math.max(prizeItems.length - visibleCount, 0);
 
+  // Reset on modal close or when waiting
+  useEffect(() => {
+    if (!isOpen || isWaiting) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setVisibleCount(0);
+    }
+  }, [isOpen, isWaiting]);
+
+  // Animation effect
   useEffect(() => {
     if (!isOpen || isWaiting || prizeItems.length === 0) {
-      setVisibleCount(0);
       return undefined;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(1);
     if (prizeItems.length <= 1) return undefined;
 

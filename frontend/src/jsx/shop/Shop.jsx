@@ -1,7 +1,6 @@
 import { useLanguage } from "../autres/Language.jsx";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { getActiveUser, setActiveUser } from "../utils/userSession.js";
 import shopProductsData from "./shopProducts.json";
 import { useCart } from "./hooks/useCart.js";
 import { useLootbox } from "./hooks/useLootbox.js";
@@ -31,7 +30,6 @@ import { FilterTabs } from "./components/FilterTabs.jsx";
 import { FeaturedSection } from "./components/FeaturedSection.jsx";
 import LoginModal from "../accueil/modals/LoginModal.jsx";
 import RegisterModal from "../accueil/modals/RegisterModal.jsx";
-import "./components/ShopAnimations.css";
 
 function Shop({ user, setUser }) {
   const { t } = useLanguage();
@@ -52,7 +50,6 @@ function Shop({ user, setUser }) {
     lootPrize,
     lootWaiting,
     lootCountdown,
-    openLootbox,
     openLootboxBatch,
     closeLootbox,
   } = useLootbox();
@@ -162,19 +159,16 @@ function Shop({ user, setUser }) {
         const rewardName = rewardProduct.titleKey
           ? t(rewardProduct.titleKey)
           : rewardProduct.title || item.name;
-        fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/shop/purchase`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: user,
-              product_id: rewardProduct.id,
-              product_name: rewardName,
-              price: "0€",
-            }),
-          },
-        ).catch((error) =>
+        fetch(`${import.meta.env.VITE_API_URL || ""}/api/shop/purchase`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: user,
+            product_id: rewardProduct.id,
+            product_name: rewardName,
+            price: "0€",
+          }),
+        }).catch((error) =>
           console.error("Failed to record lootbox reward:", error),
         );
 
@@ -194,17 +188,14 @@ function Shop({ user, setUser }) {
       }
 
       if (user && xpRewards[item.productId]) {
-        fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/user/xp`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: user,
-              xp: xpRewards[item.productId],
-            }),
-          },
-        ).catch((error) => console.error("Failed to award XP:", error));
+        fetch(`${import.meta.env.VITE_API_URL || ""}/api/user/xp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: user,
+            xp: xpRewards[item.productId],
+          }),
+        }).catch((error) => console.error("Failed to award XP:", error));
       }
     });
   }, [
@@ -267,16 +258,21 @@ function Shop({ user, setUser }) {
 
   // Définition des catégories pour les filtres
   const categories = [
-    { id: "all", label: "Tout voir", icon: "🏪", count: products.length },
+    {
+      id: "all",
+      label: t("shop.categories.seeAll"),
+      icon: "🏪",
+      count: products.length,
+    },
     {
       id: "hot",
-      label: "Tendance",
+      label: t("shop.categories.hot"),
       icon: "🔥",
       count: products.filter((p) => p.hot).length,
     },
     {
       id: "skins",
-      label: "Skins",
+      label: t("shop.categories.skins"),
       icon: "👕",
       count: products.filter((p) => p.category === "skins").length,
     },
@@ -288,13 +284,13 @@ function Shop({ user, setUser }) {
     },
     {
       id: "lootboxes",
-      label: "Mystères",
+      label: t("shop.categories.mystery"),
       icon: "🎁",
       count: products.filter((p) => p.category === "lootboxes").length,
     },
     {
       id: "boosters",
-      label: "Boosts",
+      label: t("shop.categories.boosts"),
       icon: "⚡",
       count: products.filter((p) => p.category === "boosters").length,
     },
@@ -450,7 +446,6 @@ function Shop({ user, setUser }) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3200);
     }
-    // Note: localStorage backup supprimé, on utilise maintenant la BDD
     clearCart();
   };
 
@@ -499,7 +494,7 @@ function Shop({ user, setUser }) {
       </div>
     );
   }
-
+  // sinon afficher la boutique
   return (
     <div className="shop-page">
       <section className="hero">
@@ -515,14 +510,13 @@ function Shop({ user, setUser }) {
             className="btn primary cart-button"
             onClick={() => setShowCart(true)}
           >
-            🛒 Panier{" "}
+            🛒 {t("shop.cart")}
             {getItemCount() > 0 && (
               <span className="cart-badge">{getItemCount()}</span>
             )}
           </button>
         </div>
       </section>
-
       <FeaturedSection
         trendingProducts={products.filter((p) => p.hot)}
         onAddToCart={addToCart}
@@ -530,15 +524,12 @@ function Shop({ user, setUser }) {
         reviewCounts={reviewCounts}
         userPurchasedProducts={userPurchasedProducts}
       />
-
       <PriceWarningBanner show={showPriceWarning} timer={priceWarningTimer} />
-
       <FilterTabs
         activeTab={activeFilter}
         onTabChange={setActiveFilter}
         categories={categories}
       />
-
       <section className="shop-grid">
         {filteredProducts.map((p) => (
           <ProductCard
@@ -553,7 +544,6 @@ function Shop({ user, setUser }) {
           />
         ))}
       </section>
-
       <CartModal
         isOpen={showCart}
         cart={cart}
@@ -565,7 +555,6 @@ function Shop({ user, setUser }) {
         onRemove={removeFromCart}
         t={t}
       />
-
       <LootboxModal
         isOpen={lootOpen}
         product={lootProduct}
@@ -575,11 +564,8 @@ function Shop({ user, setUser }) {
         onClose={closeLootbox}
         t={t}
       />
-
       {showConfetti && <Confetti />}
-
       <Notification message={notification} />
-
       <BombPackManager hasActiveBombPack={hasActiveBombPack} />
     </div>
   );

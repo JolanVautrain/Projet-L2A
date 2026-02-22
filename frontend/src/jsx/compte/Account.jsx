@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { LanguageSelector, useLanguage } from "../autres/Language.jsx";
@@ -9,6 +9,39 @@ import RegisterModal from "../accueil/modals/RegisterModal.jsx";
 import ChangePasswordModal from "./modals/ChangePasswordModal.jsx";
 import ChangeUsernameModal from "./modals/ChangeUsernameModal.jsx";
 import { UserInventory } from "./UserInventory.jsx";
+
+// Constantes immuables partagées (stables pour les hooks)
+const AVAILABLE_AVATARS = [
+  "samourai.png",
+  "businessman1.png",
+  "fireman.png",
+  "fireman_temu.png",
+  "fireman_woman.png",
+  "gangster.png",
+  "gangster_temu.png",
+  "policeman.png",
+  "policewomen.png",
+  "politician_men.png",
+  "politician_woman.png",
+  "rescue.png",
+  "worker.png",
+];
+
+const AVATAR_ID_TO_FILE = {
+  "avatar-samourai": "samourai.png",
+  "avatar-businessman1": "businessman1.png",
+  "avatar-fireman": "fireman.png",
+  "avatar-fireman-temu": "fireman_temu.png",
+  "avatar-fireman-woman": "fireman_woman.png",
+  "avatar-gangster": "gangster.png",
+  "avatar-gangster-temu": "gangster_temu.png",
+  "avatar-policeman": "policeman.png",
+  "avatar-policewomen": "policewomen.png",
+  "avatar-politician-men": "politician_men.png",
+  "avatar-politician-woman": "politician_woman.png",
+  "avatar-rescue": "rescue.png",
+  "avatar-worker": "worker.png",
+};
 
 /**
  * Composant Account
@@ -36,59 +69,15 @@ function Account({ user, setUser }) {
   const { t } = useLanguage();
   const apiBase = getApiBaseUrl();
 
-  // Liste des avatars disponibles (sans admin.jpg pour utilisateurs normaux)
-  const availableAvatars = [
-    "samourai.png",
-    "businessman1.png",
-    "fireman.png",
-    "fireman_temu.png",
-    "fireman_woman.png",
-    "gangster.png",
-    "gangster_temu.png",
-    "policeman.png",
-    "policewomen.png",
-    "politician_men.png",
-    "politician_woman.png",
-    "rescue.png",
-    "worker.png",
-  ];
-
-  const avatarIdToFile = {
-    "avatar-samourai": "samourai.png",
-    "avatar-businessman1": "businessman1.png",
-    "avatar-fireman": "fireman.png",
-    "avatar-fireman-temu": "fireman_temu.png",
-    "avatar-fireman-woman": "fireman_woman.png",
-    "avatar-gangster": "gangster.png",
-    "avatar-gangster-temu": "gangster_temu.png",
-    "avatar-policeman": "policeman.png",
-    "avatar-policewomen": "policewomen.png",
-    "avatar-politician-men": "politician_men.png",
-    "avatar-politician-woman": "politician_woman.png",
-    "avatar-rescue": "rescue.png",
-    "avatar-worker": "worker.png",
-  };
-
-  const ownedAvatarFiles = new Set(
-    userPurchases
-      .map((purchase) => avatarIdToFile[purchase.product_id])
-      .filter(Boolean),
+  const ownedAvatarFiles = useMemo(
+    () =>
+      new Set(
+        userPurchases
+          .map((purchase) => AVATAR_ID_TO_FILE[purchase.product_id])
+          .filter(Boolean),
+      ),
+    [userPurchases],
   );
-
-  // Charger l'historique d'achats de l'utilisateur
-  useEffect(() => {
-    if (user) {
-      fetch(`${apiBase}/shop/purchases/${user}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setUserPurchases(data.purchases || []);
-        })
-        .catch((err) => {
-          console.error("Failed to load purchase history:", err);
-          setUserPurchases([]);
-        });
-    }
-  }, [user, apiBase]);
 
   // Charger l'avatar depuis localStorage
   useEffect(() => {
@@ -105,7 +94,7 @@ function Account({ user, setUser }) {
       if (
         savedAvatar &&
         savedAvatar !== "admin.jpg" &&
-        availableAvatars.includes(savedAvatar)
+        AVAILABLE_AVATARS.includes(savedAvatar)
       ) {
         // si l'avatar sauvegardé est autorisé (samourai toujours autorisé) ou acheté individuellement
         if (
@@ -124,7 +113,7 @@ function Account({ user, setUser }) {
         localStorage.setItem(`avatar_${user}`, "samourai.png");
       }
     }
-  }, [user, userPurchases]);
+  }, [user, userPurchases, ownedAvatarFiles]);
 
   // Fonction pour sélectionner un avatar
   const handleAvatarSelect = (avatar) => {
@@ -155,30 +144,30 @@ function Account({ user, setUser }) {
     }
   };
 
-  // Fonction pour charger et enrichir les utilisateurs
-  const loadAdminUsers = async (currentUser) => {
-    try {
-      const res = await fetch(`${apiBase}/admin/users`, {
-        headers: { "X-Admin-User": currentUser },
-      });
-      // Silently ignore 401 (user not admin)
-      if (res.status === 401) {
-        return;
-      }
-      if (res.ok) {
-        const data = await res.json();
-        // Enrichir chaque utilisateur avec XP et stats (parallèle)
-        const enriched = await Promise.all(
-          data.map(async (u) => {
-            try {
-              const [xpRes, statsRes] = await Promise.all([
-                fetch(`${apiBase}/user/xp/${u.username}`),
-                fetch(`${apiBase}/user/stats/${u.username}`),
-              ]);
-              const xpJson =
-                xpRes && xpRes.ok ? await xpRes.json() : { xp: 0, level: 1 };
-              const statsJson =
-                statsRes && statsRes.ok
+  // Fonction pour charger et enrichir les utilisateurs (stabilisée avec useCallback)
+  const loadAdminUsers = useCallback(
+    async (currentUser) => {
+      try {
+        const res = await fetch(`${apiBase}/admin/users`, {
+          headers: { "X-Admin-User": currentUser },
+        });
+        if (res.status === 401) {
+          return;
+        }
+        if (res.ok) {
+          const data = await res.json();
+          // Enrichir chaque utilisateur avec XP et stats (parallèle)
+          const enriched = await Promise.all(
+            data.map(async (u) => {
+              try {
+                const [xpRes, statsRes] = await Promise.all([
+                  fetch(`${apiBase}/user/xp/${u.username}`),
+                  fetch(`${apiBase}/user/stats/${u.username}`),
+                ]);
+                const xpJson = xpRes?.ok
+                  ? await xpRes.json()
+                  : { xp: 0, level: 1 };
+                const statsJson = statsRes?.ok
                   ? await statsRes.json()
                   : {
                       totalGames: 0,
@@ -186,37 +175,54 @@ function Account({ user, setUser }) {
                       bestScore: 0,
                       averageScore: 0,
                     };
-              return {
-                ...u,
-                xp: xpJson.xp || 0,
-                level: xpJson.level || 1,
-                totalGames: statsJson.totalGames || 0,
-                totalScore: statsJson.totalScore || 0,
-                bestScore: statsJson.bestScore || 0,
-                averageScore: statsJson.averageScore || 0,
-              };
-            } catch {
-              return {
-                ...u,
-                xp: 0,
-                level: 1,
-                totalGames: 0,
-                totalScore: 0,
-                bestScore: 0,
-                averageScore: 0,
-              };
-            }
-          }),
-        );
-        setAllUsers(enriched);
-        if (enriched.length > 0 && !selectedUser)
-          setSelectedUser(enriched[0].username);
-        return enriched;
+                return {
+                  ...u,
+                  xp: xpJson.xp || 0,
+                  level: xpJson.level || 1,
+                  totalGames: statsJson.totalGames || 0,
+                  totalScore: statsJson.totalScore || 0,
+                  bestScore: statsJson.bestScore || 0,
+                  averageScore: statsJson.averageScore || 0,
+                };
+              } catch {
+                return {
+                  ...u,
+                  xp: 0,
+                  level: 1,
+                  totalGames: 0,
+                  totalScore: 0,
+                  bestScore: 0,
+                  averageScore: 0,
+                };
+              }
+            }),
+          );
+          setAllUsers(enriched);
+          if (enriched.length > 0 && !selectedUser)
+            setSelectedUser(enriched[0].username);
+          return enriched;
+        }
+      } catch (err) {
+        console.warn("Failed to load users", err);
       }
-    } catch (err) {
-      console.warn("Failed to load users", err);
+    },
+    [apiBase, selectedUser],
+  );
+
+  // Charger l'historique d'achats de l'utilisateur
+  useEffect(() => {
+    if (user) {
+      fetch(`${apiBase}/shop/purchases/${user}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setUserPurchases(data.purchases || []);
+        })
+        .catch((err) => {
+          console.error("Failed to load purchase history:", err);
+          setUserPurchases([]);
+        });
     }
-  };
+  }, [user, apiBase, loadAdminUsers]);
 
   // Charger la liste des utilisateurs si admin
   useEffect(() => {
@@ -248,7 +254,7 @@ function Account({ user, setUser }) {
     };
 
     checkAdmin();
-  }, [user, apiBase]);
+  }, [user, apiBase, loadAdminUsers]);
 
   const handleGenerateRecoveryCode = async () => {
     setRecoveryCodesLoading(true);
@@ -305,55 +311,6 @@ function Account({ user, setUser }) {
   if (user) {
     // Utilisateur connecté : afficher les informations de compte
 
-    const handleSubmit = (event) => {
-      event.preventDefault();
-
-      const data = new FormData(event.target);
-      let xp = parseInt(data.get("number"), 10);
-
-      if (data.get("sub_xp")) {
-        xp = -xp;
-      }
-
-      if (
-        selectedUser &&
-        confirm(
-          t("account.confirmAwardXp")
-            .replace("{username}", selectedUser)
-            .replace("{xp}", xp),
-        )
-      ) {
-        setAwardXpLoading(true);
-
-        fetch(`${apiBase}/user/xp`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Admin-User": user,
-          },
-          body: JSON.stringify({
-            username: selectedUser,
-            xp: xp,
-          }),
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error("Erreur serveur");
-            return res.json();
-          })
-          .then(() => {
-            alert(
-              t("account.awardXpSuccess")
-                .replace("{username}", selectedUser)
-                .replace("{xp}", xp),
-            );
-            // Rafraîchir la liste des utilisateurs après succès
-            loadAdminUsers(user);
-          })
-          .catch((e) => alert(t("common.failedPrefix") + e.message))
-          .finally(() => setAwardXpLoading(false));
-      }
-    };
-
     return (
       <>
         <h1>{t("account.title")}</h1>
@@ -361,24 +318,37 @@ function Account({ user, setUser }) {
           <p>
             {t("account.hello")} {user}, {t("account.yourAccountPage")}.
           </p>
-
-          {/* Sélecteur d'avatar */}
-          {user !== "admin" ? (
+          {user === "admin" ? (
+            <div className="avatar-selector">
+              <h3>{t("account.adminAvatar")}</h3>
+              <div className="admin-avatar-display">
+                <img
+                  src="/assets/avatar/admin.jpg"
+                  alt="Admin Avatar"
+                  className="admin-avatar-img"
+                  width="150"
+                  height="150"
+                />
+                <p style={{ color: "#66e3b8", marginTop: "12px" }}>
+                  {t("account.unmodifiableAvatar")}
+                </p>
+              </div>
+            </div>
+          ) : (
             <div className="avatar-selector">
               <h3>{t("account.chooseAvatar") || "Choisir votre avatar"}</h3>
               <div className="avatar-grid">
-                {availableAvatars.map((avatar) => {
+                {AVAILABLE_AVATARS.map((avatar) => {
                   const locked =
                     avatar !== "samourai.png" && !ownedAvatarFiles.has(avatar);
                   return (
-                    <div
+                    <button
                       key={avatar}
+                      type="button"
                       className={`avatar-option ${
                         selectedAvatar === avatar ? "selected" : ""
                       } ${locked ? "locked" : ""}`}
                       onClick={() => handleAvatarSelect(avatar)}
-                      role="button"
-                      tabIndex={0}
                       title={
                         locked
                           ? t("account.avatarRequired") ||
@@ -401,25 +371,9 @@ function Account({ user, setUser }) {
                           <span className="lock-icon">🔒</span>
                         </div>
                       )}
-                    </div>
+                    </button>
                   );
                 })}
-              </div>
-            </div>
-          ) : (
-            <div className="avatar-selector">
-              <h3>Avatar Administrateur</h3>
-              <div className="admin-avatar-display">
-                <img
-                  src="/assets/avatar/admin.jpg"
-                  alt="Admin Avatar"
-                  className="admin-avatar-img"
-                  width="150"
-                  height="150"
-                />
-                <p style={{ color: "#66e3b8", marginTop: "12px" }}>
-                  Avatar unique et non modifiable
-                </p>
               </div>
             </div>
           )}
@@ -439,8 +393,6 @@ function Account({ user, setUser }) {
             {t("account.changePassword")}
           </button>
           <LanguageSelector />
-
-          {/* Codes de récupération */}
           <div className="recovery-codes-section">
             <h3>Codes de récupération</h3>
             <button
@@ -450,10 +402,9 @@ function Account({ user, setUser }) {
               style={{ marginTop: "8px" }}
             >
               {recoveryCodesLoading
-                ? "Génération..."
-                : "Générer un nouveau code"}
+                ? t("account.generatingCode")
+                : t("account.generateCode")}
             </button>
-
             {showNewCode && newRecoveryCode && (
               <div
                 className="new-recovery-code-alert"
@@ -468,7 +419,7 @@ function Account({ user, setUser }) {
                 }}
               >
                 <p style={{ fontSize: "0.9rem", margin: "0 0 8px 0" }}>
-                  Votre nouveau code de récupération (à noter en sûr place) :
+                  {t("account.newCode")} :
                 </p>
                 <code
                   style={{
@@ -508,7 +459,6 @@ function Account({ user, setUser }) {
               </div>
             )}
           </div>
-
           <div className="user-action">
             <button
               className="btn ghost no-border account__logout"
@@ -516,7 +466,6 @@ function Account({ user, setUser }) {
             >
               {t("common.logout")}
             </button>
-
             <button
               className="btn ghost danger user__delete"
               onClick={() => {
@@ -556,7 +505,6 @@ function Account({ user, setUser }) {
             >
               {t("account.deleteSelf")}
             </button>
-
             <button
               className="btn danger"
               disabled={resetSessionsLoading}
@@ -588,14 +536,13 @@ function Account({ user, setUser }) {
               {resetSessionsLoading
                 ? t("account.resetting")
                 : t("account.resetSelfSessions")}
-              {/*bouton pour acceder au panneau de moderation */}
             </button>
             {isAdmin && (
               <button
                 className="btn primary"
                 onClick={() => navigate("/moderation")}
               >
-                boutton de la toute puissance
+                {t("account.adminTools")}
               </button>
             )}
           </div>

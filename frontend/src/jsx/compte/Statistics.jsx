@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { useLanguage } from "../autres/Language.jsx";
 
+// Composant Statistics
+// Affiche les statistiques de jeu de l'utilisateur connecté
 function Statistics({ user }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,12 @@ function Statistics({ user }) {
   }, [user, t]);
   if (!user) return <p>{t("statistics.loginToViewStats")}</p>;
   if (loading) return <p>{t("common.loading")}</p>;
-  if (error) return <p>{t("common.error")}: {error}</p>;
+  if (error)
+    return (
+      <p>
+        {t("common.error")}: {error}
+      </p>
+    );
   if (!stats) return <p>{t("common.noData")}</p>;
   const formatTime = (seconds) => {
     if (seconds === 0) return "0s";
@@ -84,7 +91,9 @@ function Statistics({ user }) {
         </div>
         <div className="stat-card">
           <div className="stat-label">{t("statistics.averagePlayTime")}</div>
-          <div className="stat-value">{formatTime(Math.round(stats.averagePlayTime))}</div>
+          <div className="stat-value">
+            {formatTime(Math.round(stats.averagePlayTime))}
+          </div>
         </div>
       </div>
     </div>

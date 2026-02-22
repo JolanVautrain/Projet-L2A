@@ -1,9 +1,9 @@
 """Shop API pour le management des achats"""
 
+from typing import Any, Dict, List
+
 from core import db
-from flask import Blueprint
-from flask import jsonify
-from flask import request
+from flask import Blueprint, jsonify, request
 
 bp = Blueprint("shop", __name__, url_prefix="/api/shop")
 
@@ -22,8 +22,8 @@ def create_purchase():
 
     try:
         db.exec_commit(
-            "INSERT INTO purchases (username, product_id, product_name, price) "
-            "VALUES (%s, %s, %s, %s)",
+            "INSERT INTO purchases (username, product_id, product_name, price)"
+            " VALUES (%s, %s, %s, %s)",
             (username, product_id, product_name, price),
         )
         return jsonify({"message": "Purchase recorded successfully"}), 201
@@ -32,7 +32,7 @@ def create_purchase():
 
 
 @bp.route("/purchases/<username>", methods=["GET"])
-def get_user_purchases(username):
+def get_user_purchases(username: str):
     """Renvoi tous les achats effectuer par le client"""
     try:
         purchases = db.query_fetchall(
@@ -40,7 +40,7 @@ def get_user_purchases(username):
             "FROM purchases WHERE username = %s ORDER BY purchased_at DESC",
             (username,),
         )
-        result = [
+        result: List[Dict[str, Any]] = [
             {
                 "id": p[0],
                 "product_id": p[1],
@@ -56,11 +56,12 @@ def get_user_purchases(username):
 
 
 @bp.route("/has-product/<username>/<product_id>", methods=["GET"])
-def check_user_has_product(username, product_id):
+def check_user_has_product(username: str, product_id: str):
     """Vérifie si le client est propriétaire du produit"""
     try:
         result = db.query_fetchone(
-            "SELECT COUNT(*) FROM purchases WHERE username = %s AND product_id = %s",
+            "SELECT COUNT(*) FROM purchases WHERE username = %s "
+            "AND product_id = %s",
             (username, product_id),
         )
         has_product = result[0] > 0 if result else False
@@ -79,10 +80,11 @@ def get_all_purchases():
 
     try:
         purchases = db.query_fetchall(
-            "SELECT id, username, product_id, product_name, price, purchased_at "
+            "SELECT id, username, product_id, product_name, price, "
+            "purchased_at "
             "FROM purchases ORDER BY purchased_at DESC"
         )
-        result = [
+        result: List[Dict[str, Any]] = [
             {
                 "id": p[0],
                 "username": p[1],
@@ -99,7 +101,7 @@ def get_all_purchases():
 
 
 @bp.route("/admin/purchase/<int:purchase_id>", methods=["DELETE"])
-def cancel_purchase(purchase_id):
+def cancel_purchase(purchase_id: int):
     """Annule achat d'un produit (uniquement Admin)"""
     admin_user = request.headers.get("X-Admin-User")
 
