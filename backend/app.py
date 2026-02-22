@@ -2,6 +2,7 @@
 
 import logging
 import re
+import urllib.parse
 import sys
 from pathlib import Path
 
@@ -38,6 +39,7 @@ def after_request(response):
 
     # Vérification de l'origine de la requête
     if origin:
+        # Liste statique d'origines autorisées
         allowed_origins = [
             "http://localhost:5173",
             "http://127.0.0.1:5173",
@@ -45,18 +47,37 @@ def after_request(response):
             "http://127.0.0.1:5000",
             "http://localhost:15256",
             "http://127.0.0.1:15256",
-            "http://192.168.60.202:15256",
-            "http://192.168.60.200:15256",
-            "http://192.168.60.302:15256",
-            "http://192.168.60.220:15256",
-            "http://192.168.60.021:15256",
-            "http://192.168.60.201:15256",
         ]
 
-        # Ajout des en-têtes CORS
-        if origin in allowed_origins or re.match(
-            r"^http://[^:]+:15256$", origin
-        ):
+        # Tenter d'ajouter automatiquement l'IP depuis les fichiers de configuration
+        def _origin_from_env(path):
+            try:
+                txt = Path(path).read_text()
+            except Exception:
+                return None
+            for key in ("VITE_BACKEND_URL", "VITE_WS_URL"):
+                m = re.search(rf'^{key}=(.+)$', txt, re.M)
+                if m:
+                    url = m.group(1).strip()
+                    parsed = urllib.parse.urlparse(url)
+                    scheme = parsed.scheme
+                    netloc = parsed.netloc
+                    if scheme in ("ws", "wss"):
+                        scheme = "http" if scheme == "ws" else "https"
+                    if netloc:
+                        return f"{scheme}://{netloc}"
+            return None
+
+        docker_env = BASE_DIR.parent / "docker" / ".env.production"
+        frontend_env_prod = BASE_DIR.parent / "frontend" / ".env.production"
+        frontend_env_dev = BASE_DIR.parent / "frontend" / ".env.development"
+        for p in (docker_env, frontend_env_prod, frontend_env_dev):
+            origin_from_file = _origin_from_env(p)
+            if origin_from_file and origin_from_file not in allowed_origins:
+                allowed_origins.append(origin_from_file)
+
+        # Ajout des en-têtes CORS si l'origine est autorisée
+        if origin in allowed_origins or re.match(r"^http://[^:]+:15256$", origin):
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Methods"] = (
