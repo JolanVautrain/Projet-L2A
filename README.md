@@ -180,8 +180,9 @@ Les comptes de test sont définis dans `backend/init_db/db_init.json` :
 ```json
 {
   "users": [
-    { "username": "admin", "password": "admin123", "language": "fr" },
-    { "username": "user1", "password": "password", "language": "fr" }
+    { "username": "admin", "password": "1234", "language": "fr" },
+    { "username": "azerty", "password": "qsdfgh", "language": "fr" },
+    { "username": "username", "password": "password", "language": "fr" }
   ]
 }
 ```
