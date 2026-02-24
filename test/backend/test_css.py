@@ -5,22 +5,22 @@ import pytest
 
 
 def test_stylelint_css():
-    """Exécute Stylelint sur `frontend/src/css`.
+    """Execute Stylelint sur `frontend/public/css`.
 
-    - Essaie `npm run lint:css` d'abord (si script présent)
-    - Sinon utilise `npx stylelint "src/css/**/*.css"` en fallback
+    - Essaie `npm run lint:css` d'abord (si script present)
+    - Sinon utilise `npx stylelint "public/css/**/*.css"` en fallback
     - Skippe si `frontend` absent ou `npm` manquant
     """
     repo_root = Path(__file__).resolve().parents[2]
     frontend_dir = repo_root / "frontend"
-    css_dir = frontend_dir / "src" / "css"
+    css_dir = frontend_dir / "public" / "css"
 
     if not frontend_dir.exists() or not css_dir.exists():
-        pytest.skip("frontend/src/css not found")
+        pytest.skip("frontend/public/css not found")
 
     npm_cmd = ["npm", "run", "lint:css"]
     # fallback direct stylelint command; prefer unquoted glob on windows-shell
-    npx_cmd = ["npx", "stylelint", "src/css/**/*.css"]
+    npx_cmd = ["npx", "stylelint", "public/css/**/*.css"]
 
     # Try npm script first
     try:
